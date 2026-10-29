@@ -1,0 +1,11 @@
+# Local overrides for this machine (Compose reads this file automatically).
+# Ports 3000 and 5432 are already used here, and nothing should be reachable
+# from the network: publish on 127.0.0.1 only. `!override` replaces the lists
+# from compose.yml instead of adding to them.
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+  app:
+    ports: !override
+      - "127.0.0.1:3300:3000"
