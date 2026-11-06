@@ -1,10 +1,12 @@
+import { intlLocale } from "@/lib/i18n";
+
 // Dates as the app shows them: "27 Sep 2026", or "3 Oct" within the current year.
 
 /** Day, short month ("Sep", as en-US has it; en-GB now says "Sept") and optionally the year. */
 function format(date: Date, { year, timeZone }: { year: boolean; timeZone?: string }): string {
-  const parts = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric", timeZone }).formatToParts(date);
+  const parts = new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "short", year: "numeric", timeZone }).formatToParts(date);
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((entry) => entry.type === type)?.value ?? "";
-  return [part("day"), part("month"), year ? part("year") : ""].filter(Boolean).join(" ");
+  return [part("day"), part("month").replace(/\.$/, ""), year ? part("year") : ""].filter(Boolean).join(" ");
 }
 
 /**
@@ -77,13 +79,13 @@ export function isoInZone(date: Date, timeZone: string): string {
 
 /** "14:00" in a time zone. */
 export function formatTime(date: Date, timeZone?: string): string {
-  return new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(date);
+  return new Intl.DateTimeFormat(intlLocale(), { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(date);
 }
 
 /** "Thu 8 Oct" in a time zone, with the year when it isn't the same as `now`'s. */
 export function formatDay(date: Date, timeZone?: string, now = new Date()): string {
   const year = new Date(dayIn(date, timeZone)).getUTCFullYear() !== new Date(dayIn(now, timeZone)).getUTCFullYear();
-  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone }).format(date);
+  const weekday = new Intl.DateTimeFormat(intlLocale(), { weekday: "short", timeZone }).format(date);
   return `${weekday} ${format(date, { year, timeZone })}`;
 }
 

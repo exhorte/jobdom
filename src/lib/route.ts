@@ -4,6 +4,8 @@ import { unstable_rethrow } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSession, type Session } from "@/lib/auth/session";
+import { t } from "@/lib/i18n";
+import { applyLocale } from "@/lib/locale";
 import { logServerError } from "@/lib/log";
 import { messages } from "@/lib/messages";
 
@@ -55,11 +57,12 @@ export function route<Context = unknown>(
 ): (request: NextRequest, context: Context) => Promise<Response> {
   return async (request, context) => {
     if (!isSameOrigin(request)) {
-      return NextResponse.json({ error: messages.crossOrigin }, { status: 403 });
+      return NextResponse.json({ error: t(messages.crossOrigin) }, { status: 403 });
     }
+    await applyLocale();
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: messages.signedOut }, { status: 401 });
+      return NextResponse.json({ error: t(messages.signedOut) }, { status: 401 });
     }
 
     let response: Response;
@@ -68,7 +71,7 @@ export function route<Context = unknown>(
     } catch (error) {
       unstable_rethrow(error);
       logServerError(`${request.method} ${request.nextUrl.pathname}`, error);
-      response = NextResponse.json({ error: messages.unexpected }, { status: 500 });
+      response = NextResponse.json({ error: t(messages.unexpected) }, { status: 500 });
     }
     if (!response.headers.has("cache-control")) {
       try {

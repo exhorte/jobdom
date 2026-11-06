@@ -3,6 +3,7 @@ import "server-only";
 import { AgentCandidateStatus } from "@/generated/prisma/enums";
 import { addDays, dayOf } from "@/lib/calendar-view";
 import { zonedTime } from "@/lib/google/slots";
+import { t } from "@/lib/i18n";
 import { findUnfinishedJobs, startJob } from "@/lib/jobs/runner";
 import { logServerError } from "@/lib/log";
 import { prisma } from "@/lib/prisma";
@@ -58,7 +59,7 @@ export async function startDueRun(now = new Date()): Promise<string | null> {
 export async function resetInterruptedDrafts(): Promise<number> {
   const { count } = await prisma.agentCandidate.updateMany({
     where: { status: AgentCandidateStatus.DRAFTING },
-    data: { status: AgentCandidateStatus.SCORED, error: "Drafting was interrupted. Try again." },
+    data: { status: AgentCandidateStatus.SCORED, error: t("Drafting was interrupted. Try again.") },
   });
   return count;
 }

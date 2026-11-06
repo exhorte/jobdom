@@ -2,6 +2,7 @@ import "server-only";
 
 import { AgentCandidateStatus, JobStatus } from "@/generated/prisma/enums";
 import { formatDateTime } from "@/lib/dates";
+import { t } from "@/lib/i18n";
 import { loadJobSearchConfig } from "@/lib/job-search/config";
 import { countryName } from "@/lib/job-search/countries";
 import { describeSearch, postedAgo, type JobSource } from "@/lib/job-search/search";
@@ -79,10 +80,10 @@ export async function countAgentQueue(): Promise<number> {
 }
 
 /** "Today" and "Yesterday" in a sentence; "2 days ago" or "15 Oct" as they are. */
-const posted = (ago: string) => (ago === "Today" || ago === "Yesterday" ? ago.toLowerCase() : ago);
+const posted = (ago: string) => ago.charAt(0).toLowerCase() + ago.slice(1);
 
 const sectionOf = (problem: string): AgentView["setupSection"] =>
-  problem.includes("AI provider") ? "ai" : problem.includes("Job search") ? "jobs" : "agent";
+  problem.includes(t("AI provider")) ? "ai" : problem.includes(t("Job search")) ? "jobs" : "agent";
 
 export async function loadAgentView(now = new Date()): Promise<AgentView> {
   const [settings, config, timeZone, candidates, draftJobs, runJobs] = await Promise.all([
@@ -104,18 +105,18 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
   const query = settings.agentQuery;
   const source: JobSource | null = config.source;
   const search = query.keywords.trim()
-    ? `${describeSearch(query, countryName(query.country) || query.country.toUpperCase())}${source ? ` · via ${SOURCE_INFO[source].name}` : ""}`
+    ? `${describeSearch(query, countryName(query.country) || query.country.toUpperCase())}${source ? t(" · via {name}", { name: SOURCE_INFO[source].name }) : ""}`
     : null;
   const setupProblem = await agentSetupProblem(query);
 
   const view = (candidate: (typeof candidates)[number]): AgentCandidateView => ({
     id: candidate.id,
-    title: candidate.title.trim() || "Untitled posting",
+    title: candidate.title.trim() || t("Untitled posting"),
     company: candidate.company.trim(),
-    facts: [candidate.place, candidate.remote ? "Remote" : "", candidate.salary].filter(Boolean).join(" · "),
+    facts: [candidate.place, candidate.remote ? t("Remote") : "", candidate.salary].filter(Boolean).join(" · "),
     origin: [
-      candidate.postedAt ? `Posted ${posted(postedAgo(candidate.postedAt.toISOString(), now))}` : "",
-      [candidate.via ? `via ${candidate.via}` : "", `on ${SOURCE_INFO[candidate.source].name}`].filter(Boolean).join(" "),
+      candidate.postedAt ? t("Posted {posted}", { posted: posted(postedAgo(candidate.postedAt.toISOString(), now)) }) : "",
+      [candidate.via ? t("via {via}", { via: candidate.via }) : "", `on ${SOURCE_INFO[candidate.source].name}`].filter(Boolean).join(" "),
     ]
       .filter(Boolean)
       .join(" · "),

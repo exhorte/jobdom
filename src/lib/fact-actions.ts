@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { action, ActionError } from "@/lib/action";
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { nextSort } from "@/lib/profile-entries";
 
@@ -19,10 +20,10 @@ const MAX_FACTS = 50;
 
 async function checkRoom(applicationId: string | null) {
   if (applicationId && !(await prisma.application.findUnique({ where: { id: applicationId }, select: { id: true } }))) {
-    throw new ActionError("This application doesn't exist any more.");
+    throw new ActionError(t("This application doesn't exist any more."));
   }
   if ((await prisma.fact.count({ where: { applicationId } })) >= MAX_FACTS) {
-    throw new ActionError(`That's ${MAX_FACTS} facts already. Remove one you no longer need first.`);
+    throw new ActionError(t("That's {MAX_FACTS} facts already. Remove one you no longer need first.", { MAX_FACTS }));
   }
 }
 

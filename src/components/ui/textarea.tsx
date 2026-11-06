@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
 import { controlClassName, FieldShell, useField, type FieldProps } from "./field";
+import { t } from "@/lib/i18n";
 
 export type TextareaProps = ComponentProps<"textarea"> &
   FieldProps & {
@@ -23,7 +24,7 @@ export function Textarea({
 }: TextareaProps) {
   const field = useField({ id, hint, error });
   return (
-    <FieldShell {...field} label={label} hint={hint} error={error} className={className}>
+    <FieldShell {...field} label={t(label)} hint={t(hint)} error={error} className={className}>
       <textarea
         {...field.controlProps}
         className={cn(controlClassName, "resize-y px-3 py-[11px] leading-[1.6]", textareaClassName)}

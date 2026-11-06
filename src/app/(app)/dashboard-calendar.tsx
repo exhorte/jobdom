@@ -1,6 +1,7 @@
 import { addDays, AGENDA_DAYS, dayOf, isDay, monthDays, shiftMonth, type Day } from "@/lib/calendar-view";
 import { workingHours } from "@/lib/google/availability";
 import { loadCalendar } from "@/lib/google/calendar-data";
+import { t } from "@/lib/i18n";
 
 import { CalendarCard } from "./calendar-card";
 
@@ -37,7 +38,7 @@ export async function DashboardCalendar({ date, now }: { date: unknown; now: Dat
 export function CalendarSkeleton() {
   return (
     <div role="status" className="h-[440px] rounded-panel bg-track">
-      <span className="sr-only">Loading your calendar…</span>
+      <span className="sr-only">{t("Loading your calendar…")}</span>
     </div>
   );
 }

@@ -5,14 +5,19 @@ import { periodFromParam } from "@/lib/dashboard";
 import { waitingByApplication } from "@/lib/google/inbox-data";
 import { loadDashboard } from "@/lib/dashboard-data";
 import { dayPeriod, hourIn } from "@/lib/greeting";
+import { t } from "@/lib/i18n";
 import { loadProfileName } from "@/lib/profile-data";
 import { loadSettings } from "@/lib/settings-data";
 import { userTimeZone } from "@/lib/time-zone";
 
 import { Dashboard } from "./dashboard";
 import { CalendarSkeleton, DashboardCalendar } from "./dashboard-calendar";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Dashboard") };
+}
 
 /**
  * Where the search stands (PRD §6.7). Read fresh on every visit, so a status

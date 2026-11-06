@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { useAutosave } from "@/hooks/use-autosave";
 import { citationExcerpt, publicationLink, toggleMark } from "@/lib/citation";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import type { ProfileData, PublicationItem } from "@/lib/profile";
 import { displayLink } from "@/lib/resume-content";
 
@@ -64,13 +66,13 @@ function CitationField({
     <div className="col-span-2 flex flex-col gap-[7px]">
       <div className="flex items-end justify-between gap-3">
         <label htmlFor={id} className="text-label font-medium text-ink">
-          Citation
+          {t("Citation")}
         </label>
-        <span className="flex gap-1" role="group" aria-label="Formatting">
-          <button type="button" className={cn(markButton, "font-bold")} title="Bold (Ctrl+B)" aria-label="Bold" onClick={() => mark("bold")}>
+        <span className="flex gap-1" role="group" aria-label={t("Formatting")}>
+          <button type="button" className={cn(markButton, "font-bold")} title={t("Bold (Ctrl+B)")} aria-label={t("Bold")} onClick={() => mark("bold")}>
             B
           </button>
-          <button type="button" className={cn(markButton, "font-serif italic")} title="Italic (Ctrl+I)" aria-label="Italic" onClick={() => mark("italic")}>
+          <button type="button" className={cn(markButton, "font-serif italic")} title={t("Italic (Ctrl+I)")} aria-label={t("Italic")} onClick={() => mark("italic")}>
             I
           </button>
         </span>
@@ -80,7 +82,7 @@ function CitationField({
         id={id}
         aria-describedby={`${id}-hint`}
         rows={3}
-        placeholder="Doe, J., & Roe, R. (2025). A study of things. *Journal of Studies*, 12(3), 45–67."
+        placeholder={t("Doe, J., & Roe, R. (2025). A study of things. *Journal of Studies*, 12(3), 45–67.")}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
@@ -88,12 +90,11 @@ function CitationField({
         className="w-full resize-y rounded-control border border-line-input bg-input px-3 py-[11px] text-field leading-[1.6] text-ink shadow-control focus:border-primary"
       />
       <p id={`${id}-hint`} className="text-label text-muted">
-        In any citation style. Select words and press B or I to set them in bold or italics, like your name or the journal:
-        here they show as **bold** and *italic*.
+        {t("In any citation style. Select words and press B or I to set them in bold or italics, like your name or the journal: here they show as **bold** and *italic*.")}
       </p>
       {value.trim() && (
         <p className="rounded-control bg-paper px-3 py-2.5 text-sm text-pretty">
-          <span className="sr-only">How it looks: </span>
+          <span className="sr-only">{t("How it looks:")} </span>
           <CitationText text={value} />
         </p>
       )}
@@ -122,11 +123,11 @@ function PublicationForm({
         className="col-span-2"
         label={
           <>
-            Link <span className="font-normal text-muted">(optional)</span>
+            {rich("Link {span}", { span: <span className="font-normal text-muted">{t("(optional)")}</span> })}
           </>
         }
-        placeholder="doi.org/10.1000/xyz123, or just the DOI"
-        hint="A DOI on its own becomes its doi.org link. On a PDF, the link can be clicked."
+        placeholder={t("doi.org/10.1000/xyz123, or just the DOI")}
+        hint={t("A DOI on its own becomes its doi.org link. On a PDF, the link can be clicked.")}
         value={entry.link}
         onChange={(event) => set({ link: event.target.value })}
         onBlur={() => {
@@ -136,8 +137,8 @@ function PublicationForm({
       />
       <Checkbox
         className="col-span-2"
-        label="Show on resumes"
-        hint="Off keeps it in your profile, but leaves it off every resume and out of what the AI reads."
+        label={t("Show on resumes")}
+        hint={t("Off keeps it in your profile, but leaves it off every resume and out of what the AI reads.")}
         checked={entry.onResumes}
         onChange={(event) => set({ onResumes: event.target.checked })}
       />
@@ -154,7 +155,7 @@ export function PublicationsSection({ profile, update }: { profile: ProfileData;
     <EntryList
       items={profile.publications}
       setItems={(change) => update((current) => ({ ...current, publications: change(current.publications) }))}
-      addLabel="Add a publication"
+      addLabel={t("Add a publication")}
       ordering={{ mode: "manual", save: (ids) => reorderPublications({ ids }) }}
       summary={(entry) => ({
         title: citationExcerpt(entry.citation, 80) || "New publication",

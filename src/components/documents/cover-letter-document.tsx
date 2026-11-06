@@ -11,6 +11,7 @@ import { TONES } from "@/lib/tones";
 
 import { ContactLine, DocumentPage, plainUnit, type UnitRenderer } from "./document-page";
 import styles from "./document.module.css";
+import { t } from "@/lib/i18n";
 
 type CoverLetterDocumentProps = {
   theme: ThemeData;
@@ -69,7 +70,7 @@ export function CoverLetterDocument({
   const { lang, dir } = documentLanguage(language, paragraphs.map((unit) => unit.text).join(" "));
 
   return (
-    <DocumentPage theme={resolved} paper={paper} lang={lang} dir={dir} label="Cover letter" className={styles.letter}>
+    <DocumentPage theme={resolved} paper={paper} lang={lang} dir={dir} label={t("Cover letter")} className={styles.letter}>
       {renderUnit({
         id: "sender",
         className: styles.sender,

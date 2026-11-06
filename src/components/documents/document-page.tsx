@@ -7,6 +7,7 @@ import { CONTACT_SEPARATOR } from "@/lib/resume-content";
 import { PAPER_SIZES, SIDEBAR, type ResolvedTheme } from "@/lib/themes";
 
 import styles from "./document.module.css";
+import { t } from "@/lib/i18n";
 
 /** The theme's numbers as the custom properties document.module.css reads. */
 function themeStyle(theme: ResolvedTheme, paper: PaperSize): CSSProperties {
@@ -79,7 +80,7 @@ export function DocumentPage({
 }) {
   return (
     <article
-      aria-label={label}
+      aria-label={t(label)}
       lang={lang}
       dir={dir}
       className={cn(styles.page, themeClasses(theme), className)}
@@ -111,7 +112,7 @@ export const plainUnit: UnitRenderer = ({ id, className, head, children }) => (
 export function DocumentSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+      <h2 className={styles.sectionTitle}>{t(title)}</h2>
       {children}
     </section>
   );

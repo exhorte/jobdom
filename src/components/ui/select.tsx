@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
 import { controlClassName, FieldShell, useField, type FieldProps } from "./field";
+import { t } from "@/lib/i18n";
 
 export type SelectProps = ComponentProps<"select"> &
   FieldProps & {
@@ -26,7 +27,7 @@ export function Select({
 }: SelectProps) {
   const field = useField({ id, hint, error });
   return (
-    <FieldShell {...field} label={label} hint={hint} error={error} className={className}>
+    <FieldShell {...field} label={t(label)} hint={t(hint)} error={error} className={className}>
       <select
         {...field.controlProps}
         className={cn(controlClassName, "cursor-pointer px-2.5 py-2.5", selectClassName)}

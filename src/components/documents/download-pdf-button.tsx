@@ -6,6 +6,7 @@ import { toast } from "@/components/toast";
 import { buttonClassName, type ButtonSize, type ButtonVariant } from "@/components/ui/button";
 import { messages } from "@/lib/messages";
 import { downloadFrom, saveFile } from "@/lib/save-file";
+import { t } from "@/lib/i18n";
 
 /** The file name a download response asks for, preferring the UTF-8 one (RFC 6266). */
 export function fileNameFrom(disposition: string | null): string | null {
@@ -31,7 +32,7 @@ export function DownloadPdfButton({
   held = true,
   variant = "primary",
   size = "md",
-  progress = "Rendering your PDF on the server. It'll download in a moment.",
+  progress = t("Rendering your PDF on the server. It'll download in a moment."),
   children,
 }: {
   href: string;
@@ -82,7 +83,7 @@ export function DownloadPdfButton({
       }}
       className={buttonClassName(variant, size, variant === "primary" ? "hover:text-on-primary" : undefined)}
     >
-      {busy ? "Rendering…" : children}
+      {busy ? t("Rendering…") : children}
     </a>
   );
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { PageBarIcon } from "./page-bar-icon";
+import { t } from "@/lib/i18n";
 
 export type PageHeaderProps = {
   title: ReactNode;
@@ -23,13 +24,13 @@ export function PageHeader({ title, description, actions, before }: PageHeaderPr
       <PageBar>
         <div className="flex min-w-0 items-center gap-3">
           {before ?? <PageBarIcon />}
-          <h1 className="font-serif text-title text-pretty">{title}</h1>
+          <h1 className="font-serif text-title text-pretty">{t(title)}</h1>
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </PageBar>
       {/* The screen's content starts 32px under the bar, after the description if there is one. */}
       {description ? (
-        <p className="max-w-[620px] px-10 pt-1 pb-8 text-lead text-pretty text-muted">{description}</p>
+        <p className="max-w-[620px] px-10 pt-1 pb-8 text-lead text-pretty text-muted">{t(description)}</p>
       ) : (
         <div aria-hidden="true" className="h-8" />
       )}

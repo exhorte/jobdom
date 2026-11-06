@@ -1,6 +1,7 @@
 import { prettifyError, toJSONSchema, type z } from "zod";
 
 import type { AiProvider as AiProviderKind, Creativity } from "@/generated/prisma/enums";
+import { t } from "@/lib/i18n";
 
 import { AiError, toAiError } from "./errors";
 
@@ -152,7 +153,7 @@ export abstract class BaseProvider implements AIProvider {
   }
 
   private requireModel(): string {
-    if (!this.model) throw AiError.config("Choose a model in Settings → AI provider first.");
+    if (!this.model) throw AiError.config(t("Choose a model in Settings → AI provider first."));
     return this.model;
   }
 

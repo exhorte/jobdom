@@ -4,6 +4,7 @@ import { useId, type ComponentProps, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 /** What an entry needs to be reordered (E4-9): its drag handle, and where it is for the Move buttons. */
 export type Reorder = {
@@ -21,7 +22,7 @@ export function DragHandle({ ref, ...props }: ComponentProps<"span">) {
       ref={ref}
       {...props}
       aria-hidden="true"
-      title="Drag to reorder"
+      title={t("Drag to reorder")}
       className="flex w-7 flex-none cursor-grab touch-none items-center justify-end text-base text-faint select-none hover:text-muted active:cursor-grabbing"
     >
       ⠿
@@ -34,7 +35,7 @@ function MoveButton({ label, disabled, onClick, children }: { label: string; dis
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={t(label)}
       aria-disabled={disabled || undefined}
       onClick={() => !disabled && onClick()}
       className="grid size-6 place-items-center rounded-[6px] text-sm leading-none text-muted hover:bg-hover hover:text-ink aria-disabled:cursor-default aria-disabled:text-faint aria-disabled:hover:bg-transparent"
@@ -93,19 +94,19 @@ export function EntryCard({
           )}
         >
           <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-            <span className="text-[15.5px] font-medium">{title}</span>
-            <span className="text-control text-muted">{subtitle || "Not filled in yet"}</span>
+            <span className="text-[15.5px] font-medium">{t(title)}</span>
+            <span className="text-control text-muted">{subtitle || t("Not filled in yet")}</span>
             {meta && <span className="text-meta text-muted tabular-nums">{meta}</span>}
             {footnote && <span className="mt-[3px] text-label text-muted">{footnote}</span>}
           </span>
-          <span className="w-10 flex-none text-right text-meta text-muted">{open ? "Close" : "Edit"}</span>
+          <span className="w-10 flex-none text-right text-meta text-muted">{open ? t("Close") : t("Edit")}</span>
         </button>
         {reorder && (
           <span className="flex flex-none flex-col justify-center gap-0.5 pr-3">
-            <MoveButton label={`Move “${title}” up`} disabled={reorder.first} onClick={reorder.moveUp}>
+            <MoveButton label={t("Move “{title}” up", { title })} disabled={reorder.first} onClick={reorder.moveUp}>
               ↑
             </MoveButton>
-            <MoveButton label={`Move “${title}” down`} disabled={reorder.last} onClick={reorder.moveDown}>
+            <MoveButton label={t("Move “{title}” down", { title })} disabled={reorder.last} onClick={reorder.moveDown}>
               ↓
             </MoveButton>
           </span>
@@ -116,10 +117,10 @@ export function EntryCard({
           {children}
           <div className="flex items-center justify-between">
             <Button variant="danger-text" size="sm" onClick={onRemove}>
-              Remove
+              {t("Remove")}
             </Button>
             <Button variant="secondary" size="sm" className="bg-input" onClick={onToggle}>
-              Done
+              {t("Done")}
             </Button>
           </div>
         </div>
@@ -146,7 +147,7 @@ export function AddEntryButton({ children, onClick, disabled }: { children: Reac
 export function EmptyEntries() {
   return (
     <div className="rounded-panel border border-dashed border-line-strong p-9 text-center text-sm text-muted">
-      Nothing here yet. Add your first one below.
+      {t("Nothing here yet. Add your first one below.")}
     </div>
   );
 }

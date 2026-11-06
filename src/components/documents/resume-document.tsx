@@ -11,6 +11,7 @@ import { PHOTO_SHAPES, resolveTheme, type ThemeData } from "@/lib/themes";
 
 import { Contact, ContactLine, DocumentPage, DocumentSection, plainUnit, type UnitRenderer } from "./document-page";
 import styles from "./document.module.css";
+import { t } from "@/lib/i18n";
 
 type ResumeDocumentProps = ResumeOptions & {
   theme: ThemeData;
@@ -231,11 +232,11 @@ export function ResumeDocument({ theme, profile, paper, layout, language, render
   const beside = content.photo && (position === PhotoPosition.HEADER_START || position === PhotoPosition.HEADER_END);
 
   return (
-    <DocumentPage theme={resolved} paper={paper} lang={lang} dir={dir} label="Resume">
+    <DocumentPage theme={resolved} paper={paper} lang={lang} dir={dir} label={t("Resume")}>
       <header className={cn(styles.header, beside && styles.headerWithPhoto)}>
         {position === PhotoPosition.ABOVE_NAME && photo("header", styles.photoAbove)}
         {position === PhotoPosition.HEADER_START && photo("header")}
-        {beside ? <div className={styles.headerText}>{title}</div> : title}
+        {beside ? <div className={styles.headerText}>{t(title)}</div> : t(title)}
         {position === PhotoPosition.HEADER_END && photo("header")}
       </header>
       <div className={styles.columns}>
@@ -289,7 +290,7 @@ function EntryHead({ title, at, dates, timeline }: { title: string; at: ReactNod
     <div className={styles.entryHead}>
       {timeline && datesSpan}
       <p>
-        <span className={styles.entryTitle}>{title}</span>
+        <span className={styles.entryTitle}>{t(title)}</span>
         {at && (
           <>
             {title && ", "}

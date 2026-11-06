@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { action, ActionError } from "@/lib/action";
+import { t, tx } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_BASE_THEME } from "@/lib/settings";
 import { loadSettings, saveSettings } from "@/lib/settings-data";
@@ -11,7 +12,7 @@ import { THEME_FIELDS } from "@/lib/theme-data";
 import { parseThemeFile, themeFieldsSchema } from "@/lib/theme-file";
 import type { ThemeData } from "@/lib/themes";
 
-const THEME_GONE = "That theme doesn't exist anymore. Reload the page to see your themes.";
+const THEME_GONE = tx("That theme doesn't exist anymore. Reload the page to see your themes.");
 
 /** Makes a theme the base resume theme (RES-2). */
 export const setBaseTheme = action(z.object({ id: z.string().min(1) }), async ({ id }) => {
@@ -35,7 +36,7 @@ export const saveTheme = action(
       if (id) {
         const existing = await tx.theme.findUnique({ where: { id }, select: { builtIn: true } });
         if (!existing) throw new ActionError(THEME_GONE);
-        if (existing.builtIn) throw new ActionError("Built-in themes can't be changed. Save it as a new theme instead.");
+        if (existing.builtIn) throw new ActionError(t("Built-in themes can't be changed. Save it as a new theme instead."));
         saved = await tx.theme.update({ where: { id }, data: fields, select: THEME_FIELDS });
       } else {
         saved = await tx.theme.create({ data: fields, select: THEME_FIELDS });
@@ -43,7 +44,7 @@ export const saveTheme = action(
       await saveSettings({ baseThemeId: saved.id }, tx);
       return saved;
     });
-    toast(`Saved “${theme.name}”. It's now your base resume theme.`);
+    toast(t("Saved “{name}”. It's now your base resume theme.", { name: theme.name }));
     revalidatePath("/resume");
     return theme;
   },
@@ -56,11 +57,11 @@ export const duplicateTheme = action(z.object({ id: z.string().min(1) }), async 
   const original = await prisma.theme.findUnique({ where: { id }, select: { ...THEME_FIELDS, id: false, builtIn: false } });
   if (!original) throw new ActionError(THEME_GONE);
   const copy = await prisma.$transaction(async (tx) => {
-    const created = await tx.theme.create({ data: { ...original, name: `${original.name} copy`.slice(0, 60) }, select: THEME_FIELDS });
+    const created = await tx.theme.create({ data: { ...original, name: t("{name} copy", { name: original.name }).slice(0, 60) }, select: THEME_FIELDS });
     await saveSettings({ baseThemeId: created.id }, tx);
     return created;
   });
-  toast(`Made “${copy.name}”. It's now your base resume theme.`);
+  toast(t("Made “{name}”. It's now your base resume theme.", { name: copy.name }));
   revalidatePath("/resume");
   return copy;
 });
@@ -73,7 +74,7 @@ export const duplicateTheme = action(z.object({ id: z.string().min(1) }), async 
 export const deleteTheme = action(z.object({ id: z.string().min(1) }), async ({ id }, { toast }) => {
   const theme = await prisma.theme.findUnique({ where: { id }, select: { name: true, builtIn: true } });
   if (!theme) throw new ActionError(THEME_GONE);
-  if (theme.builtIn) throw new ActionError("Built-in themes can't be deleted.");
+  if (theme.builtIn) throw new ActionError(t("Built-in themes can't be deleted."));
   const baseThemeId = await prisma.$transaction(async (tx) => {
     let base = (await loadSettings()).baseThemeId;
     if (base === id) {
@@ -83,7 +84,7 @@ export const deleteTheme = action(z.object({ id: z.string().min(1) }), async ({ 
     await tx.theme.delete({ where: { id } });
     return base;
   });
-  toast(`Deleted “${theme.name}”.`);
+  toast(t("Deleted “{name}”.", { name: theme.name }));
   revalidatePath("/resume");
   return { baseThemeId };
 });
@@ -97,7 +98,7 @@ export const importTheme = action(z.object({ file: z.unknown() }), async ({ file
     await saveSettings({ baseThemeId: created.id }, tx);
     return created;
   });
-  toast(`Imported “${theme.name}”. It's now your base resume theme.`);
+  toast(t("Imported “{name}”. It's now your base resume theme.", { name: theme.name }));
   revalidatePath("/resume");
   return theme;
 });

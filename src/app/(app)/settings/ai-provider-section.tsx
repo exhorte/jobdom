@@ -10,9 +10,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { AiProvider } from "@/generated/prisma/enums";
-import { API_KEY_UNREADABLE, PROVIDER_OPTIONS, providerOption, type AiSettingsView } from "@/lib/ai/provider-options";
+import { API_KEY_UNREADABLE, providerOption, providerOptions, type AiSettingsView } from "@/lib/ai/provider-options";
 import { cn } from "@/lib/cn";
 import { useAutosave } from "@/hooks/use-autosave";
+import { intlLocale, t, tx } from "@/lib/i18n";
 
 import { listAiModels, saveAiProvider, saveApiKey, testAiConnection } from "./actions";
 import { SettingsSectionIntro } from "./settings-screen";
@@ -33,7 +34,7 @@ const looksLikeUrl = (value: string) => /^https?:\/\/\S+$/i.test(value.trim());
 
 /** What a hosted model is sent (profileForPrompt and the tasks in src/lib/ai/tasks; PRIVACY.md). */
 const SENT_TO_HOSTED =
-  "your profile without contact details, your facts about you, the postings you add and the facts you give for each one, and, when you refine, the drafts and your chat messages. Importing a resume sends its whole text, contact details included. With Gmail connected, it also gets each reply it reads or answers, with earlier mail in the thread. The notes you keep on an application are never sent.";
+  tx("your profile without contact details, your facts about you, the postings you add and the facts you give for each one, and, when you refine, the drafts and your chat messages. Importing a resume sends its whole text, contact details included. With Gmail connected, it also gets each reply it reads or answers, with earlier mail in the thread. The notes you keep on an application are never sent.");
 
 /**
  * Settings → AI provider (E6-3, SET-1, SET-2). Each field saves on its own:
@@ -131,17 +132,17 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
 
   return (
     <>
-      <SettingsSectionIntro title="AI provider">
-        This is what reads job postings and writes your drafts. A local model keeps everything on your machine.
+      <SettingsSectionIntro title={t("AI provider")}>
+        {t("This is what reads job postings and writes your drafts. A local model keeps everything on your machine.")}
       </SettingsSectionIntro>
 
       <RadioGroup.Root
-        aria-label="Provider"
+        aria-label={t("Provider")}
         value={provider}
         onValueChange={(value) => chooseProvider(value as AiProvider)}
         className="grid grid-cols-1 gap-3 sm:grid-cols-2"
       >
-        {PROVIDER_OPTIONS.map((entry) => (
+        {providerOptions().map((entry) => (
           <RadioGroup.Item
             key={entry.value}
             value={entry.value}
@@ -159,7 +160,7 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
               </span>
             </span>
             <span id={`provider-${entry.value}`} className="flex flex-col gap-1.5">
-              <span className="text-meta text-muted">{entry.description}</span>
+              <span className="text-meta text-muted">{t(entry.description)}</span>
               <span className="text-xs text-muted">{entry.tag}</span>
             </span>
           </RadioGroup.Item>
@@ -169,15 +170,15 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
       {!option.local && (
         <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
           {option.vendor
-            ? `${option.vendor} receives what each task needs: ${SENT_TO_HOSTED} How long it's kept and where it's processed depend on your account with ${option.vendor}.`
-            : `This server receives what each task needs: ${SENT_TO_HOSTED} If it isn't on your own network, all this leaves your server, and how long it's kept is up to whoever runs it.`}
+            ? t("{vendor} receives what each task needs: {SENT_TO_HOSTED} How long it's kept and where it's processed depend on your account with {vendor2}.", { vendor: option.vendor, SENT_TO_HOSTED: t(SENT_TO_HOSTED), vendor2: option.vendor })
+            : t("This server receives what each task needs: {SENT_TO_HOSTED} If it isn't on your own network, all this leaves your server, and how long it's kept is up to whoever runs it.", { SENT_TO_HOSTED: t(SENT_TO_HOSTED) })}
         </p>
       )}
 
       <Card className="grid grid-cols-1 gap-x-[18px] gap-y-5 sm:grid-cols-2">
         <Input
           className="sm:col-span-2"
-          label="Server address"
+          label={t("Server address")}
           inputClassName="font-mono text-[13.5px]"
           value={baseUrl}
           placeholder={option.urlPlaceholder}
@@ -193,14 +194,14 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
           }}
           hint={
             urlLeft && baseUrl.trim() && !looksLikeUrl(baseUrl)
-              ? "Start the address with http:// or https://."
+              ? t("Start the address with http:// or https://.")
               : option.urlHint
           }
         />
 
         <div className="flex flex-col gap-2.5">
           <Select
-            label="Model"
+            label={t("Model")}
             value={otherModel ? OTHER_MODEL : model}
             onChange={(event) => {
               if (event.target.value === OTHER_MODEL) {
@@ -212,19 +213,19 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
               changed();
               setSaveNow((count) => count + 1);
             }}
-            hint={!modelList.loading && modelList.problem ? `Couldn't list the models: ${modelList.problem}` : undefined}
+            hint={!modelList.loading && modelList.problem ? t("Couldn't list the models: {problem}", { problem: modelList.problem }) : undefined}
           >
-            {!model && !otherModel && <option value="">{modelList.loading ? "Loading models…" : "Choose a model"}</option>}
+            {!model && !otherModel && <option value="">{modelList.loading ? t("Loading models…") : t("Choose a model")}</option>}
             {models.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
             ))}
-            <option value={OTHER_MODEL}>Other model…</option>
+            <option value={OTHER_MODEL}>{t("Other model…")}</option>
           </Select>
           {otherModel && (
             <Input
-              label="Model name"
+              label={t("Model name")}
               value={model}
               placeholder="e.g. llama3.1:8b"
               spellCheck={false}
@@ -241,17 +242,17 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
         {option.apiKey ? (
           <div className="flex flex-col gap-2.5">
             <Input
-              label={option.apiKey.label}
-              hint={keyState === "unreadable" ? undefined : option.apiKey.hint}
+              label={t(option.apiKey.label)}
+              hint={keyState === "unreadable" ? undefined : t(option.apiKey.hint)}
               type="password"
               autoComplete="off"
               value={keyInput}
               placeholder={
                 keyState === "set"
-                  ? "Saved · type a new key to replace it"
+                  ? t("Saved · type a new key to replace it")
                   : keyState === "env"
-                    ? "Using DOSSIER_AI_KEY · type one to save it here"
-                    : "Stored encrypted on your server"
+                    ? t("Using DOSSIER_AI_KEY · type one to save it here")
+                    : t("Stored encrypted on your server")
               }
               error={keyState === "unreadable" ? API_KEY_UNREADABLE : undefined}
               onChange={(event) => setKeyInput(event.target.value)}
@@ -267,20 +268,20 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
             />
             {(keyState === "set" || keyState === "unreadable") && (
               <Button variant="text" size="sm" className="self-start" onClick={() => void saveKey({ action: "clear" })}>
-                Remove saved key
+                {t("Remove saved key")}
               </Button>
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-[7px]">
-            <span className="text-label text-muted">API key</span>
-            <p className="py-[11px] text-sm text-muted">Not needed for a local model</p>
+            <span className="text-label text-muted">{t("API key")}</span>
+            <p className="py-[11px] text-sm text-muted">{t("Not needed for a local model")}</p>
           </div>
         )}
 
         <div className="flex flex-wrap items-center gap-3.5 pt-1 sm:col-span-2">
           <Button variant="secondary" onClick={() => void test()} disabled={connection.status === "testing"}>
-            {connection.status === "testing" ? "Testing…" : "Test connection"}
+            {connection.status === "testing" ? t("Testing…") : t("Test connection")}
           </Button>
           <ConnectionStatus connection={connection} />
         </div>
@@ -292,12 +293,12 @@ export function AiProviderSection({ initial }: { initial: AiSettingsView }) {
 function ConnectionStatus({ connection }: { connection: Connection }) {
   const [dot, text, message] =
     connection.status === "connected"
-      ? ["bg-success", "text-success", `Connected · ${connection.model} answered in ${connection.seconds.toLocaleString("en-US")} s`]
+      ? ["bg-success", "text-success", t("Connected · {model} answered in {connection} s", { model: connection.model, connection: connection.seconds.toLocaleString(intlLocale()) })]
       : connection.status === "failed"
         ? ["bg-error", "text-error", connection.message]
         : connection.status === "testing"
-          ? ["bg-status-offer", "text-muted", "Sending a short test prompt…"]
-          : ["bg-faint", "text-muted", "Not tested since your last change"];
+          ? ["bg-status-offer", "text-muted", t("Sending a short test prompt…")]
+          : ["bg-faint", "text-muted", t("Not tested since your last change")];
   return (
     <p role="status" className={cn("flex items-start gap-2 text-control", text)}>
       {/* One line high, so the dot stays by the first line when the message wraps. */}

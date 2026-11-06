@@ -2,6 +2,7 @@
 
 import { ScreenError, type ErrorPageProps } from "@/components/screen-error";
 import { fontVariables } from "@/fonts";
+import { t } from "@/lib/i18n";
 
 import "./globals.css";
 
@@ -10,9 +11,9 @@ export default function GlobalError(props: ErrorPageProps) {
   return (
     <html lang="en" className={`${fontVariables} h-full antialiased`}>
       <body className="min-h-full">
-        <title>Dossier didn&apos;t load</title>
+        <title>{t("Dossier didn't load")}</title>
         <main className="flex min-h-screen justify-center">
-          <ScreenError {...props} standalone title="Dossier didn't load" />
+          <ScreenError {...props} standalone title={t("Dossier didn't load")} />
         </main>
       </body>
     </html>

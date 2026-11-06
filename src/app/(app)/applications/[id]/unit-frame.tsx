@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { Unit } from "@/lib/application-data";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 import { isBulletUnit } from "@/lib/unit-text";
 
 import styles from "./unit-frame.module.css";
@@ -77,7 +78,7 @@ export function UnitFrame({
       className={cn(className, styles.frame, flashing && styles.flash, busy && styles.busy, editing && styles.editing)}
       data-unit={id}
       role="group"
-      aria-label={unit.label}
+      aria-label={t(unit.label)}
       aria-busy={busy || undefined}
       tabIndex={editing ? -1 : 0}
     >
@@ -89,7 +90,7 @@ export function UnitFrame({
       {flagged && <CheckThis facts={unit.unverified!} />}
       {busy ? (
         <span className={cn(styles.status, "rounded-[6px] border border-line-popover bg-card px-2 py-1 font-sans text-[11.5px] leading-[1.2] text-muted")}>
-          Rewriting…
+          {t("Rewriting…")}
         </span>
       ) : (
         !editing && (
@@ -100,21 +101,21 @@ export function UnitFrame({
             )}
           >
             <button type="button" className={toolButton} onClick={onEdit}>
-              Edit
+              {t("Edit")}
             </button>
             {onRegenerate && (
               <button type="button" className={toolButton} onClick={onRegenerate}>
-                Regenerate
+                {t("Regenerate")}
               </button>
             )}
             {onAskAi && (
               <button type="button" className={toolButton} onClick={onAskAi}>
-                Ask AI
+                {t("Ask AI")}
               </button>
             )}
             {onLeaveOut && (
               <button type="button" className={toolButton} onClick={onLeaveOut}>
-                Leave out
+                {t("Leave out")}
               </button>
             )}
           </div>
@@ -142,7 +143,7 @@ function UnitEditor({
   return (
     <div className={cn(styles.editor, "mt-1 flex flex-col gap-2 font-sans")} dir="auto">
       <textarea
-        aria-label={`Edit ${unit.label}`}
+        aria-label={t("Edit {label}", { label: unit.label })}
         aria-describedby={isBulletUnit(unit.id) ? `${unit.id}-hint` : undefined}
         // Opened on request, so the text box takes focus.
         autoFocus
@@ -164,14 +165,14 @@ function UnitEditor({
       <div className="flex items-center justify-end gap-1.5">
         {isBulletUnit(unit.id) && (
           <span id={`${unit.id}-hint`} className="mr-auto text-xs text-muted">
-            One bullet per line
+            {t("One bullet per line")}
           </span>
         )}
         <Button variant="secondary" size="sm" className="min-h-[calc(var(--px)*30)] bg-input" onClick={onCancel} disabled={saving}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button size="sm" className="min-h-[calc(var(--px)*30)]" onClick={() => onSave(value)} disabled={saving}>
-          {saving ? "Saving…" : "Save"}
+          {saving ? t("Saving…") : t("Save")}
         </Button>
       </div>
     </div>
@@ -184,8 +185,8 @@ function CheckThis({ facts }: { facts: string[] }) {
   return (
     <Popover.Root>
       <Popover.Trigger
-        aria-label={`Check this: ${quoted}`}
-        title="Check this"
+        aria-label={t("Check this: {quoted}", { quoted })}
+        title={t("Check this")}
         className={cn(
           styles.check,
           "grid size-4 place-items-center rounded-full border border-warning-line bg-warning-surface font-sans text-[11px] leading-none font-bold text-warning",
@@ -201,10 +202,11 @@ function CheckThis({ facts }: { facts: string[] }) {
           collisionPadding={16}
           className="z-30 flex max-w-[280px] flex-col gap-1 rounded-card border border-line-popover bg-card px-3.5 py-3 text-meta shadow-menu"
         >
-          <p className="font-medium">Check this</p>
+          <p className="font-medium">{t("Check this")}</p>
           <p className="text-muted">
-            I couldn&apos;t find {quoted} in your profile or the posting. If {facts.length === 1 ? "it isn't" : "they aren't"}{" "}
-            right, edit this part before you send it.
+            {facts.length === 1
+              ? t("I couldn't find {quoted} in your profile or the posting. If it isn't right, edit this part before you send it.", { quoted })
+              : t("I couldn't find {quoted} in your profile or the posting. If they aren't right, edit this part before you send it.", { quoted })}
           </p>
         </Popover.Content>
       </Popover.Portal>

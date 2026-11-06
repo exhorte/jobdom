@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { t } from "@/lib/i18n";
+
 import { googleFetch } from "./account";
 import { googleUrl } from "./endpoints";
 import { isGone } from "./errors";
@@ -90,11 +92,11 @@ export function readMessage(json: unknown): ReadMail {
     id: message.id,
     threadId: message.threadId,
     labels: message.labelIds,
-    from: decodeHeader(header(payload, "From")),
+    from: decodeHeader(header(payload, t("From"))),
     to: decodeHeader(header(payload, "To")),
-    subject: decodeHeader(header(payload, "Subject")),
+    subject: decodeHeader(header(payload, t("Subject"))),
     messageId: header(payload, "Message-ID") || header(payload, "Message-Id"),
-    references: header(payload, "References"),
+    references: header(payload, t("References")),
     date: Number.isNaN(date.getTime()) ? new Date() : date,
     text,
   };

@@ -20,6 +20,7 @@ import type { ApplicationStatus } from "@/generated/prisma/enums";
 import type { ApplicationRow } from "@/lib/applications-data";
 import { statusLabel } from "@/lib/applications-list";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 import { RowMenu } from "./row-menu";
 
@@ -120,7 +121,7 @@ function Column({ status, count, children }: { status: ApplicationStatus; count:
         <span className="flex-1 text-control font-medium">{statusLabel(status)}</span>{" "}
         <span className="text-label text-muted tabular-nums">
           {count}{" "}
-          <span className="sr-only">{count === 1 ? "application" : "applications"}</span>
+          <span className="sr-only">{count === 1 ? t("application") : t("applications")}</span>
         </span>
       </h2>
       {count > 0 ? (
@@ -128,7 +129,7 @@ function Column({ status, count, children }: { status: ApplicationStatus; count:
         // at the side and focus rings aren't cut off; the heading stays.
         <ul className="-mx-3 -mt-1 -mb-3 flex min-h-0 flex-1 scrollbar-subtle flex-col gap-2.5 overflow-y-auto px-3 pt-1 pb-3">{children}</ul>
       ) : (
-        <p className="px-2.5 py-5 text-center text-label text-muted">Nothing here yet</p>
+        <p className="px-2.5 py-5 text-center text-label text-muted">{t("Nothing here yet")}</p>
       )}
     </section>
   );
@@ -167,8 +168,8 @@ function CardFace({ row, lifted = false, onOpen }: { row: ApplicationRow; lifted
       )}
     >
       <p className="flex items-baseline justify-between gap-2 text-label text-muted">
-        {row.company || "No company"}
-        {row.archived && <span className="rounded-[6px] bg-track px-1.5 text-xs">Archived</span>}
+        {row.company || t("No company")}
+        {row.archived && <span className="rounded-[6px] bg-track px-1.5 text-xs">{t("Archived")}</span>}
       </p>
       {/* The link covers the card, so clicking anywhere opens it. */}
       <Link
@@ -182,11 +183,11 @@ function CardFace({ row, lifted = false, onOpen }: { row: ApplicationRow; lifted
       {place && <p className="text-label text-muted">{place}</p>}
       {row.status === "DRAFT" && row.deadline && (
         <p className="flex">
-          <span className="rounded-[6px] bg-warning-surface px-2 py-[3px] text-xs text-warning">Apply by {row.deadline}</span>
+          <span className="rounded-[6px] bg-warning-surface px-2 py-[3px] text-xs text-warning">{t("Apply by {deadline}", { deadline: row.deadline })}</span>
         </p>
       )}
       <p className="mt-0.5 flex justify-between gap-2 border-t border-line pt-1.5 text-xs text-muted">
-        <span>{row.match ? `${row.match.hit}/${row.match.total} match` : "Not matched"}</span>
+        <span>{row.match ? t("{hit}/{total} match", { hit: row.match.hit, total: row.match.total }) : t("Not matched")}</span>
         <span>{row.updated}</span>
       </p>
     </div>

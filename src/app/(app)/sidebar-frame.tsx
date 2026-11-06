@@ -4,6 +4,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { createContext, use, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 import { rememberPreference, SIDEBAR_COOKIE } from "@/lib/ui-preferences";
 
 const CollapsedContext = createContext<{ collapsed: boolean; expand: () => void }>({ collapsed: false, expand: () => {} });
@@ -70,8 +71,8 @@ export function SidebarFrame({
           <button
             type="button"
             onClick={toggle}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("Expand sidebar") : t("Collapse sidebar")}
+            title={collapsed ? t("Expand sidebar") : t("Collapse sidebar")}
             className={cn(
               "grid size-7 shrink-0 place-items-center rounded-control text-muted hover:bg-hover hover:text-ink",
               collapsed &&

@@ -2,6 +2,8 @@ import { countryName } from "./countries";
 import type { JobSource } from "./search";
 import { SOURCE_INFO } from "./sources";
 
+import { t } from "@/lib/i18n";
+
 // What can go wrong when searching a job source, in words people can act on
 // (E14-1). A source's own error text never reaches the screen or the logs.
 
@@ -40,19 +42,19 @@ export class JobSearchError extends Error {
 export function jobSearchError(problem: JobSearchProblem, source: JobSource, { country = "", detail }: { country?: string; detail?: string } = {}) {
   const { name, quotaPeriod } = SOURCE_INFO[source];
   const message = {
-    off: `${name} isn't offered on this server. Choose another source in Settings → Job search.`,
-    "not-accepted": `Read the note about ${name} and tick “I understand” before Dossier searches it.`,
-    "no-key": `Add your ${name} ${source === "ADZUNA" ? "app ID and key" : "key"} in Settings → Job search first.`,
-    key: `${name} didn't accept your key. Check it in Settings → Job search.`,
+    off: t("{name} isn't offered on this server. Choose another source in Settings → Job search.", { name }),
+    "not-accepted": t("Read the note about {name} and tick “I understand” before Dossier searches it.", { name }),
+    "no-key": t("Add your {name} {source} in Settings → Job search first.", { name, source: source === "ADZUNA" ? t("app ID and key") : "key" }),
+    key: t("{name} didn't accept your key. Check it in Settings → Job search.", { name }),
     quota: quotaPeriod
-      ? `You've used up your ${name} searches for ${quotaPeriod}. Try again then, or move to a bigger plan.`
-      : `${name} is limiting searches right now. Wait a minute and try again.`,
-    country: `${name} doesn't list jobs in ${countryName(country)}. Choose another country, or another source in Settings → Job search.`,
-    unavailable: `${name} isn't answering right now. Try again in a minute.`,
+      ? t("You've used up your {name} searches for {quotaPeriod}. Try again then, or move to a bigger plan.", { name, quotaPeriod })
+      : t("{name} is limiting searches right now. Wait a minute and try again.", { name }),
+    country: t("{name} doesn't list jobs in {countryName}. Choose another country, or another source in Settings → Job search.", { name, countryName: countryName(country) }),
+    unavailable: t("{name} isn't answering right now. Try again in a minute.", { name }),
     changed:
       source === "ARBEITSAGENTUR"
-        ? "The Arbeitsagentur's job search has changed or isn't answering. Try another source in Settings → Job search."
-        : `${name} answered in a way Dossier doesn't understand; its service may have changed. Try again later.`,
+        ? t("The Arbeitsagentur's job search has changed or isn't answering. Try another source in Settings → Job search.")
+        : t("{name} answered in a way Dossier doesn't understand; its service may have changed. Try again later.", { name }),
   }[problem];
   return new JobSearchError(problem, message, detail ? `${source}: ${detail}` : undefined);
 }

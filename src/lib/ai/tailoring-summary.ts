@@ -1,5 +1,6 @@
 import type { Tone } from "@/generated/prisma/enums";
 import type { Match, Unit } from "@/lib/application-data";
+import { listOf, t, tp } from "@/lib/i18n";
 import { isParagraph } from "@/lib/letter-frame";
 import { sameName, type ProfileData } from "@/lib/profile";
 import { TONES } from "@/lib/tones";
@@ -12,11 +13,6 @@ import { TONES } from "@/lib/tones";
 export type TailoringSummary = { intro: string; list: string[]; foot: string };
 
 const same = (a: string, b: string) => a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
-
-/** "A, B and C" */
-function listOf(names: string[]): string {
-  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-}
 
 export function tailoringSummary({
   profile,
@@ -45,14 +41,17 @@ export function tailoringSummary({
   /** Settings → "Show what changed" (SET-5). */
   showChanges: boolean;
 }): TailoringSummary {
-  const where = company.trim() || "this job";
+  const where = company.trim() || t("this job");
   const unit = (id: string) => resume.find((entry) => entry.id === id);
   const list: string[] = [];
 
   const summary = unit("summary")?.text ?? "";
-  const forRole = role.trim() ? `for the ${role.trim()} role` : "for this job";
-  if (summary && !profile.basics.summary.trim()) list.push(`Wrote a summary ${forRole}`);
-  else if (summary && !same(summary, profile.basics.summary)) list.push(`Rewrote your summary ${forRole}`);
+  const roleName = role.trim();
+  if (summary && !profile.basics.summary.trim()) {
+    list.push(roleName ? t("Wrote a summary for the {role} role", { role: roleName }) : t("Wrote a summary for this job"));
+  } else if (summary && !same(summary, profile.basics.summary)) {
+    list.push(roleName ? t("Rewrote your summary for the {role} role", { role: roleName }) : t("Rewrote your summary for this job"));
+  }
 
   const reworded = profile.experience.filter((entry) => {
     const tailored = unit(`experience:${entry.id}`);
@@ -61,8 +60,8 @@ export function tailoringSummary({
   if (reworded.length > 0) {
     list.push(
       reworded.length === profile.experience.length && reworded.length > 1
-        ? `Reworded all ${reworded.length} roles to lead with what ${where} asks for`
-        : `Reworded your ${listOf(reworded.map((entry) => entry.company || entry.role))} ${reworded.length === 1 ? "role" : "roles"} for this job`,
+        ? t("Reworded all {count} roles to lead with what {where} asks for", { count: reworded.length, where })
+        : tp(reworded.length, "Reworded your {names} role for this job", "Reworded your {names} roles for this job", { names: listOf(reworded.map((entry) => entry.company || entry.role)) }),
     );
   }
 
@@ -71,52 +70,58 @@ export function tailoringSummary({
     return tailored && !same(tailored.text, entry.bullets.split("\n").map((line) => line.trim()).filter(Boolean).join("\n"));
   });
   if (projects.length > 0) {
-    list.push(`Reworded your ${listOf(projects.map((entry) => entry.name || "untitled"))} ${projects.length === 1 ? "project" : "projects"} for this job`);
+    list.push(tp(projects.length, "Reworded your {names} project for this job", "Reworded your {names} projects for this job", { names: listOf(projects.map((entry) => entry.name || t("untitled"))) }));
   }
 
   const publications = resume.filter((entry) => entry.id.startsWith("publication:")).length;
-  if (publications > 0) list.push(`Kept your ${publications === 1 ? "publication" : `${publications} publications`} word for word`);
+  if (publications > 0) list.push(tp(publications, "Kept your publication word for word", "Kept your {count} publications word for word"));
 
   const skills = (unit("skills")?.text ?? "").split(" · ").filter(Boolean);
   const profileSkills = profile.skills.map((skill) => skill.name);
   const kept = profileSkills.filter((name) => skills.some((skill) => sameName(skill, name)));
   if (skills.length > 1 && !skills.every((skill, index) => kept[index] && sameName(skill, kept[index]))) {
-    list.push(`Ordered your skills by what ${where} asks for`);
+    list.push(t("Ordered your skills by what {where} asks for", { where }));
   }
   const dropped = profileSkills.filter((name) => !skills.some((skill) => sameName(skill, name)));
   if (skills.length > 0 && dropped.length > 0) {
-    list.push(dropped.length <= 3 ? `Left out ${listOf(dropped)}, which this job isn't about` : `Left out ${dropped.length} skills that don't help here`);
+    list.push(dropped.length <= 3 ? t("Left out {names}, which this job isn't about", { names: listOf(dropped) }) : t("Left out {count} skills that don't help here", { count: dropped.length }));
   }
 
   if (profile.references.length > 0) {
     list.push(
       references === "included"
-        ? "Included your references, since the posting asks for them"
+        ? t("Included your references, since the posting asks for them")
         : references === "not-asked"
-          ? "Left out references, since the posting doesn't ask for them"
-          : "Left out references, as set in Settings",
+          ? t("Left out references, since the posting doesn't ask for them")
+          : t("Left out references, as set in Settings"),
     );
   }
 
-  if (letter.some(isParagraph)) list.push(`Wrote a ${TONES[tone].label.toLowerCase()} cover letter`);
+  if (letter.some(isParagraph)) list.push(t("Wrote a {tone} cover letter", { tone: t(TONES[tone].label).toLowerCase() }));
   const gaps = match.items.filter((item) => item.result === "gap").map((item) => `“${item.requirement}”`);
-  if (gaps.length > 0) list.push(`Worth being ready to talk about ${listOf(gaps)}, since ${gaps.length === 1 ? "it isn't" : "they aren't"} in your profile`);
-  if (note.trim()) list.push(`Took your note into account: “${note.trim()}”`);
+  if (gaps.length > 0) {
+    list.push(
+      gaps.length === 1
+        ? t("Worth being ready to talk about {names}, since it isn't in your profile", { names: listOf(gaps) })
+        : t("Worth being ready to talk about {names}, since they aren't in your profile", { names: listOf(gaps) }),
+    );
+  }
+  if (note.trim()) list.push(t("Took your note into account: “{note}”", { note: note.trim() }));
 
   const flagged = [...resume, ...letter].reduce((count, entry) => count + (entry.unverified?.length ?? 0), 0);
   if (strict && flagged > 0) {
-    list.push(`Marked ${flagged === 1 ? "one detail" : `${flagged} details`} to check (not in your profile or the posting)`);
+    list.push(tp(flagged, "Marked one detail to check (not in your profile or the posting)", "Marked {count} details to check (not in your profile or the posting)"));
   }
 
   const foot = !strict
-    ? "“Never invent experience” is off, so check the facts before you send anything."
+    ? t("“Never invent experience” is off, so check the facts before you send anything.")
     : flagged > 0
-      ? "Double-check the marked details before you send anything."
-      : "Nothing invented: every line comes from your profile.";
+      ? t("Double-check the marked details before you send anything.")
+      : t("Nothing invented: every line comes from your profile.");
 
   return showChanges
-    ? { intro: `Here's what I tailored for ${where}:`, list, foot }
-    : { intro: `Your tailored resume and cover letter for ${where} are ready.`, list: [], foot };
+    ? { intro: t("Here's what I tailored for {where}:", { where }), list, foot }
+    : { intro: t("Your tailored resume and cover letter for {where} are ready.", { where }), list: [], foot };
 }
 
 /** The message as stored: intro, a bulleted list, the footnote. */

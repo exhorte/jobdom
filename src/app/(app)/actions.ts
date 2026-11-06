@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { action, ActionError } from "@/lib/action";
 import { env } from "@/lib/env";
+import { t } from "@/lib/i18n";
 import { saveSettings } from "@/lib/settings-data";
 import { saveUsagePingChoice } from "@/lib/usage-ping";
 
@@ -28,7 +29,7 @@ export const rememberQuietDays = action(z.object({ days: z.number().int().min(1)
  */
 export const chooseUsagePing = action(z.object({ send: z.boolean() }), async ({ send }) => {
   if (env.DOSSIER_TELEMETRY) {
-    throw new ActionError(`DOSSIER_TELEMETRY=${env.DOSSIER_TELEMETRY} is set on the server, so it decides. Change it there.`);
+    throw new ActionError(t("DOSSIER_TELEMETRY={DOSSIER_TELEMETRY} is set on the server, so it decides. Change it there.", { DOSSIER_TELEMETRY: env.DOSSIER_TELEMETRY }));
   }
   await saveUsagePingChoice(send ? "on" : "off");
   revalidatePath("/", "layout");

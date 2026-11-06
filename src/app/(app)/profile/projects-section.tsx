@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutosave } from "@/hooks/use-autosave";
+import { t } from "@/lib/i18n";
 import { formatDateRange, type EntryOrder, type ProfileData, type ProjectItem } from "@/lib/profile";
 
 import {
@@ -47,40 +48,40 @@ function ProjectForm({
   return (
     <div className="grid grid-cols-2 gap-[18px]" onBlur={flush}>
       <Input
-        label="Project"
-        placeholder="Churn predictor"
+        label={t("Project")}
+        placeholder={t("Churn predictor")}
         value={entry.name}
         onChange={(event) => set({ name: event.target.value })}
         autoFocus={autoFocus}
       />
       <Input
-        label="Link"
+        label={t("Link")}
         placeholder="github.com/you/churn-predictor"
         value={entry.link}
         onChange={(event) => set({ link: event.target.value })}
       />
       <MonthYearField
-        label="Started"
+        label={t("Started")}
         value={{ month: entry.startMonth, year: entry.startYear }}
         onChange={({ month, year }) => set({ startMonth: month, startYear: year })}
       />
       <div className="flex flex-col gap-2.5">
         <MonthYearField
-          label="Finished"
+          label={t("Finished")}
           value={{ month: entry.endMonth, year: entry.endYear }}
           onChange={({ month, year }) => set({ endMonth: month, endYear: year })}
           disabled={entry.current}
         />
         <Checkbox
-          label="Still working on it"
+          label={t("Still working on it")}
           checked={entry.current}
           onChange={(event) => set({ current: event.target.checked })}
         />
       </div>
       <Textarea
         className="col-span-2"
-        label="What you did"
-        placeholder="One point per line: what you built, how, and what came of it."
+        label={t("What you did")}
+        placeholder={t("One point per line: what you built, how, and what came of it.")}
         rows={4}
         value={entry.bullets}
         onChange={(event) => set({ bullets: event.target.value })}
@@ -98,7 +99,7 @@ export function ProjectsSection({ profile, update, order }: { profile: ProfileDa
     <EntryList
       items={profile.projects}
       setItems={(change) => update((current) => ({ ...current, projects: change(current.projects) }))}
-      addLabel="Add a project"
+      addLabel={t("Add a project")}
       ordering={{
         mode: order,
         save: (ids) => reorderEntries({ section: "project", ids }),
@@ -118,7 +119,7 @@ export function ProjectsSection({ profile, update, order }: { profile: ProfileDa
           <ProjectForm entry={entry} onChange={onChange} autoFocus={autoFocus} />
           <SkillsUsed
             entry={entry}
-            noun="project"
+            noun={t("project")}
             skills={profile.skills}
             update={update}
             setLinks={(change) =>

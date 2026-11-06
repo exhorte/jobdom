@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 
 import { ResumeDocument } from "@/components/documents/resume-document";
+import { t } from "@/lib/i18n";
 import { verifyPrintAccess } from "@/lib/pdf/print-access";
 import { loadProfile } from "@/lib/profile-data";
 import { loadSettings } from "@/lib/settings-data";
 import { loadTheme } from "@/lib/theme-data";
 import { BUILT_IN_THEMES, printCss } from "@/lib/themes";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Base resume", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Base resume"), robots: { index: false } };
+}
 
 /** The base resume on its own, for the PDF renderer (E5-5) to print. */
 export default async function PrintBaseResumePage() {

@@ -13,6 +13,8 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { JOB_SOURCES, type JobSource, type JSearchHost } from "@/lib/job-search/search";
 import { JOB_KEY_UNREADABLE, JSEARCH_KEY_URLS, SOURCE_INFO, type JobKeyState, type JobSearchSettingsView } from "@/lib/job-search/sources";
 import { cn } from "@/lib/cn";
+import { intlLocale, t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { saveJobSearchDetails, saveJobSource, saveJobSourceKey, testJobSource } from "./actions";
 import { SettingsSectionIntro } from "./settings-screen";
@@ -21,7 +23,7 @@ type Choice = JobSource | "OFF";
 
 const CHOICES: readonly { value: Choice; name: string; description: string; tag: string }[] = [
   ...JOB_SOURCES.map((source) => ({ value: source, ...SOURCE_INFO[source] })),
-  { value: "OFF", name: "Off", description: "Find jobs stays off, and no search leaves your server.", tag: "Nothing is sent anywhere" },
+  { value: "OFF", name: tx("Off"), description: tx("Find jobs stays off, and no search leaves your server."), tag: tx("Nothing is sent anywhere") },
 ];
 
 type Connection =
@@ -91,12 +93,12 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
 
   return (
     <>
-      <SettingsSectionIntro title="Job search">
-        Where Find jobs looks for postings. Pick one source; you can switch any time, and each keeps its own key.
+      <SettingsSectionIntro title={t("Job search")}>
+        {t("Where Find jobs looks for postings. Pick one source; you can switch any time, and each keeps its own key.")}
       </SettingsSectionIntro>
 
       <RadioGroup.Root
-        aria-label="Job source"
+        aria-label={t("Job source")}
         value={source}
         onValueChange={(value) => void choose(value as Choice)}
         className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3"
@@ -119,7 +121,7 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
               </span>
             </span>
             <span id={`job-source-${entry.value}`} className="flex flex-col gap-1.5">
-              <span className="text-meta text-muted">{entry.description}</span>
+              <span className="text-meta text-muted">{t(entry.description)}</span>
               <span className="text-xs text-muted">{entry.tag}</span>
             </span>
           </RadioGroup.Item>
@@ -129,7 +131,7 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
       {source !== "OFF" && (
         <>
           <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-            Your searches (keywords, place and filters) go to {SOURCE_INFO[source].name}. Nothing from your profile does.
+            {t("Your searches (keywords, place and filters) go to {name}. Nothing from your profile does.", { name: SOURCE_INFO[source].name })}
           </p>
 
           <Card className="flex flex-col gap-5">
@@ -137,7 +139,7 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
               <>
                 <HostChoice host={view.jsearch.host} onChange={(host) => void chooseHost(host)} />
                 <KeyField
-                  label="API key"
+                  label={t("API key")}
                   keyState={view.jsearch.keyState}
                   envName="DOSSIER_JSEARCH_KEY"
                   getKey={{ href: JSEARCH_KEY_URLS[view.jsearch.host], text: view.jsearch.host === "rapidapi" ? "JSearch on RapidAPI" : "OpenWeb Ninja" }}
@@ -148,7 +150,7 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
             {source === "ADZUNA" && (
               <div className="grid grid-cols-1 gap-x-[18px] gap-y-5 sm:grid-cols-2">
                 <Input
-                  label="App ID"
+                  label={t("App ID")}
                   value={appId}
                   spellCheck={false}
                   autoComplete="off"
@@ -157,7 +159,7 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
                   onBlur={() => void saveAppId()}
                 />
                 <KeyField
-                  label="App key"
+                  label={t("App key")}
                   keyState={view.adzuna.keyState}
                   envName="DOSSIER_ADZUNA_KEY"
                   getKey={{ href: SOURCE_INFO.ADZUNA.keyUrl!, text: "Adzuna's developer site" }}
@@ -168,14 +170,14 @@ export function JobSearchSection({ initial }: { initial: JobSearchSettingsView }
             {source === "ARBEITSAGENTUR" && (
               <>
                 <ArbeitsagenturNote accepted={Boolean(view.arbeitsagentur.acceptedAt)} onAccept={acceptArbeitsagentur} />
-                <p className="text-sm text-muted">No key needed. The job agent doesn&apos;t search this source; choose JSearch or Adzuna for it.</p>
+                <p className="text-sm text-muted">{t("No key needed. The job agent doesn't search this source; choose JSearch or Adzuna for it.")}</p>
               </>
             )}
 
             {testable && (
               <div className="flex flex-wrap items-center gap-3.5 pt-1">
                 <Button variant="secondary" onClick={() => void test()} disabled={connection.status === "testing"}>
-                  {connection.status === "testing" ? "Testing…" : "Test connection"}
+                  {connection.status === "testing" ? t("Testing…") : t("Test connection")}
                 </Button>
                 <ConnectionStatus connection={connection} source={source} />
               </div>
@@ -192,7 +194,7 @@ function HostChoice({ host, onChange }: { host: JSearchHost; onChange: (host: JS
   return (
     <div className="flex flex-col gap-[7px]">
       <span id={labelId} className="text-label text-muted">
-        Key from
+        {t("Key from")}
       </span>
       <SegmentedControl<JSearchHost>
         aria-labelledby={labelId}
@@ -230,22 +232,20 @@ function KeyField({
   return (
     <div className="flex flex-col gap-2.5">
       <Input
-        label={label}
+        label={t(label)}
         type="password"
         autoComplete="off"
         value={value}
         placeholder={
-          keyState === "set" ? "Saved · type a new key to replace it" : keyState === "env" ? `Using ${envName} · type one to save it here` : "Stored encrypted on your server"
+          keyState === "set" ? t("Saved · type a new key to replace it") : keyState === "env" ? t("Using {envName} · type one to save it here", { envName }) : t("Stored encrypted on your server")
         }
         error={keyState === "unreadable" ? JOB_KEY_UNREADABLE : undefined}
         hint={
           keyState === "none" ? (
             <>
-              Get one from{" "}
-              <a href={getKey.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">
+              {rich("Get one from {link}.", { link: <a href={getKey.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-ink">
                 {getKey.text}
-              </a>
-              .
+              </a> })}
             </>
           ) : undefined
         }
@@ -260,7 +260,7 @@ function KeyField({
       />
       {(keyState === "set" || keyState === "unreadable") && (
         <Button variant="text" size="sm" className="self-start" onClick={() => void onSave({ action: "clear" })}>
-          Remove saved key
+          {t("Remove saved key")}
         </Button>
       )}
     </div>
@@ -270,12 +270,12 @@ function KeyField({
 function ConnectionStatus({ connection, source }: { connection: Connection; source: JobSource }) {
   const [dot, text, message] =
     connection.status === "connected"
-      ? ["bg-success", "text-success", `Connected · ${SOURCE_INFO[source].name} answered in ${connection.seconds.toLocaleString("en-US")} s`]
+      ? ["bg-success", "text-success", t("Connected · {name} answered in {connection} s", { name: SOURCE_INFO[source].name, connection: connection.seconds.toLocaleString(intlLocale()) })]
       : connection.status === "failed"
         ? ["bg-error", "text-error", connection.message]
         : connection.status === "testing"
-          ? ["bg-status-offer", "text-muted", "Sending a small search…"]
-          : ["bg-faint", "text-muted", source === "JSEARCH" ? "Not tested since your last change · a test uses one search from your plan" : "Not tested since your last change"];
+          ? ["bg-status-offer", "text-muted", t("Sending a small search…")]
+          : ["bg-faint", "text-muted", source === "JSEARCH" ? t("Not tested since your last change · a test uses one search from your plan") : t("Not tested since your last change")];
   return (
     <p role="status" className={cn("flex items-center gap-2 text-control", text)}>
       <span aria-hidden className={cn("size-2 flex-none rounded-full", dot)} />

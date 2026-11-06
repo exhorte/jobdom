@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { SavedIndicator } from "@/components/saved-indicator";
 import { TrackSaveContext, useSaveTracker } from "@/components/save-tracker";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 import { SETTINGS_SECTIONS, settingsSectionHref, type SettingsSectionId } from "./sections";
 
@@ -21,12 +22,12 @@ export function SettingsScreen({ section, children }: { section: SettingsSection
   return (
     <TrackSaveContext value={saves.track}>
       <PageHeader
-        title="Settings"
-        description="It's your server, so it's your call. Choose which AI writes for you, set your document defaults, and take your data with you whenever you like."
+        title={t("Settings")}
+        description={t("It's your server, so it's your call. Choose which AI writes for you, set your document defaults, and take your data with you whenever you like.")}
         actions={<SavedIndicator status={saves.status} savedAt={saves.savedAt} />}
       />
       <div className="flex flex-wrap items-start gap-x-12 gap-y-8 px-10 pb-20">
-        <nav aria-label="Settings sections" className="flex max-w-[220px] min-w-[200px] flex-[1_1_200px] flex-col gap-0.5">
+        <nav aria-label={t("Settings sections")} className="flex max-w-[220px] min-w-[200px] flex-[1_1_200px] flex-col gap-0.5">
           {SETTINGS_SECTIONS.map((entry) => (
             <Link
               key={entry.id}
@@ -37,7 +38,7 @@ export function SettingsScreen({ section, children }: { section: SettingsSection
                 entry.id === section && "bg-selected font-medium hover:bg-selected",
               )}
             >
-              {entry.label}
+              {t(entry.label)}
             </Link>
           ))}
         </nav>
@@ -51,7 +52,7 @@ export function SettingsScreen({ section, children }: { section: SettingsSection
 export function SettingsSectionIntro({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <h2 className="font-serif text-section">{title}</h2>
+      <h2 className="font-serif text-section">{t(title)}</h2>
       {children && <p className="text-sm text-pretty text-muted">{children}</p>}
     </div>
   );

@@ -8,15 +8,16 @@ import { Card } from "@/components/ui/card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Toggle } from "@/components/ui/toggle";
 import type { Creativity } from "@/generated/prisma/enums";
+import { t, tx } from "@/lib/i18n";
 
 import { updateSettings } from "./actions";
 
 type Behaviour = { creativity: Creativity; strict: boolean; showDiff: boolean };
 
 const CREATIVITY_OPTIONS: { value: Creativity; label: string }[] = [
-  { value: "FAITHFUL", label: "Faithful" },
-  { value: "BALANCED", label: "Balanced" },
-  { value: "EXPRESSIVE", label: "Expressive" },
+  { value: "FAITHFUL", label: tx("Faithful") },
+  { value: "BALANCED", label: tx("Balanced") },
+  { value: "EXPRESSIVE", label: tx("Expressive") },
 ];
 
 /**
@@ -40,10 +41,10 @@ export function AiBehaviour({ initial }: { initial: Behaviour }) {
       <div className="flex flex-wrap items-center gap-5 py-4">
         <div className="flex min-w-[220px] flex-1 flex-col gap-[3px]">
           <span id="creativity-label" className="text-field">
-            Creativity
+            {t("Creativity")}
           </span>
           <p id="creativity-description" className="text-meta text-muted">
-            Lower keeps drafts close to your own wording. Higher takes more liberties with phrasing, but never with facts.
+            {t("Lower keeps drafts close to your own wording. Higher takes more liberties with phrasing, but never with facts.")}
           </p>
         </div>
         <SegmentedControl
@@ -57,21 +58,21 @@ export function AiBehaviour({ initial }: { initial: Behaviour }) {
       </div>
       <div className="flex flex-col gap-2 border-t border-line py-4">
         <Toggle
-          label="Never invent experience"
-          description="Drafts may only use facts from your profile. If a job asks for something you don't have, I'll say so instead of making it up."
+          label={t("Never invent experience")}
+          description={t("Drafts may only use facts from your profile. If a job asks for something you don't have, I'll say so instead of making it up.")}
           checked={behaviour.strict}
           onCheckedChange={(strict) => change({ strict })}
         />
         {!behaviour.strict && (
           <p role="status" className="rounded-control bg-warning-surface px-3 py-2 text-meta text-warning">
-            Heads up: drafts may now stretch beyond your profile. Double-check before sending.
+            {t("Heads up: drafts may now stretch beyond your profile. Double-check before sending.")}
           </p>
         )}
       </div>
       <Toggle
         className="border-t border-line py-4"
-        label="Show what changed"
-        description="After each draft, list what was tailored compared with your base resume."
+        label={t("Show what changed")}
+        description={t("After each draft, list what was tailored compared with your base resume.")}
         checked={behaviour.showDiff}
         onCheckedChange={(showDiff) => change({ showDiff })}
       />

@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 
 import { dayPeriod, TIME_ZONE_COOKIE, type DayPeriod } from "@/lib/greeting";
+import { t } from "@/lib/i18n";
 
 const never = () => () => {};
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
@@ -22,8 +23,8 @@ export function Greeting({ name, serverPeriod }: { name: string; serverPeriod: D
 
   return (
     <>
-      Good {period}
-      {name && `, ${name}`}
+      {period === "morning" ? t("Good morning") : period === "afternoon" ? t("Good afternoon") : t("Good evening")}
+      {name ? t(", {name}", { name }) : ""}
     </>
   );
 }

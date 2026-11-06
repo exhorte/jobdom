@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { isAiConfigured } from "@/lib/ai/config";
+import { t } from "@/lib/i18n";
 import { findUnfinishedJobs } from "@/lib/jobs/runner";
 import { loadProfile } from "@/lib/profile-data";
 import { loadSettings, saveSettings } from "@/lib/settings-data";
@@ -10,8 +11,12 @@ import { listStartups } from "@/lib/startups/store";
 import { startupFilterFromParams } from "@/lib/startups/types";
 
 import { StartupsScreen } from "./startups-screen";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Startups" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Startups") };
+}
 
 /** Opening the screen counts as using it for this long, so the daily refresh keeps going (#222). */
 const VIEW_MARK_MS = 60 * 60 * 1000;

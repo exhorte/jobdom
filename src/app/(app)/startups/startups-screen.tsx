@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useJob } from "@/hooks/use-job";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/dates";
+import { t, tp, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import { postedAgo } from "@/lib/job-search/search";
 import {
   STARTUP_SOURCE_INFO,
@@ -46,10 +48,10 @@ export type StartupsScreenProps = {
 };
 
 const VIEWS: { status: StartupStatusName; label: string }[] = [
-  { status: "NEW", label: "To look at" },
-  { status: "SAVED", label: "Saved" },
-  { status: "CONTACTED", label: "Contacted" },
-  { status: "DISMISSED", label: "Dismissed" },
+  { status: "NEW", label: tx("To look at") },
+  { status: "SAVED", label: tx("Saved") },
+  { status: "CONTACTED", label: tx("Contacted") },
+  { status: "DISMISSED", label: tx("Dismissed") },
 ];
 
 /**
@@ -66,9 +68,9 @@ export function StartupsScreen({ filter, list, lastRefresh, refreshJobId, city, 
   const job = useJob<StartupsRefresh>(jobId, 0, (update) => {
     if (update.status !== "DONE" && update.status !== "FAILED") return;
     setJobId(null);
-    if (update.status === "FAILED") return toast(update.error ?? "The refresh didn't finish. Try again.");
+    if (update.status === "FAILED") return toast(update.error ?? t("The refresh didn't finish. Try again."));
     const added = update.result?.added ?? 0;
-    toast(added > 0 ? `Found ${added} new ${added === 1 ? "startup" : "startups"}.` : "No new startups this time.");
+    toast(added > 0 ? tp(added, "Found {count} new startup.", "Found {count} new startups.") : t("No new startups this time."));
     router.refresh();
   });
   const refreshing = Boolean(jobId) && (!job || job.status === "QUEUED" || job.status === "RUNNING");
@@ -84,11 +86,11 @@ export function StartupsScreen({ filter, list, lastRefresh, refreshJobId, city, 
   return (
     <>
       <PageHeader
-        title="Startups"
-        description="Startups that are hiring, from YC startups' job posts and Hacker News' “Who is hiring?”, ranked against your profile, with the address each one publishes for applications. You write to each one yourself."
+        title={t("Startups")}
+        description={t("Startups that are hiring, from YC startups' job posts and Hacker News' “Who is hiring?”, ranked against your profile, with the address each one publishes for applications. You write to each one yourself.")}
         actions={
           <Button aria-disabled={refreshing || starting || undefined} onClick={() => !refreshing && !starting && refresh()}>
-            {refreshing ? "Refreshing…" : "Refresh"}
+            {refreshing ? t("Refreshing…") : t("Refresh")}
           </Button>
         }
       />
@@ -103,8 +105,8 @@ export function StartupsScreen({ filter, list, lastRefresh, refreshJobId, city, 
             ) : (
               <>
                 <p className="text-meta text-muted">
-                  {list.total > list.startups.length ? `The best ${list.startups.length} of ${list.total}` : `${list.total} ${list.total === 1 ? "startup" : "startups"}`}
-                  {filter.sort === "match" ? ", best match first." : ", newest first."}
+                  {list.total > list.startups.length ? t("The best {length} of {total}", { length: list.startups.length, total: list.total }) : tp(list.total, "{count} startup", "{count} startups")}
+                  {filter.sort === "match" ? ", best match first." : t(", newest first.")}
                 </p>
                 <ul className="flex flex-col gap-3">
                   {list.startups.map((startup) => (
@@ -126,7 +128,7 @@ function RefreshStatus({ lastRefresh, refreshing, step, today }: { lastRefresh: 
   if (refreshing) {
     return (
       <p role="status" className="rounded-card border border-line-card bg-card px-4 py-3 text-meta text-muted">
-        {step ?? "Starting…"} This takes a minute or two.
+        {t("{step} This takes a minute or two.", { step: step ?? t("Starting…") })}
       </p>
     );
   }
@@ -134,12 +136,10 @@ function RefreshStatus({ lastRefresh, refreshing, step, today }: { lastRefresh: 
     return (
       <div role="note" className="flex flex-col gap-2 rounded-panel border border-line-card bg-card px-6 py-5 text-sm text-pretty">
         <p>
-          Press <strong>Refresh</strong> to look for startups. Dossier reads YC startups&apos; job posts and this month&apos;s “Who is hiring?” thread on
-          Hacker News, keeps the ones that hire where you live or remotely, and looks on the best matches&apos; own sites for the address they publish for
-          applications, following their robots.txt.
+          {rich("Press {strong} to look for startups. Dossier reads YC startups' job posts and this month's “Who is hiring?” thread on Hacker News, keeps the ones that hire where you live or remotely, and looks on the best matches' own sites for the address they publish for applications, following their robots.txt.", { strong: <strong>{t("Refresh")}</strong> })}
         </p>
         <p className="text-muted">
-          After that it refreshes once a day while you use this screen. Nothing is sent to anyone: you decide whom to write to.
+          {t("After that it refreshes once a day while you use this screen. Nothing is sent to anyone: you decide whom to write to.")}
         </p>
       </div>
     );
@@ -148,16 +148,14 @@ function RefreshStatus({ lastRefresh, refreshing, step, today }: { lastRefresh: 
   return (
     <div className="flex flex-col gap-2 text-meta text-muted">
       <p>
-        Last refreshed {formatDateTime(new Date(lastRefresh.at), undefined, new Date(today))}:{" "}
-        {lastRefresh.sources
+        {t("Last refreshed {formatDateTime}: {lastRefresh}.", { formatDateTime: formatDateTime(new Date(lastRefresh.at), undefined, new Date(today)), lastRefresh: lastRefresh.sources
           .filter((source) => !source.error)
           .map((source) => `${STARTUP_SOURCE_INFO[source.source].name} ${source.found}`)
-          .join(" · ")}
-        .
+          .join(" · ") })}
       </p>
       {failed.length > 0 && (
         <p role="note" className="rounded-card bg-warning-surface px-4 py-2.5 text-warning">
-          {failed.map((source) => source.error).join("; ")}. {failed.length < lastRefresh.sources.length ? "The other one worked. " : ""}The next refresh tries again.
+          {t("{failed}. {failed2}The next refresh tries again.", { failed: failed.map((source) => source.error).join("; "), failed2: failed.length < lastRefresh.sources.length ? t("The other one worked. ") : "" })}
         </p>
       )}
     </div>
@@ -166,7 +164,7 @@ function RefreshStatus({ lastRefresh, refreshing, step, today }: { lastRefresh: 
 
 function ViewTabs({ filter, counts }: { filter: StartupFilter; counts: Record<StartupStatusName, number> }) {
   return (
-    <nav aria-label="Startups views" className="flex flex-wrap gap-1.5">
+    <nav aria-label={t("Startups views")} className="flex flex-wrap gap-1.5">
       {VIEWS.map((view) => (
         <Link
           key={view.status}
@@ -179,7 +177,7 @@ function ViewTabs({ filter, counts }: { filter: StartupFilter; counts: Record<St
               : "border-line-field bg-card text-ink hover:border-line-strong hover:bg-hover hover:text-ink",
           )}
         >
-          {view.label}
+          {t(view.label)}
           <span className="text-xs opacity-65">{counts[view.status]}</span>
         </Link>
       ))}
@@ -196,37 +194,37 @@ function Filters({ filter, city, country, onChange }: { filter: StartupFilter; c
   return (
     <form
       role="search"
-      aria-label="Filter startups"
+      aria-label={t("Filter startups")}
       onSubmit={submit}
       className="grid grid-cols-1 items-end gap-4 rounded-panel border border-line-card bg-card p-6 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
     >
-      <Input label="Search" value={q} placeholder="e.g. android, fintech, Berlin" onChange={(event) => setQ(event.target.value)} onBlur={() => q.trim() !== filter.q && onChange({ q: q.trim() })} />
-      <Select label="Where" value={filter.place} onChange={(event) => onChange({ place: event.target.value as StartupFilter["place"] })}>
-        <option value="any">Anywhere</option>
+      <Input label={t("Search")} value={q} placeholder={t("e.g. android, fintech, Berlin")} onChange={(event) => setQ(event.target.value)} onBlur={() => q.trim() !== filter.q && onChange({ q: q.trim() })} />
+      <Select label={t("Where")} value={filter.place} onChange={(event) => onChange({ place: event.target.value as StartupFilter["place"] })}>
+        <option value="any">{t("Anywhere")}</option>
         {city && <option value="city">{city}</option>}
         {country && <option value="country">{country}</option>}
-        <option value="remote">Remote{country ? `, open to ${country}` : ""}</option>
+        <option value="remote">{t("Remote{country}", { country: country ? t(", open to {country}", { country }) : "" })}</option>
       </Select>
-      <Select label="Source" value={filter.source} onChange={(event) => onChange({ source: event.target.value as StartupFilter["source"] })}>
-        <option value="">Both sources</option>
+      <Select label={t("Source")} value={filter.source} onChange={(event) => onChange({ source: event.target.value as StartupFilter["source"] })}>
+        <option value="">{t("Both sources")}</option>
         {STARTUP_SOURCES.map((source) => (
           <option key={source} value={source}>
             {STARTUP_SOURCE_INFO[source].name}
           </option>
         ))}
       </Select>
-      <Select label="Match" value={String(filter.minScore)} onChange={(event) => onChange({ minScore: Number(event.target.value) })}>
-        <option value="0">Any</option>
-        <option value="50">50 and up</option>
-        <option value="70">70 and up</option>
-        <option value="85">85 and up</option>
+      <Select label={t("Match")} value={String(filter.minScore)} onChange={(event) => onChange({ minScore: Number(event.target.value) })}>
+        <option value="0">{t("Any")}</option>
+        <option value="50">{t("50 and up")}</option>
+        <option value="70">{t("70 and up")}</option>
+        <option value="85">{t("85 and up")}</option>
       </Select>
-      <Select label="Sort" value={filter.sort} onChange={(event) => onChange({ sort: event.target.value as StartupFilter["sort"] })}>
-        <option value="match">Best match</option>
-        <option value="newest">Newest</option>
+      <Select label={t("Sort")} value={filter.sort} onChange={(event) => onChange({ sort: event.target.value as StartupFilter["sort"] })}>
+        <option value="match">{t("Best match")}</option>
+        <option value="newest">{t("Newest")}</option>
       </Select>
       <div className="sm:col-span-2 lg:col-span-5">
-        <Checkbox label="Only ones with an address to write to" checked={filter.withEmail} onChange={(event) => onChange({ withEmail: event.target.checked })} />
+        <Checkbox label={t("Only ones with an address to write to")} checked={filter.withEmail} onChange={(event) => onChange({ withEmail: event.target.checked })} />
       </div>
     </form>
   );
@@ -236,7 +234,7 @@ function Empty({ filter }: { filter: StartupFilter }) {
   const filtered = filter.q || filter.place !== "any" || filter.source || filter.minScore > 0 || filter.withEmail;
   return (
     <p className="rounded-panel border border-dashed border-line-strong px-7 py-10 text-center text-sm text-muted">
-      {filtered ? "None match these filters. Try fewer." : filter.status === "NEW" ? "Nothing new to look at. The next refresh may bring more." : "None here yet."}
+      {filtered ? t("None match these filters. Try fewer.") : filter.status === "NEW" ? t("Nothing new to look at. The next refresh may bring more.") : t("None here yet.")}
     </p>
   );
 }
@@ -264,7 +262,7 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
     if (!result.ok) return;
     toast(message, {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: () => void setStartupStatus({ id: startup.id, status: before }).then((undone) => toastResult(undone).ok && router.refresh()),
       },
     });
@@ -279,9 +277,9 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
     if (!result.ok) return;
     const added = result.data.emails.length - startup.emails.length;
     setStartup(result.data);
-    if (result.data.noApplicationsFrom) toast("Their site says they don't take unsolicited applications.");
-    else if (added > 0) toast(`Found ${added} ${added === 1 ? "address" : "addresses"} on their site.`);
-    else toast(people ? "Their site doesn't publish anyone's own address." : "Their site doesn't publish an address for applications. Try their careers page.");
+    if (result.data.noApplicationsFrom) toast(t("Their site says they don't take unsolicited applications."));
+    else if (added > 0) toast(tp(added, "Found {count} address on their site.", "Found {count} addresses on their site."));
+    else toast(people ? t("Their site doesn't publish anyone's own address.") : t("Their site doesn't publish an address for applications. Try their careers page."));
   };
 
   const remove = async () => {
@@ -301,12 +299,12 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
             </span>
           </div>
           <p className="text-sm text-pretty">{startup.summary}</p>
-          <p className="text-meta text-muted">{[startup.location, startup.remote && !/remote/i.test(startup.location) ? "Remote" : "", startup.stage, posted].filter(Boolean).join(" · ")}</p>
+          <p className="text-meta text-muted">{[startup.location, startup.remote && !/remote/i.test(startup.location) ? t("Remote") : "", startup.stage, posted].filter(Boolean).join(" · ")}</p>
         </div>
       </div>
 
       {startup.roles.length > 0 && (
-        <ul aria-label="Roles" className="flex flex-wrap gap-1.5">
+        <ul aria-label={t("Roles")} className="flex flex-wrap gap-1.5">
           {startup.roles.map((role) => (
             <li key={role} className="rounded-full border border-line-field bg-input px-2.5 py-1 text-xs">
               {role}
@@ -319,7 +317,7 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
 
       {blocked && (
         <p role="note" className="rounded-card bg-warning-surface px-4 py-2.5 text-meta text-warning">
-          Their site says they don&apos;t take unsolicited applications: {startup.noApplicationsFrom}. Apply through a posted job instead.
+          {t("Their site says they don't take unsolicited applications: {noApplicationsFrom}. Apply through a posted job instead.", { noApplicationsFrom: startup.noApplicationsFrom })}
         </p>
       )}
 
@@ -328,45 +326,45 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
       <div className="flex flex-wrap items-center gap-2">
         {startup.applicationId ? (
           <Link href={`/applications/${startup.applicationId}`} className={buttonClassName("secondary", "sm")}>
-            Open the application
+            {t("Open the application")}
           </Link>
         ) : !blocked && aiReady ? (
           <Link href={`/new?startup=${encodeURIComponent(startup.id)}`} className={buttonClassName("primary", "sm")}>
-            Write to them
+            {t("Write to them")}
           </Link>
         ) : !blocked ? (
           <Link href="/settings?section=ai" className="text-meta text-muted underline underline-offset-2 hover:text-ink">
-            Choose an AI provider to write an application
+            {t("Choose an AI provider to write an application")}
           </Link>
         ) : null}
         {startup.website && !blocked && (
           <Button size="sm" variant="secondary" aria-disabled={busy !== null || undefined} onClick={() => void lookUp(false)}>
-            {busy === "emails" ? "Looking…" : startup.emailsCheckedAt ? "Look on their site again" : "Find addresses on their site"}
+            {busy === "emails" ? t("Looking…") : startup.emailsCheckedAt ? t("Look on their site again") : t("Find addresses on their site")}
           </Button>
         )}
         {startup.website && !blocked && startup.emailsCheckedAt && (
           <Button size="sm" variant="text" aria-disabled={busy !== null || undefined} onClick={() => void lookUp(true)}>
-            {busy === "people" ? "Looking…" : "Look for people's addresses"}
+            {busy === "people" ? t("Looking…") : t("Look for people's addresses")}
           </Button>
         )}
         <span className="ml-auto flex flex-wrap items-center gap-3">
           {startup.status !== "SAVED" && startup.status !== "CONTACTED" && startup.status !== "DISMISSED" && (
             <Button size="sm" variant="secondary" aria-disabled={busy !== null || undefined} onClick={() => void move("SAVED", `Saved ${startup.company}.`)}>
-              Save
+              {t("Save")}
             </Button>
           )}
           {startup.status !== "CONTACTED" && startup.status !== "DISMISSED" && (
             <Button size="sm" variant="text" aria-disabled={busy !== null || undefined} onClick={() => void move("CONTACTED", `Marked ${startup.company} as contacted.`)}>
-              Mark as contacted
+              {t("Mark as contacted")}
             </Button>
           )}
           {startup.status === "DISMISSED" || startup.status === "CONTACTED" ? (
             <Button size="sm" variant="text" onClick={() => void move("NEW", `${startup.company} is back in To look at.`)}>
-              Move back
+              {t("Move back")}
             </Button>
           ) : (
             <Button size="sm" variant="danger-text" onClick={() => void move("DISMISSED", `Dismissed ${startup.company}.`)}>
-              Dismiss
+              {t("Dismiss")}
             </Button>
           )}
         </span>
@@ -375,15 +373,15 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-3 text-meta">
         {startup.links.map((link) => (
           <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" className="text-muted underline underline-offset-2 hover:text-ink">
-            {link.label} ↗
+            {t(link.label)} ↗
           </a>
         ))}
         <span className="ml-auto flex items-center gap-4">
           <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="text-muted underline underline-offset-2 hover:text-ink">
-            {open ? "Hide details" : "Details and notes"}
+            {open ? t("Hide details") : t("Details and notes")}
           </button>
           <Button size="sm" variant="danger-text" onClick={() => setRemoving(true)}>
-            Remove for good
+            {t("Remove for good")}
           </Button>
         </span>
       </div>
@@ -396,9 +394,9 @@ function StartupCard({ startup: initial, headline, aiReady, today }: { startup: 
       <ConfirmDialog
         open={removing}
         onOpenChange={setRemoving}
-        title={`Remove ${startup.company} for good?`}
-        description="Dossier deletes what it keeps about this startup, its addresses and your notes, and refreshes leave it out from now on. An application you started stays."
-        confirmLabel="Remove for good"
+        title={t("Remove {company} for good?", { company: startup.company })}
+        description={t("Dossier deletes what it keeps about this startup, its addresses and your notes, and refreshes leave it out from now on. An application you started stays.")}
+        confirmLabel={t("Remove for good")}
         onConfirm={() => void remove()}
       />
     </article>
@@ -412,38 +410,38 @@ function Notes({ id, initial }: { id: string; initial: string }) {
     if (notes === saved) return;
     if (toastResult(await saveStartupNotes({ id, notes })).ok) setSaved(notes);
   };
-  return <Textarea label="Notes" rows={3} value={notes} maxLength={5_000} onChange={(event) => setNotes(event.target.value)} onBlur={() => void save()} />;
+  return <Textarea label={t("Notes")} rows={3} value={notes} maxLength={5_000} onChange={(event) => setNotes(event.target.value)} onBlur={() => void save()} />;
 }
 
 function Emails({ emails, company, headline, peopleChecked }: { emails: StartupEmail[]; company: string; headline: string; peopleChecked: boolean }) {
   if (emails.length === 0) return null;
   const copy = (email: string) =>
     void navigator.clipboard.writeText(email).then(
-      () => toast(`Copied ${email}.`),
-      () => toast("Couldn't copy it. Select the address instead."),
+      () => toast(t("Copied {email}.", { email })),
+      () => toast(t("Couldn't copy it. Select the address instead.")),
     );
   return (
     <div className="flex flex-col gap-1.5">
-      <ul aria-label="Addresses they publish" className="flex flex-col gap-1.5">
+      <ul aria-label={t("Addresses they publish")} className="flex flex-col gap-1.5">
         {emails.map((entry) => (
           <li key={entry.email} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="w-20 text-meta text-muted">{entry.label}</span>
+            <span className="w-20 text-meta text-muted">{t(entry.label)}</span>
             <a href={mailto(entry.email, company, headline)} className="font-medium underline underline-offset-2">
               {entry.email}
             </a>
             <button type="button" onClick={() => copy(entry.email)} className="text-meta text-muted underline underline-offset-2 hover:text-ink">
-              Copy
+              {t("Copy")}
             </button>
             {/^https?:\/\//.test(entry.from) && (
               <a href={entry.from} target="_blank" rel="noopener noreferrer" className="text-meta text-muted hover:text-ink">
-                where it&apos;s published ↗
+                {t("where it's published ↗")}
               </a>
             )}
           </li>
         ))}
       </ul>
       {peopleChecked && emails.some((entry) => entry.onRequest) && (
-        <p className="text-meta text-muted">People&apos;s own addresses are dropped after 14 days unless you write to this startup.</p>
+        <p className="text-meta text-muted">{t("People's own addresses are dropped after 14 days unless you write to this startup.")}</p>
       )}
     </div>
   );

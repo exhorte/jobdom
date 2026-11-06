@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import type { ActionResult } from "@/lib/action";
+import { t } from "@/lib/i18n";
 
 /** How long a toast stays on screen. */
 export const TOAST_DURATION_MS = 3200;
@@ -88,7 +89,7 @@ export function Toaster() {
           onBlur={() => setPausedId(null)}
           className="pointer-events-auto flex max-w-[520px] items-baseline gap-4 rounded-toast bg-inverse px-[18px] py-3 text-sm text-on-inverse shadow-toast motion-safe:animate-toast-in"
         >
-          <span>{shown.message}</span>
+          <span>{t(shown.message)}</span>
           {shown.action && (
             <button
               type="button"
@@ -98,7 +99,7 @@ export function Toaster() {
               }}
               className="shrink-0 font-medium underline underline-offset-3 focus-visible:outline-on-inverse"
             >
-              {shown.action.label}
+              {t(shown.action.label)}
             </button>
           )}
         </div>

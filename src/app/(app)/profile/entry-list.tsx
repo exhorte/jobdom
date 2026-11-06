@@ -12,6 +12,7 @@ import type { EntryOrder } from "@/lib/profile";
 
 import { AddEntryButton, DragHandle, EmptyEntries, EntryCard, type Reorder } from "./entry-card";
 import { useTrackSave } from "@/components/save-tracker";
+import { t } from "@/lib/i18n";
 
 type Summary = { title: string; subtitle: string; meta?: string; footnote?: string };
 
@@ -98,14 +99,14 @@ export function EntryList<T extends { id: string }>({
     }
 
     const { title } = summary(item);
-    toast(`Removed “${title}”.`, {
+    toast(t("Removed “{title}”.", { title }), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: async () => {
           const restored = await track(restore(item));
           if (!restored.ok) return toast(restored.error);
           putBack(restored.data);
-          toast(`Put back “${title}”.`);
+          toast(t("Put back “{title}”.", { title }));
         },
       },
     });
@@ -117,7 +118,7 @@ export function EntryList<T extends { id: string }>({
     const next = arrayMove(items, from, to);
     setItems(() => next);
     setMode("manual");
-    setAnnouncement(`“${summary(items[from]).title}” moved to position ${to + 1} of ${items.length}.`);
+    setAnnouncement(t("“{title}” moved to position {to} of {length}.", { title: summary(items[from]).title, to: to + 1, length: items.length }));
     const result = await track(ordering.save(next.map((item) => item.id)));
     if (!result.ok) {
       setItems(() => before.items);
@@ -133,7 +134,7 @@ export function EntryList<T extends { id: string }>({
     const position = new Map(result.data.map((id, index) => [id, index]));
     setItems((current) => current.toSorted((a, b) => (position.get(a.id) ?? Infinity) - (position.get(b.id) ?? Infinity)));
     setMode("date");
-    setAnnouncement("Sorted by date, newest first.");
+    setAnnouncement(t("Sorted by date, newest first."));
   }
 
   const sensors = useSensors(
@@ -178,16 +179,16 @@ export function EntryList<T extends { id: string }>({
       {ordering && items.length > 1 && (
         <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-4 gap-y-1 text-meta text-muted">
           {!ordering.sortByDate ? (
-            <span>In your own order. Drag an entry or use its arrows to move it.</span>
+            <span>{t("In your own order. Drag an entry or use its arrows to move it.")}</span>
           ) : mode === "manual" ? (
             <>
-              <span>In your own order.</span>
+              <span>{t("In your own order.")}</span>
               <Button variant="text" size="sm" onClick={() => void sortByDate()}>
-                Sort by date
+                {t("Sort by date")}
               </Button>
             </>
           ) : (
-            <span>Newest first. Drag an entry or use its arrows to set your own order.</span>
+            <span>{t("Newest first. Drag an entry or use its arrows to set your own order.")}</span>
           )}
         </div>
       )}

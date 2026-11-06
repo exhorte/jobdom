@@ -24,22 +24,23 @@ import {
 import type { EmailView } from "@/lib/google/inbox-data";
 import type { DraftReplyResult } from "@/lib/jobs/draft-reply";
 import { statusInfo } from "@/lib/status";
+import { intlLocale, t, tx } from "@/lib/i18n";
 
 // An application's mail (E15-3, E15-4, E15-5), oldest first: each message,
 // what the AI read in replies, the status they suggest, a drafted answer
 // with free times from the calendar, and agreed interviews.
 
 export const KIND_LABELS: Record<ReplyKind, string> = {
-  REJECTION: "Rejection",
-  INTERVIEW: "Interview invite",
-  QUESTION: "Question",
-  OFFER: "Offer",
-  ACKNOWLEDGEMENT: "Acknowledgement",
-  OTHER: "Other",
+  REJECTION: tx("Rejection"),
+  INTERVIEW: tx("Interview invite"),
+  QUESTION: tx("Question"),
+  OFFER: tx("Offer"),
+  ACKNOWLEDGEMENT: tx("Acknowledgement"),
+  OTHER: tx("Other"),
 };
 
 export function formatWhen(date: Date, timeZone?: string): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
+  return new Intl.DateTimeFormat(intlLocale("en-GB"), { timeZone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
 }
 
 /** Every message of a conversation; the newest unanswered reply opens with its answer. */
@@ -59,7 +60,7 @@ export function Conversation({ emails, aiReady, timeZone }: { emails: EmailView[
 function Message({ email, aiReady, timeZone, initiallyOpen }: { email: EmailView; aiReady: boolean; timeZone?: string; initiallyOpen: boolean }) {
   const [open, setOpen] = useState(initiallyOpen);
   const outgoing = email.direction === "OUTGOING";
-  const who = outgoing ? "You" : email.fromName || email.fromAddress;
+  const who = outgoing ? t("You") : email.fromName || email.fromAddress;
   return (
     <article className={cn("rounded-panel border border-line-card bg-card", outgoing && "bg-canvas")}>
       <button
@@ -84,7 +85,7 @@ function Message({ email, aiReady, timeZone, initiallyOpen }: { email: EmailView
       {open && (
         <div className="flex flex-col gap-4 px-6 pb-5">
           {email.subject && <p className="text-meta text-muted">{email.subject}</p>}
-          <div className="text-field leading-[1.6] break-words whitespace-pre-wrap">{email.body || <span className="text-muted">No text.</span>}</div>
+          <div className="text-field leading-[1.6] break-words whitespace-pre-wrap">{email.body || <span className="text-muted">{t("No text.")}</span>}</div>
           {!outgoing && <Reading email={email} aiReady={aiReady} timeZone={timeZone} />}
         </div>
       )}
@@ -95,7 +96,7 @@ function Message({ email, aiReady, timeZone, initiallyOpen }: { email: EmailView
 function KindChip({ kind }: { kind: ReplyKind }) {
   const tone =
     kind === "REJECTION" ? "bg-danger-surface text-danger" : kind === "OFFER" || kind === "INTERVIEW" ? "bg-warning-surface text-warning" : "bg-hover text-muted";
-  return <span className={cn("rounded-[6px] px-2 py-[2px] text-xs", tone)}>{KIND_LABELS[kind]}</span>;
+  return <span className={cn("rounded-[6px] px-2 py-[2px] text-xs", tone)}>{t(KIND_LABELS[kind])}</span>;
 }
 
 /** What the AI read in a reply, its suggested status and interview time, and the answer. */
@@ -106,8 +107,8 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
 
   if (!email.read) {
     return (
-      <Panel title="Not read yet">
-        <p className="text-meta text-muted">{aiReady ? "The AI hasn't read this one yet." : "With an AI provider, I'd read this and draft an answer."}</p>
+      <Panel title={t("Not read yet")}>
+        <p className="text-meta text-muted">{aiReady ? t("The AI hasn't read this one yet.") : t("With an AI provider, I'd read this and draft an answer.")}</p>
         {aiReady && (
           <Button
             variant="secondary"
@@ -120,7 +121,7 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
               })
             }
           >
-            {pending ? "Reading…" : "Read it now"}
+            {pending ? t("Reading…") : t("Read it now")}
           </Button>
         )}
       </Panel>
@@ -137,7 +138,7 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
 
   return (
     <>
-      <Panel title="What I read">
+      <Panel title={t("What I read")}>
         <p className="text-sm">{email.summary}</p>
         {email.questions.length > 0 && (
           <ul className="flex list-disc flex-col gap-1 pl-5 text-meta text-muted">
@@ -148,12 +149,12 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
         )}
         {email.suggestedStatus && email.application && (
           <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-            <span className="mr-auto text-meta">Move to {statusInfo(email.suggestedStatus).label}?</span>
+            <span className="mr-auto text-meta">{t("Move to {label}?", { label: statusInfo(email.suggestedStatus).label })}</span>
             <Button variant="text" size="sm" disabled={pending} onClick={() => suggest(false)}>
-              Not now
+              {t("Not now")}
             </Button>
             <Button variant="secondary" size="sm" disabled={pending} onClick={() => suggest(true)}>
-              Move to {statusInfo(email.suggestedStatus).label}
+              {t("Move to {label}", { label: statusInfo(email.suggestedStatus).label })}
             </Button>
           </div>
         )}
@@ -163,7 +164,7 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
         <ReplyDraft email={email} aiReady={aiReady} />
       ) : (
         <p className="text-meta text-muted">
-          {email.kind === "ACKNOWLEDGEMENT" || email.kind === "REJECTION" ? "No answer needed." : "Answered."}{" "}
+          {email.kind === "ACKNOWLEDGEMENT" || email.kind === "REJECTION" ? t("No answer needed.") : t("Answered.")}{" "}
           <button
             type="button"
             className="underline underline-offset-3 hover:text-ink"
@@ -173,7 +174,7 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
               })
             }
           >
-            Answer anyway
+            {t("Answer anyway")}
           </button>
         </p>
       )}
@@ -184,7 +185,7 @@ function Reading({ email, aiReady, timeZone }: { email: EmailView; aiReady: bool
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2.5 rounded-card border border-line bg-canvas px-4 py-3.5">
-      <h3 className="text-label text-muted">{title}</h3>
+      <h3 className="text-label text-muted">{t(title)}</h3>
       {children}
     </section>
   );
@@ -203,12 +204,12 @@ function InterviewConfirm({ email, timeZone }: { email: EmailView; timeZone?: st
       router.refresh();
     });
   return (
-    <Panel title={`Interview on ${formatWhen(email.confirmedAt!, timeZone)}`}>
-      <p className="text-meta text-muted">They settled on this time. Add it to your calendar and dashboard?</p>
-      {email.application?.status !== "INTERVIEW" && <Checkbox label="Move to Interview too" checked={move} onChange={(event) => setMove(event.target.checked)} />}
+    <Panel title={t("Interview on {when}", { when: formatWhen(email.confirmedAt!, timeZone) })}>
+      <p className="text-meta text-muted">{t("They settled on this time. Add it to your calendar and dashboard?")}</p>
+      {email.application?.status !== "INTERVIEW" && <Checkbox label={t("Move to Interview too")} checked={move} onChange={(event) => setMove(event.target.checked)} />}
       <div className="flex justify-end">
         <Button size="sm" disabled={pending} onClick={confirm}>
-          {pending ? "Adding…" : "Add interview"}
+          {pending ? t("Adding…") : t("Add interview")}
         </Button>
       </div>
     </Panel>
@@ -251,7 +252,7 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
   const drafting = useJob<DraftReplyResult>(job, 0, (update) => {
     if (update.status === "FAILED") {
       setJob(null);
-      toast(update.error ?? "That didn't work. Try again.");
+      toast(update.error ?? t("That didn't work. Try again."));
     } else if (update.status === "DONE" && update.result) {
       setJob(null);
       setBody(update.result.body);
@@ -264,7 +265,7 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
 
   const draft = () =>
     startTransition(async () => {
-      if (!aiReady) return toast("That needs an AI provider. Choose one in Settings → AI provider.");
+      if (!aiReady) return toast(t("That needs an AI provider. Choose one in Settings → AI provider."));
       const result = await startDraftingReply({ emailId: email.id, note, slots: wantsSlots && slots ? picked : null });
       if (!result.ok) return toast(result.error);
       setJob(result.data);
@@ -288,15 +289,15 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
   return (
     <section className="flex flex-col gap-3 rounded-card border border-line-card px-4 py-4" aria-busy={job !== null || undefined}>
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-[15px] font-medium">Your answer</h3>
-        {job && <span className="text-meta text-muted">{drafting?.step ?? "Starting…"}</span>}
+        <h3 className="text-[15px] font-medium">{t("Your answer")}</h3>
+        {job && <span className="text-meta text-muted">{drafting?.step ?? t("Starting…")}</span>}
       </div>
 
       {wantsSlots && (
         <div className="flex flex-col gap-2">
-          <span className="text-label text-muted">{slots === null ? "Looking at your calendar…" : slots.length > 0 ? "Times to offer, from your calendar" : "No calendar times: connect Google Calendar in Settings to offer some"}</span>
+          <span className="text-label text-muted">{slots === null ? t("Looking at your calendar…") : slots.length > 0 ? t("Times to offer, from your calendar") : t("No calendar times: connect Google Calendar in Settings to offer some")}</span>
           {slots && slots.length > 0 && (
-            <div role="group" aria-label="Times to offer" className="flex flex-wrap gap-1.5">
+            <div role="group" aria-label={t("Times to offer")} className="flex flex-wrap gap-1.5">
               {slots.map((slot) => {
                 const on = picked.includes(slot.start);
                 return (
@@ -310,7 +311,7 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
                       on ? "border-primary bg-selected font-medium" : "border-line-field bg-input text-muted hover:border-line-strong",
                     )}
                   >
-                    {slot.label}
+                    {t(slot.label)}
                   </button>
                 );
               })}
@@ -321,7 +322,7 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
 
       {drafted || body ? (
         <textarea
-          aria-label="Your answer"
+          aria-label={t("Your answer")}
           value={body}
           rows={Math.min(18, Math.max(6, body.split("\n").length + 1))}
           onChange={(event) => setBody(event.target.value)}
@@ -332,26 +333,26 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
           )}
         />
       ) : (
-        <p className="text-meta text-muted">I&apos;ll answer from your profile and this application, and only with facts that are in them.</p>
+        <p className="text-meta text-muted">{t("I'll answer from your profile and this application, and only with facts that are in them.")}</p>
       )}
 
       {gaps.length > 0 && (
         <div role="note" className="flex flex-col gap-1 rounded-card bg-warning-surface px-3.5 py-2.5 text-meta text-warning">
-          <span className="font-medium">Your profile doesn&apos;t say:</span>
+          <span className="font-medium">{t("Your profile doesn't say:")}</span>
           <ul className="list-disc pl-5">
             {gaps.map((gap) => (
               <li key={gap}>{gap}</li>
             ))}
           </ul>
-          <span>Fill in the […] above, or tell me below and draft again.</span>
+          <span>{t("Fill in the […] above, or tell me below and draft again.")}</span>
         </div>
       )}
 
       <div className="flex gap-2">
         <input
-          aria-label="Tell the AI"
+          aria-label={t("Tell the AI")}
           value={note}
-          placeholder={body ? "e.g. My notice period is 3 months; make it shorter" : "Anything to add? e.g. My notice period is 3 months"}
+          placeholder={body ? t("e.g. My notice period is 3 months; make it shorter") : t("Anything to add? e.g. My notice period is 3 months")}
           onChange={(event) => setNote(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -362,13 +363,13 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
           className="h-[34px] min-w-0 flex-1 rounded-control border border-line-input bg-input px-3 text-sm placeholder:text-muted focus-visible:border-primary focus-visible:outline-offset-0"
         />
         <Button variant="secondary" disabled={busy} onClick={draft}>
-          {job ? "Drafting…" : drafted ? "Draft again" : "Draft an answer"}
+          {job ? t("Drafting…") : drafted ? t("Draft again") : t("Draft an answer")}
         </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
         <Button variant="text" size="sm" disabled={busy} onClick={skip}>
-          No answer needed
+          {t("No answer needed")}
         </Button>
         <Button
           className="ml-auto"
@@ -379,7 +380,7 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
             setConfirming(true);
           }}
         >
-          Review and send
+          {t("Review and send")}
         </Button>
       </div>
 
@@ -387,15 +388,15 @@ function ReplyDraft({ email, aiReady }: { email: EmailView; aiReady: boolean }) 
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
           <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-dialog border border-line-popover bg-card p-6 shadow-menu">
-            <AlertDialog.Title className="font-serif text-[22px] leading-tight">Send your answer?</AlertDialog.Title>
+            <AlertDialog.Title className="font-serif text-[22px] leading-tight">{t("Send your answer?")}</AlertDialog.Title>
             <AlertDialog.Description className="text-sm text-muted">
-              To {email.fromName ? `${email.fromName} <${email.fromAddress}>` : email.fromAddress}, in the same thread. This can&apos;t be unsent.
+              {t("To {email}, in the same thread. This can't be unsent.", { email: email.fromName ? `${email.fromName} <${email.fromAddress}>` : email.fromAddress })}
             </AlertDialog.Description>
             <div className="min-h-0 overflow-auto rounded-control border border-line bg-canvas px-4 py-3 text-control leading-[1.6] whitespace-pre-wrap">{body}</div>
             <div className="mt-2 flex justify-end gap-2">
-              <AlertDialog.Cancel className={buttonClassName("secondary", "sm")}>Cancel</AlertDialog.Cancel>
+              <AlertDialog.Cancel className={buttonClassName("secondary", "sm")}>{t("Cancel")}</AlertDialog.Cancel>
               <AlertDialog.Action className={buttonClassName("primary", "sm", "hover:text-on-primary")} onClick={send}>
-                Send now
+                {t("Send now")}
               </AlertDialog.Action>
             </div>
           </AlertDialog.Content>

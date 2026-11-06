@@ -4,6 +4,7 @@ import { Switch } from "radix-ui";
 import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 export type ToggleProps = Omit<Switch.SwitchProps, "children"> & {
   label: ReactNode;
@@ -23,11 +24,11 @@ export function Toggle({ label, description, id, className, ...props }: TogglePr
     <div className={cn("flex items-center gap-5", className)}>
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <label htmlFor={switchId} className="w-fit cursor-pointer text-field">
-          {label}
+          {t(label)}
         </label>
         {description && (
           <p id={descriptionId} className="text-meta text-muted">
-            {description}
+            {t(description)}
           </p>
         )}
       </div>

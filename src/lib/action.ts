@@ -4,6 +4,8 @@ import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 
 import { getSession, type Session } from "@/lib/auth/session";
+import { t } from "@/lib/i18n";
+import { applyLocale } from "@/lib/locale";
 import { logServerError } from "@/lib/log";
 import { messages } from "@/lib/messages";
 
@@ -51,7 +53,7 @@ export function action<S extends z.ZodType, T>(
 ): (input: z.input<S>) => Promise<ActionResult<T>> {
   return async (input) => {
     const session = await getSession();
-    if (!session) return { ok: false, error: messages.signedOut };
+    if (!session) return { ok: false, error: t(messages.signedOut) };
     return run(schema, input, (data, toast) => handler(data, { session, toast }));
   };
 }
@@ -72,12 +74,16 @@ async function run<S extends z.ZodType, T>(
   input: unknown,
   handler: (input: z.output<S>, toast: (message: string) => void) => Promise<T>,
 ): Promise<ActionResult<T>> {
+  await applyLocale();
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: messages.invalidInput,
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      error: t(messages.invalidInput),
+      // Validation messages are written once, in English, next to the schema.
+      fieldErrors: Object.fromEntries(
+        Object.entries(z.flattenError(parsed.error).fieldErrors).map(([field, errors]) => [field, (errors as string[] | undefined)?.map((message) => t(message))]),
+      ),
     };
   }
 
@@ -86,11 +92,11 @@ async function run<S extends z.ZodType, T>(
     const data = await handler(parsed.data, (message) => {
       toast = message;
     });
-    return toast === undefined ? { ok: true, data } : { ok: true, data, toast };
+    return toast === undefined ? { ok: true, data } : { ok: true, data, toast: t(toast) };
   } catch (error) {
     unstable_rethrow(error);
-    if (error instanceof ActionError) return { ok: false, error: error.message };
+    if (error instanceof ActionError) return { ok: false, error: t(error.message) };
     logServerError("action", error);
-    return { ok: false, error: messages.unexpected };
+    return { ok: false, error: t(messages.unexpected) };
   }
 }

@@ -17,6 +17,7 @@ import { ProjectsSection } from "./projects-section";
 import { PublicationsSection } from "./publications-section";
 import { ReferencesSection } from "./references-section";
 import { TrackSaveContext, useSaveTracker } from "@/components/save-tracker";
+import { t } from "@/lib/i18n";
 import { SkillsSection } from "./skills-section";
 import { StrengthMeter } from "./strength-meter";
 import { SECTIONS, sectionHref, type SectionId } from "./sections";
@@ -69,16 +70,16 @@ export function ProfileEditor({ initial, section, order }: { initial: ProfileDat
   return (
     <TrackSaveContext value={saves.track}>
       <PageHeader
-        title="Your profile"
-        description="Everything here feeds your resumes and cover letters. Fill in what you like. You can always come back to it."
+        title={t("Your profile")}
+        description={t("Everything here feeds your resumes and cover letters. Fill in what you like. You can always come back to it.")}
         actions={
           <>
             <SavedIndicator status={saves.status} savedAt={saves.savedAt} />
             <Link href="/profile/import" className={buttonClassName("secondary")}>
-              Import from a resume
+              {t("Import from a resume")}
             </Link>
             <Link href="/resume" className={buttonClassName("primary", "md", "hover:text-on-primary")}>
-              See base resume →
+              {t("See base resume →")}
             </Link>
           </>
         }
@@ -87,7 +88,7 @@ export function ProfileEditor({ initial, section, order }: { initial: ProfileDat
       <div className="flex flex-wrap items-start gap-x-12 gap-y-10 px-10 pt-2 pb-20">
         <div className="flex max-w-[220px] min-w-[200px] flex-[1_1_200px] flex-col gap-6">
           <StrengthMeter profile={profile} />
-          <nav aria-label="Profile sections" className="flex flex-col gap-0.5">
+          <nav aria-label={t("Profile sections")} className="flex flex-col gap-0.5">
             {SECTIONS.map((entry) => (
               <Link
                 key={entry.id}
@@ -99,8 +100,8 @@ export function ProfileEditor({ initial, section, order }: { initial: ProfileDat
                 )}
               >
                 <span>
-                  {entry.label}
-                  {entry.optional && <span className="ml-2 text-xs text-muted">optional</span>}
+                  {t(entry.label)}
+                  {entry.optional && <span className="ml-2 text-xs text-muted">{t("optional")}</span>}
                 </span>
                 <span className="text-xs text-muted tabular-nums">{counts[entry.id]}</span>
               </Link>
@@ -110,10 +111,10 @@ export function ProfileEditor({ initial, section, order }: { initial: ProfileDat
 
         <div className="flex max-w-[760px] min-w-0 flex-[999_1_420px] flex-col gap-6">
           <div className="flex flex-col gap-1.5">
-            <h2 className="font-serif text-section">{current.title}</h2>
+            <h2 className="font-serif text-section">{t(current.title)}</h2>
             <p className="text-sm text-pretty text-muted">
-              {current.optional && "Optional. "}
-              {current.hint}
+              {current.optional && t("Optional. ")}
+              {t(current.hint)}
             </p>
           </div>
 
@@ -122,18 +123,18 @@ export function ProfileEditor({ initial, section, order }: { initial: ProfileDat
           <div className="flex items-center justify-between gap-3 pt-2">
             {previous ? (
               <Link href={sectionHref(previous.id)} className={buttonClassName("text")}>
-                ← {previous.label}
+                ← {t(previous.label)}
               </Link>
             ) : (
               <span />
             )}
             {next ? (
               <Link href={sectionHref(next.id)} className={buttonClassName("secondary", "md", "bg-card")}>
-                Next: {next.label} →
+                {t("Next: {label} →", { label: next.label })}
               </Link>
             ) : (
               <Link href="/resume" className={buttonClassName("primary", "md", "hover:text-on-primary")}>
-                Looks good. See my resume →
+                {t("Looks good. See my resume →")}
               </Link>
             )}
           </div>

@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 
 import { PageBar } from "./page-header";
 import { PageBarIcon } from "./page-bar-icon";
+import { t } from "@/lib/i18n";
 
 type Variant = "dashboard" | "list" | "document" | "form";
 
@@ -67,7 +68,7 @@ const bodies: Record<Variant, ReactNode> = {
 export function ScreenSkeleton({ label, variant }: { label: string; variant: Variant }) {
   return (
     <div role="status" className="flex flex-1 flex-col animate-skeleton-in">
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{t(label)}</span>
       <div aria-hidden="true" className="flex flex-1 flex-col motion-safe:animate-pulse">
         <PageBar>
           <div className="flex items-center gap-3">

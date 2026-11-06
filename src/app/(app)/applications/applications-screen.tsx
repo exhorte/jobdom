@@ -13,6 +13,8 @@ import type { ApplicationStatus } from "@/generated/prisma/enums";
 import type { ApplicationRow } from "@/lib/applications-data";
 import { FILTERS, listHref, statusesIn, type Filter, type ListParams, type View } from "@/lib/applications-list";
 import { cn } from "@/lib/cn";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { rememberListView } from "./actions";
 import { Board } from "./board";
@@ -32,8 +34,8 @@ export type ApplicationsScreenProps = {
 };
 
 const HINTS: Record<View, string> = {
-  board: "Drag a card to change its status",
-  table: "Click a row to open it",
+  board: tx("Drag a card to change its status"),
+  table: tx("Click a row to open it"),
 };
 
 /** How long typing pauses before the search runs. */
@@ -58,7 +60,7 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
 
   // A moved card shows in its new column at once; if the move fails, it goes back (LST-4).
   const [shown, showMove] = useOptimistic(rows, (current, { id, to }: { id: string; to: ApplicationStatus }) =>
-    current.map((row) => (row.id === id ? { ...row, status: to, updated: "Today", updatedAt: Date.now() } : row)),
+    current.map((row) => (row.id === id ? { ...row, status: to, updated: t("Today"), updatedAt: Date.now() } : row)),
   );
   const [, startMove] = useTransition();
   const move = (row: ApplicationRow, to: ApplicationStatus) =>
@@ -95,12 +97,12 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
   return (
     <div className={cn("flex flex-col", board ? "h-panel min-h-[520px]" : "flex-1")}>
       <PageHeader
-        title="Applications"
+        title={t("Applications")}
         description={summary}
         actions={
           <>
             <SegmentedControl<View>
-              aria-label="View"
+              aria-label={t("View")}
               size="sm"
               options={[
                 { value: "board", label: "Board" },
@@ -110,7 +112,7 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
               onValueChange={(view) => go({ view })}
             />
             <Link href="/new?fresh=1" className={buttonClassName("primary", "md", "hover:text-on-primary")}>
-              + New application
+              {t("+ New application")}
             </Link>
           </>
         }
@@ -123,14 +125,14 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
           <div className="flex flex-wrap items-center gap-3 px-10 pb-[18px]">
             <input
               type="search"
-              aria-label="Search applications"
-              placeholder="Search company or role"
+              aria-label={t("Search applications")}
+              placeholder={t("Search company or role")}
               value={query}
               onChange={(event) => search(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && go({ q: query.trim() }, { replace: true })}
               className="min-w-[180px] flex-[0_1_300px] rounded-control border border-line-input bg-input px-3 py-2.5 text-sm placeholder:text-muted focus-visible:border-primary focus-visible:outline-offset-0"
             />
-            <div role="group" aria-label="Show" className="flex flex-wrap gap-1.5">
+            <div role="group" aria-label={t("Show")} className="flex flex-wrap gap-1.5">
               {FILTERS.map(({ value, label }) => (
                 <button
                   key={value}
@@ -142,7 +144,7 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
                     params.filter === value ? "border-primary bg-selected font-medium text-primary-text" : "border-line-field bg-card hover:border-line-strong hover:bg-hover",
                   )}
                 >
-                  {label}{" "}
+                  {t(label)}{" "}
                   <span className="text-xs opacity-65">{counts[value]}</span>
                 </button>
               ))}
@@ -154,16 +156,15 @@ export function ApplicationsScreen({ params, rows, counts, summary, empty, archi
                 onClick={() => go({ archived: !params.archived })}
                 className="rounded-control px-1 py-2 text-control text-muted underline-offset-3 hover:text-ink aria-pressed:text-ink aria-pressed:underline"
               >
-                Show archived{" "}
-                <span className="text-xs opacity-65">{archivedCount}</span>
+                {rich("Show archived {span}", { span: <span className="text-xs opacity-65">{archivedCount}</span> })}
               </button>
             )}
-            <span className="ml-auto text-meta text-muted">{HINTS[params.view]}</span>
+            <span className="ml-auto text-meta text-muted">{t(HINTS[params.view])}</span>
           </div>
 
           <div className={cn("flex min-h-0 flex-1 flex-col motion-safe:transition-opacity", pending && "opacity-60")} aria-busy={pending || undefined}>
             {rows.length === 0 ? (
-              <Nothing>{params.q ? `No applications match “${params.q}”.` : "Nothing in this view yet."}</Nothing>
+              <Nothing>{params.q ? t("No applications match “{q}”.", { q: params.q }) : t("Nothing in this view yet.")}</Nothing>
             ) : board ? (
               <Board rows={shown} statuses={statusesIn(params.filter)} onMove={move} />
             ) : (
@@ -187,17 +188,16 @@ function Nothing({ children }: { children: ReactNode }) {
 function FirstApplication() {
   return (
     <div className="mx-10 mb-16 flex max-w-[640px] flex-col items-start gap-3 rounded-panel border border-line-card bg-card px-7 py-7">
-      <h2 className="font-serif text-section">Your first application</h2>
+      <h2 className="font-serif text-section">{t("Your first application")}</h2>
       <p className="text-sm text-muted">
-        Paste a job posting and I&apos;ll read it, check it against your profile and draft a tailored resume and cover letter. Your
-        profile is what everything is built from, so it&apos;s worth filling in first.
+        {t("Paste a job posting and I'll read it, check it against your profile and draft a tailored resume and cover letter. Your profile is what everything is built from, so it's worth filling in first.")}
       </p>
       <div className="flex flex-wrap items-center gap-4 pt-1">
         <Link href="/new?fresh=1" className={buttonClassName("primary", "md", "hover:text-on-primary")}>
-          + New application
+          {t("+ New application")}
         </Link>
         <Link href="/profile" className="text-sm text-muted underline underline-offset-2 hover:text-ink">
-          Fill in your profile
+          {t("Fill in your profile")}
         </Link>
       </div>
     </div>

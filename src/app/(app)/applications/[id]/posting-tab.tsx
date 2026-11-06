@@ -6,6 +6,8 @@ import { useId } from "react";
 import { FactList } from "@/components/fact-list";
 import { MatchRows } from "@/components/match-rows";
 import type { Match, Requirement } from "@/lib/application-data";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import type { FactItem } from "@/lib/profile";
 
 import { sectionHref } from "../../profile/sections";
@@ -61,27 +63,24 @@ export function PostingTab({
       >
         <div className="flex flex-col gap-1.5">
           <h2 id={`${factsHint}-title`} className="text-[15px] font-medium">
-            Facts for this application
+            {t("Facts for this application")}
           </h2>
           <p id={factsHint} className="text-sm text-pretty text-muted">
-            What the AI should know for this job only, on top of your profile&apos;s{" "}
-            <Link href={sectionHref("facts")} className="text-muted underline underline-offset-2 hover:text-ink">
-              Facts about me
-            </Link>
-            . It uses them the next time it writes or rewrites something here.
+            {rich("What the AI should know for this job only, on top of your profile's {link}. It uses them the next time it writes or rewrites something here.", { link: <Link href={sectionHref("facts")} className="text-muted underline underline-offset-2 hover:text-ink">
+              {t("Facts about me")}
+            </Link> })}
           </p>
         </div>
         <FactList
           applicationId={applicationId}
           facts={facts}
           setFacts={setFacts}
-          placeholder="e.g. I met their design lead at Config last year. Or: lean on my research work."
+          placeholder={t("e.g. I met their design lead at Config last year. Or: lean on my research work.")}
         />
       </section>
       <div className="flex w-full max-w-[640px] flex-wrap justify-between gap-x-3 gap-y-1 text-meta text-muted">
         <span className="min-w-0">
-          Job posting
-          {posting.url && (
+          {rich("Job posting{posting}", { posting: posting.url && (
             <>
               {" · "}
               <a
@@ -92,21 +91,21 @@ export function PostingTab({
               >
                 {shortLink(posting.url)}
                 <span aria-hidden="true"> ↗</span>{" "}
-                <span className="sr-only">(opens in a new tab)</span>
+                <span className="sr-only">{t("(opens in a new tab)")}</span>
               </a>
             </>
-          )}
+          ) })}
         </span>
-        <span>Pasted {posting.pasted}</span>
+        <span>{t("Pasted {pasted}", { pasted: posting.pasted })}</span>
       </div>
       <div className="flex w-full max-w-[640px] flex-col gap-[22px] rounded-panel border border-line-card bg-card px-[30px] py-7">
         {match && match.items.length > 0 && <MatchRows match={match} requirements={requirements} onAddSkill={onAddSkill} />}
         <div className={match && match.items.length > 0 ? "flex flex-col gap-2.5 border-t border-line pt-5" : "flex flex-col gap-2.5"}>
-          <h2 className="text-[15px] font-medium">Original posting</h2>
+          <h2 className="text-[15px] font-medium">{t("Original posting")}</h2>
           {posting.text.trim() ? (
             <p className="text-sm leading-[1.65] whitespace-pre-wrap text-document">{posting.text}</p>
           ) : (
-            <p className="text-sm text-muted">No posting was saved with this application.</p>
+            <p className="text-sm text-muted">{t("No posting was saved with this application.")}</p>
           )}
         </div>
       </div>

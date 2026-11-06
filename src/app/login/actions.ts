@@ -14,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { loadProfileName } from "@/lib/profile-data";
 
 import { loginMessages } from "./messages";
+import { t } from "@/lib/i18n";
 
 /**
  * Signs in with the password that DOSSIER_PASSWORD is a hash of (PRD AUTH-1, AUTH-4).
@@ -31,16 +32,16 @@ export const signIn = publicAction(
     const wait = await loginWaitMs(prisma, ip);
     if (wait > 0) throw new ActionError(tooManyAttemptsMessage(wait));
 
-    if (!password) throw new ActionError(loginMessages.empty);
+    if (!password) throw new ActionError(t(loginMessages.empty));
     if (!(await passwordMatches(password))) {
       await recordLoginFailure(prisma, ip);
-      throw new ActionError(loginMessages.wrong);
+      throw new ActionError(t(loginMessages.wrong));
     }
     await recordLoginSuccess(prisma, ip);
 
     await startSession({ persistent: remember });
-    const firstName = (await loadProfileName()).trim().split(/\s+/)[0] || "there";
-    toast(`Welcome back, ${firstName}.`);
+    const firstName = (await loadProfileName()).trim().split(/\s+/)[0];
+    toast(firstName ? t("Welcome back, {firstName}.", { firstName }) : t("Welcome back, there."));
     return { redirectTo: safeNextPath(next) };
   },
 );

@@ -3,6 +3,7 @@ import type { ProfileData } from "@/lib/profile";
 import { reach, type Place } from "./place";
 import { headerParts } from "./text";
 import type { FoundStartup } from "./types";
+import { listOf, t } from "@/lib/i18n";
 
 // How well a startup fits the profile (#222), 0–100, with the reasons,
 // worked out in code, so it needs no AI model and costs nothing: the
@@ -34,7 +35,6 @@ function skillPattern(skill: string): RegExp {
   return new RegExp(`(^|[^a-z0-9+#])${spelled}($|[^a-z0-9+#])`, "i");
 }
 
-const list = (items: string[]) => (items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
 
 /** Where a startup says it hires: its location, and the title or the post's first line. */
 export const whereText = (startup: Pick<FoundStartup, "source" | "location" | "summary" | "details">) =>
@@ -57,7 +57,7 @@ export function matchStartup(
   const skills = profile.skills.map((skill) => skill.name.trim()).filter((name) => name.length > 1 && !GENERIC.test(name));
   const hits = skills.filter((skill) => skillPattern(skill).test(text));
   score += Math.min(40, hits.slice(0, 2).length * 12 + hits.slice(2).length * 5);
-  if (hits.length > 0) reasons.push(`Mentions ${list(hits.slice(0, 4))} from your skills`);
+  if (hits.length > 0) reasons.push(t("Mentions {skills} from your skills", { skills: listOf(hits.slice(0, 4)) }));
 
   // The kind of work the profile does.
   const profileText = [profile.basics.headline, profile.basics.summary, ...profile.experience.map((role) => role.role), ...skills].join(" ");
@@ -83,16 +83,16 @@ export function matchStartup(
     reasons.push(place.countryName ? `Remote, open to ${place.countryName}` : "Remote from anywhere");
   } else if (where.remote && where.remoteOpen === null) {
     score += 5;
-    reasons.push("Remote (where from isn't said)");
+    reasons.push(t("Remote (where from isn't said)"));
   } else if (where.remote && where.remoteOnly) {
-    reasons.push(`Remote only for ${where.remoteOnly}`);
+    reasons.push(t("Remote only for {where}", { where: where.remoteOnly }));
   }
 
   // How fresh it is.
   const days = startup.postedAt ? (now.getTime() - Date.parse(startup.postedAt)) / 86_400_000 : Infinity;
   if (days <= 14) {
     score += 10;
-    reasons.push(days < 1 ? "Posted today" : days < 2 ? "Posted yesterday" : `Posted ${Math.round(days)} days ago`);
+    reasons.push(days < 1 ? t("Posted today") : days < 2 ? t("Posted yesterday") : t("Posted {days} days ago", { days: Math.round(days) }));
   } else if (days <= 45) {
     score += 5;
   }

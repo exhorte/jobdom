@@ -11,6 +11,7 @@ import { RepositoryLink } from "./repository-link";
 import { SidebarFrame } from "./sidebar-frame";
 import { ThemeToggle } from "./theme-toggle";
 import { UpdateNotice } from "./update-notice";
+import { t } from "@/lib/i18n";
 
 /** Up to two initials for the avatar, e.g. "Jane Doe" → "JD". */
 function initials(name: string): string {
@@ -49,7 +50,7 @@ export function Sidebar({
           <BrandMark />
           <div className="flex min-w-0 flex-col group-data-collapsed/sidebar:hidden">
             <span className="font-serif text-2xl leading-none font-medium tracking-[-0.01em]">Dossier</span>
-            <span className="truncate text-xs text-muted">Your job search, on your server</span>
+            <span className="truncate text-xs text-muted">{t("Your job search, on your server")}</span>
           </div>
         </>
       }
@@ -58,12 +59,12 @@ export function Sidebar({
         {/* Always a fresh start, whatever an open draft holds (E7-7). */}
         <Link
           href="/new?fresh=1"
-          title="New application"
+          title={t("New application")}
           className="mb-2 flex min-h-[34px] items-center gap-1.5 rounded-control bg-primary px-3 text-sm font-semibold text-on-primary shadow-cta hover:bg-primary-hover hover:text-on-primary motion-safe:transition-colors group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-1.5"
         >
           <Plus size={16} aria-hidden="true" className="shrink-0" />
           {/* Hidden while collapsed, but still the link's name. */}
-          <span className="group-data-collapsed/sidebar:sr-only">New application</span>
+          <span className="group-data-collapsed/sidebar:sr-only">{t("New application")}</span>
         </Link>
 
         <NavLinks counts={counts} />
@@ -90,13 +91,13 @@ export function Sidebar({
         </span>
         <span className="flex min-w-0 flex-1 flex-col group-data-collapsed/sidebar:hidden">
           <span className="truncate text-xs font-medium">{userName}</span>
-          <span className="truncate text-[11px] text-muted">Self-hosted · v{currentVersion}</span>
+          <span className="truncate text-[11px] text-muted">{t("Self-hosted · v{version}", { version: currentVersion })}</span>
         </span>
         <form action={signOut}>
           <button
             type="submit"
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={t("Sign out")}
+            title={t("Sign out")}
             className="grid size-[26px] place-items-center rounded-control text-muted hover:bg-hover hover:text-ink"
           >
             <LogOut size={15} aria-hidden="true" />

@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import type { Match, MatchResult, Requirement } from "@/lib/application-data";
 import { matchScore } from "@/lib/application-data";
 import { cn } from "@/lib/cn";
+import { t, tx } from "@/lib/i18n";
 
 const MARKS: Record<MatchResult, { mark: string; label: string; className: string }> = {
-  covered: { mark: "✓", label: "Covered", className: "border-primary bg-primary text-on-primary" },
-  partial: { mark: "~", label: "Partly covered", className: "border-warning-line bg-warning-surface text-warning" },
-  gap: { mark: "–", label: "Not covered", className: "border-line-strong text-muted" },
+  covered: { mark: "✓", label: tx("Covered"), className: "border-primary bg-primary text-on-primary" },
+  partial: { mark: "~", label: tx("Partly covered"), className: "border-warning-line bg-warning-surface text-warning" },
+  gap: { mark: "–", label: tx("Not covered"), className: "border-line-strong text-muted" },
 };
 
 /**
@@ -30,12 +31,12 @@ export function MatchRows({
   return (
     <div className="flex flex-col">
       <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3.5">
-        <h2 className="text-[15px] font-medium">How you match</h2>
+        <h2 className="text-[15px] font-medium">{t("How you match")}</h2>
         <p className="text-meta text-muted">
-          {hit} of {total} covered by your profile
+          {t("{hit} of {total} covered by your profile", { hit, total })}
         </p>
       </div>
-      <ul aria-label="Requirements">
+      <ul aria-label={t("Requirements")}>
         {match.items.map((item, index) => {
           const { mark, label, className } = MARKS[item.result];
           const skill = requirements[index]?.kind === "skill" ? requirements[index].skill : null;
@@ -46,14 +47,14 @@ export function MatchRows({
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="text-field">
-                  <span className="sr-only">{label}: </span>
+                  <span className="sr-only">{t(label)}: </span>
                   {item.requirement}
                 </p>
                 {item.note && <p className="text-meta text-muted">{item.note}</p>}
               </div>
               {item.result === "gap" && skill && (
                 <Button variant="secondary" size="sm" className="flex-none" onClick={() => onAddSkill(index, skill)}>
-                  + Add to profile
+                  {t("+ Add to profile")}
                 </Button>
               )}
             </li>

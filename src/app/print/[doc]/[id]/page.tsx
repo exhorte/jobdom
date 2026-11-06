@@ -3,10 +3,15 @@ import { notFound } from "next/navigation";
 
 import { TailoredLetter, TailoredResume } from "@/components/documents/tailored-documents";
 import { loadDocuments } from "@/lib/application-documents";
+import { t } from "@/lib/i18n";
 import { verifyPrintAccess } from "@/lib/pdf/print-access";
 import { printCss } from "@/lib/themes";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Tailored document", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Tailored document"), robots: { index: false } };
+}
 
 /**
  * An application's tailored resume (/print/resume/{id}) or cover letter

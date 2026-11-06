@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 
+import { t } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile-data";
 import { loadSettings } from "@/lib/settings-data";
 
 import { ProfileEditor } from "./profile-editor";
 import { sectionFromParam } from "./sections";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Profile" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Profile") };
+}
 
 /** The profile editor; the current section is in `?section=` (E4-1). */
 export default async function ProfilePage({ searchParams }: PageProps<"/profile">) {

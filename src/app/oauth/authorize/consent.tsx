@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
 
 import { answerConnector } from "./actions";
 
@@ -36,10 +37,10 @@ export function Consent({ request }: { request: ConsentRequest }) {
       )}
       <div className="flex flex-wrap gap-3">
         <Button type="button" aria-disabled={pending || undefined} onClick={() => !pending && answer(true)}>
-          {pending ? "Connecting…" : "Allow"}
+          {pending ? t("Connecting…") : t("Allow")}
         </Button>
         <Button type="button" variant="secondary" aria-disabled={pending || undefined} onClick={() => !pending && answer(false)}>
-          Deny
+          {t("Deny")}
         </Button>
       </div>
     </div>

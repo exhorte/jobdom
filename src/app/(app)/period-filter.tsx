@@ -6,6 +6,7 @@ import { createContext, use, useOptimistic, useTransition, type ReactNode } from
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
 import { DASHBOARD_PERIODS, type DashboardPeriod } from "@/lib/dashboard";
+import { t } from "@/lib/i18n";
 
 import { rememberDashboardPeriod } from "./actions";
 
@@ -26,7 +27,7 @@ export function PeriodFilter({ period, children }: { period: DashboardPeriod; ch
     <>
       <div className="flex flex-wrap items-center gap-3 px-10 pb-5">
         <span id="period-label" className="text-meta text-muted">
-          Showing
+          {t("Showing")}
         </span>
         <SegmentedControl
           aria-labelledby="period-label"

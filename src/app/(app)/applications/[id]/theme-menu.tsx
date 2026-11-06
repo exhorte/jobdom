@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 /**
  * "Editorial theme ▾" above the Resume and Cover letter tabs' preview (#226,
@@ -32,15 +34,14 @@ export function ThemeMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="text" size="sm" aria-label={`Theme: ${current.name}`} className="data-[state=open]:text-ink">
-          {current.name} theme
-          <span aria-hidden="true" className="text-[10px]">
+        <Button variant="text" size="sm" aria-label={t("Theme: {name}", { name: current.name })} className="data-[state=open]:text-ink">
+          {rich("{name} theme{span}", { name: current.name, span: <span aria-hidden="true" className="text-[10px]">
             ▼
-          </span>
+          </span> })}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto">
-        <DropdownMenuLabel>Theme for this resume and cover letter</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("Theme for this resume and cover letter")}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={current.id} onValueChange={(id) => id !== current.id && onChange(id)}>
           {themes.map((theme, index) => (
             <Fragment key={theme.id}>
@@ -49,7 +50,7 @@ export function ThemeMenu({
               <DropdownMenuRadioItem value={theme.id}>
                 {theme.name}
                 {/* The space only keeps the item's name readable: "Modern base theme". */}
-                {theme.id === baseThemeId && <> <span className="text-meta text-muted">base theme</span></>}
+                {theme.id === baseThemeId && <> <span className="text-meta text-muted">{t("base theme")}</span></>}
               </DropdownMenuRadioItem>
             </Fragment>
           ))}

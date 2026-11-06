@@ -10,7 +10,6 @@ import { isAiConfigured } from "@/lib/ai/config";
 import { editsSchema, extractedSchema, matchSchema, trimmedSchema, unitsSchema, withSkillAdded } from "@/lib/application-data";
 import { WRITTEN_EMAIL_UNITS } from "@/lib/application-email";
 import { updateDocuments } from "@/lib/document-units";
-import { DOCUMENT_LABELS } from "@/lib/file-name";
 import { syncInterviewToCalendar } from "@/lib/google/availability";
 import { GoogleError } from "@/lib/google/errors";
 import { isFrameUnit, withFrame, WRITTEN_FRAME_UNITS } from "@/lib/letter-frame";
@@ -22,9 +21,10 @@ import { emailJobKey, writeEmailJob } from "@/lib/jobs/write-email";
 import { prisma } from "@/lib/prisma";
 import { findOrCreateSkill } from "@/lib/profile-entries";
 import { cleanUnitText, isPublicationUnit, unitName } from "@/lib/unit-text";
+import { listOf, t, tx } from "@/lib/i18n";
 
-const GONE = "That application no longer exists.";
-const PART_GONE = "That part of the document no longer exists. Reload the page to see what's there now.";
+const GONE = tx("That application no longer exists.");
+const PART_GONE = tx("That part of the document no longer exists. Reload the page to see what's there now.");
 
 const refresh = (id: string) => revalidatePath(`/applications/${id}`);
 
@@ -33,7 +33,7 @@ export const setFollowThemeLayout = action(
   z.object({ id: z.string().min(1), follow: z.boolean() }),
   async ({ id, follow }) => {
     const { count } = await prisma.application.updateMany({ where: { id }, data: { followThemeLayout: follow } });
-    if (count === 0) throw new ActionError(GONE);
+    if (count === 0) throw new ActionError(t(GONE));
     refresh(id);
     return null;
   },
@@ -42,7 +42,7 @@ export const setFollowThemeLayout = action(
 /** The Resume tab's Photo switch (#224): show the profile photo on this resume or not, whatever the profile says. */
 export const setShowPhoto = action(z.object({ id: z.string().min(1), show: z.boolean() }), async ({ id, show }) => {
   const { count } = await prisma.application.updateMany({ where: { id }, data: { showPhoto: show } });
-  if (count === 0) throw new ActionError(GONE);
+  if (count === 0) throw new ActionError(t(GONE));
   refresh(id);
   return null;
 });
@@ -54,9 +54,9 @@ export const setShowPhoto = action(z.object({ id: z.string().min(1), show: z.boo
  */
 export const setApplicationTheme = action(z.object({ id: z.string().min(1), themeId: z.string().min(1) }), async ({ id, themeId }) => {
   if (!(await prisma.theme.count({ where: { id: themeId } }))) {
-    throw new ActionError("That theme doesn't exist anymore. Reload the page to see your themes.");
+    throw new ActionError(t("That theme doesn't exist anymore. Reload the page to see your themes."));
   }
-  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(GONE);
+  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(t(GONE));
   await prisma.document.updateMany({
     where: { applicationId: id, kind: { in: [DocumentKind.RESUME, DocumentKind.COVER_LETTER] } },
     data: { themeId },
@@ -75,15 +75,15 @@ export const setInterviewDate = action(
   z.object({ id: z.string().min(1), at: z.iso.datetime().nullable() }),
   async ({ id, at }, { toast }) => {
     const { count } = await prisma.application.updateMany({ where: { id }, data: { nextInterviewAt: at ? new Date(at) : null } });
-    if (count === 0) throw new ActionError(GONE);
+    if (count === 0) throw new ActionError(t(GONE));
     refresh(id);
     try {
       const { inCalendar } = await syncInterviewToCalendar(id);
-      if (inCalendar) toast(at ? "Interview date saved, in your calendar too." : "Interview date removed, from your calendar too.");
-      else toast(at ? "Interview date saved. It'll show on your dashboard." : "Interview date removed.");
+      if (inCalendar) toast(at ? t("Interview date saved, in your calendar too.") : t("Interview date removed, from your calendar too."));
+      else toast(at ? t("Interview date saved. It'll show on your dashboard.") : t("Interview date removed."));
     } catch (error) {
       if (!(error instanceof GoogleError)) throw error;
-      toast(`${at ? "Interview date saved" : "Interview date removed"}, but your calendar wasn't changed: ${error.message}`);
+      toast(t("{at}, but your calendar wasn't changed: {message}", { at: at ? t("Interview date saved") : t("Interview date removed"), message: error.message }));
     }
     return null;
   },
@@ -107,7 +107,7 @@ export const saveUnit = action(
     const clean = cleanUnitText(unitId, text);
     // The email's recipient may be left empty, for the mail app to fill in.
     if (!clean && !(document === DocumentKind.EMAIL && unitId === "to")) {
-      throw new ActionError("Write something first, or cancel to keep it as it was.");
+      throw new ActionError(t("Write something first, or cancel to keep it as it was."));
     }
 
     await updateDocuments(id, async (documents) => {
@@ -120,7 +120,7 @@ export const saveUnit = action(
       }
       if (!unit) throw new ActionError(PART_GONE);
       if (unit.text !== expected) {
-        throw new ActionError("This part changed while you were editing it. Copy your text, cancel, and edit the new version.");
+        throw new ActionError(t("This part changed while you were editing it. Copy your text, cancel, and edit the new version."));
       }
       unit.text = clean;
       delete unit.unverified;
@@ -146,11 +146,11 @@ export const startRegenerating = action(
     const frame = document === DocumentKind.COVER_LETTER && isFrameUnit(unitId);
     // The sender, date and signature come from the profile and the day, not the AI (E8-11).
     if ((frame && !WRITTEN_FRAME_UNITS.has(unitId)) || (document === DocumentKind.EMAIL && !WRITTEN_EMAIL_UNITS.has(unitId))) {
-      throw new ActionError("This part isn't written by the AI. Edit it instead.");
+      throw new ActionError(t("This part isn't written by the AI. Edit it instead."));
     }
     // A publication is the user's own citation (#218).
     if (document === DocumentKind.RESUME && isPublicationUnit(unitId)) {
-      throw new ActionError("A publication stays as you wrote it. Edit it instead.");
+      throw new ActionError(t("A publication stays as you wrote it. Edit it instead."));
     }
     if (frame && shown) {
       await updateDocuments(id, async (documents) => {
@@ -186,7 +186,7 @@ export const restoreUnit = action(
     await updateDocuments(id, async (documents) => {
       const unit = documents[document]?.find((entry) => entry.id === unitId);
       if (!unit) throw new ActionError(PART_GONE);
-      if (unit.text !== expected) throw new ActionError("It's been changed again since, so this can't be undone.");
+      if (unit.text !== expected) throw new ActionError(t("It's been changed again since, so this can't be undone."));
       unit.text = text;
       if (unverified?.length) unit.unverified = unverified;
       else delete unit.unverified;
@@ -197,7 +197,7 @@ export const restoreUnit = action(
 );
 
 /** The answer on the Job posting tab, where there's nothing to change. */
-const POSTING_REPLY = "I can change the resume, the cover letter or the email. Switch to one of them, or hover a section and pick “Ask AI”.";
+const POSTING_REPLY = tx("I can change the resume, the cover letter or the email. Switch to one of them, or hover a section and pick “Ask AI”.");
 
 /**
  * Sends a message from the Refine with AI panel (E8-5): saves it and starts
@@ -207,14 +207,14 @@ const POSTING_REPLY = "I can change the resume, the cover letter or the email. S
 export const sendMessage = action(
   z.object({
     id: z.string().min(1),
-    text: z.string().trim().min(1, "Write what should change first.").max(2000),
+    text: z.string().trim().min(1, tx("Write what should change first.")).max(2000),
     /** The document on screen; null on the Job posting and Notes tabs, and on the Email tab before there's an email. */
     viewing: z.enum(DocumentKind).nullable(),
     /** The unit picked with "Ask AI". */
     target: z.object({ document: z.enum(DocumentKind), unitId: z.string().min(1) }).nullable(),
   }),
   async ({ id, text, viewing, target }) => {
-    if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(GONE);
+    if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(t(GONE));
 
     if (!viewing && !target) {
       const now = Date.now();
@@ -228,9 +228,9 @@ export const sendMessage = action(
       return { jobId: null };
     }
 
-    if (!(await isAiConfigured())) throw new ActionError("That needs an AI provider. Choose one in Settings → AI provider.");
+    if (!(await isAiConfigured())) throw new ActionError(t("That needs an AI provider. Choose one in Settings → AI provider."));
     if ((await findUnfinishedJobs(refineJobKey(id))).length > 0) {
-      throw new ActionError("I'm still working on your last message. Send this one when I'm done.");
+      throw new ActionError(t("I'm still working on your last message. Send this one when I'm done."));
     }
     let targetLabel: string | null = null;
     if (target) {
@@ -251,7 +251,6 @@ export const sendMessage = action(
 );
 
 /** "A, B and C" */
-const listOf = (names: string[]) => (names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
 
 /**
  * "Undo" under a reply in the chat (E8-6, APP-8): puts back what the reply
@@ -261,17 +260,19 @@ const listOf = (names: string[]) => (names.length <= 1 ? names.join("") : `${nam
 export const undoMessage = action(z.object({ id: z.string().min(1), messageId: z.string().min(1) }), async ({ id, messageId }) => {
   const message = await prisma.chatMessage.findFirst({ where: { id: messageId, applicationId: id, role: ChatRole.AI } });
   const edits = message && editsSchema.safeParse(message.edits);
-  if (!message || !edits?.success || edits.data.length === 0) throw new ActionError("There's nothing to undo in that message.");
-  if (message.undone) throw new ActionError("That's already undone.");
+  if (!message || !edits?.success || edits.data.length === 0) throw new ActionError(t("There's nothing to undo in that message."));
+  if (message.undone) throw new ActionError(t("That's already undone."));
 
   await updateDocuments(id, async (documents, tx) => {
     const changed = edits.data.flatMap((edit) => {
       const unit = documents[edit.document]?.find((entry) => entry.id === edit.unitId);
-      return unit?.text === edit.text ? [] : [`the ${unitName(unit ?? { id: edit.unitId, label: "" })}`];
+      return unit?.text === edit.text ? [] : [t("the {unitName}", { unitName: unitName(unit ?? { id: edit.unitId, label: "" }) })];
     });
     if (changed.length > 0) {
       throw new ActionError(
-        `You've changed ${listOf(changed)} since, so undoing this would overwrite that. Edit ${changed.length === 1 ? "it" : "them"} by hand instead.`,
+        changed.length === 1
+          ? t("You've changed {names} since, so undoing this would overwrite that. Edit it by hand instead.", { names: listOf(changed) })
+          : t("You've changed {names} since, so undoing this would overwrite that. Edit them by hand instead.", { names: listOf(changed) }),
       );
     }
     for (const edit of edits.data) {
@@ -283,7 +284,7 @@ export const undoMessage = action(z.object({ id: z.string().min(1), messageId: z
     if (message.previousTone) await tx.application.update({ where: { id }, data: { tone: message.previousTone } });
     // Only once, even when two clicks race.
     const { count } = await tx.chatMessage.updateMany({ where: { id: messageId, undone: false }, data: { undone: true } });
-    if (count === 0) throw new ActionError("That's already undone.");
+    if (count === 0) throw new ActionError(t("That's already undone."));
   }, { version: { cause: VersionCause.UNDONE } });
   refresh(id);
   return { edited: edits.data.map(({ document, unitId }) => ({ document, unitId })) };
@@ -295,13 +296,13 @@ export const undoMessage = action(z.object({ id: z.string().min(1), messageId: z
  */
 export const addMatchSkill = action(z.object({ id: z.string().min(1), index: z.number().int().min(0) }), async ({ id, index }) => {
   const application = await prisma.application.findUnique({ where: { id }, select: { match: true, extracted: true } });
-  if (!application) throw new ActionError(GONE);
+  if (!application) throw new ActionError(t(GONE));
   const match = matchSchema.safeParse(application.match);
   const extracted = extractedSchema.safeParse(application.extracted);
   const item = match.success ? match.data.items[index] : undefined;
   const requirement = extracted.success ? extracted.data.requirements[index] : undefined;
   if (!match.success || !item || item.result !== "gap" || requirement?.kind !== "skill" || !requirement.skill) {
-    throw new ActionError("That requirement can't be added to your profile. Reload the page to see what's there now.");
+    throw new ActionError(t("That requirement can't be added to your profile. Reload the page to see what's there now."));
   }
 
   const { skill } = await findOrCreateSkill(requirement.skill.trim());
@@ -314,16 +315,16 @@ export const addMatchSkill = action(z.object({ id: z.string().min(1), index: z.n
 // Private notes (E8-9, APP-14). They stay on this server and never go into
 // a prompt: no AI task reads the Note table.
 
-const noteBody = z.string().trim().min(1, "Write something first.").max(5000);
+const noteBody = z.string().trim().min(1, tx("Write something first.")).max(5000);
 
 export const addNote = action(z.object({ id: z.string().min(1), body: noteBody }), async ({ id, body }) => {
-  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(GONE);
+  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(t(GONE));
   await prisma.note.create({ data: { applicationId: id, body } });
   refresh(id);
   return null;
 });
 
-const NOTE_GONE = "That note no longer exists.";
+const NOTE_GONE = tx("That note no longer exists.");
 
 export const updateNote = action(
   z.object({ id: z.string().min(1), noteId: z.string().min(1), body: noteBody }),
@@ -347,7 +348,7 @@ export const deleteNote = action(z.object({ id: z.string().min(1), noteId: z.str
 export const restoreNote = action(
   z.object({ id: z.string().min(1), body: noteBody, createdAt: z.iso.datetime(), updatedAt: z.iso.datetime() }),
   async ({ id, body, createdAt, updatedAt }) => {
-    if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(GONE);
+    if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(t(GONE));
     await prisma.note.create({ data: { applicationId: id, body, createdAt: new Date(createdAt), updatedAt: new Date(updatedAt) } });
     refresh(id);
     return null;
@@ -387,7 +388,7 @@ export const putBackTrimmed = action(z.object({ id: z.string().min(1), index: z.
   const row = await prisma.document.findUnique({ where: { applicationId_kind: { applicationId: id, kind: DocumentKind.RESUME } } });
   const trimmed = row ? trimmedSchema.safeParse(row.trimmed) : null;
   const item = trimmed?.success ? trimmed.data[index] : undefined;
-  if (!row || !trimmed?.success || !item) throw new ActionError("That's already back. Reload the page to see the resume as it is.");
+  if (!row || !trimmed?.success || !item) throw new ActionError(t("That's already back. Reload the page to see the resume as it is."));
 
   await updateDocuments(id, async (documents) => {
     const units = documents[DocumentKind.RESUME];
@@ -409,7 +410,7 @@ export const putBackTrimmed = action(z.object({ id: z.string().min(1), index: z.
 
 // ─── Versions (E8-10, APP-13) ────────────────────────────────────────────────
 
-const VERSION_GONE = "That version no longer exists. Open the history again to see what's there.";
+const VERSION_GONE = tx("That version no longer exists. Open the history again to see what's there.");
 
 /** A document's versions, newest first, without their units. */
 export const listVersions = action(z.object({ id: z.string().min(1), document: z.enum(DocumentKind) }), async ({ id, document }) => {
@@ -450,7 +451,7 @@ export const restoreVersion = action(z.object({ id: z.string().min(1), versionId
     async (documents, tx) => {
       const current = documents[kind];
       if (!current) throw new ActionError(PART_GONE);
-      if (JSON.stringify(current) === JSON.stringify(units)) throw new ActionError("That's the version you have now.");
+      if (JSON.stringify(current) === JSON.stringify(units)) throw new ActionError(t("That's the version you have now."));
       const newest = await tx.documentVersion.findFirst({ where: { documentId: version.document.id }, orderBy: { createdAt: "desc" }, select: { units: true } });
       if (!newest || JSON.stringify(unitsSchema.parse(newest.units)) !== JSON.stringify(current)) {
         await saveVersion(tx, version.document.id, current, { cause: VersionCause.BEFORE_RESTORE });
@@ -476,7 +477,13 @@ export const restoreVersion = action(z.object({ id: z.string().min(1), versionId
       data: { trimmed: stillLeftOut.length > 0 ? stillLeftOut : Prisma.DbNull },
     });
   }
-  toast(`Restored the ${DOCUMENT_LABELS[kind].toLowerCase()} as it was then. The version you had is in the history too.`);
+  toast(
+    kind === DocumentKind.RESUME
+      ? t("Restored the resume as it was then. The version you had is in the history too.")
+      : kind === DocumentKind.COVER_LETTER
+        ? t("Restored the cover letter as it was then. The version you had is in the history too.")
+        : t("Restored the email as it was then. The version you had is in the history too."),
+  );
   refresh(id);
   return null;
 });
@@ -489,8 +496,8 @@ export const restoreVersion = action(z.object({ id: z.string().min(1), versionId
  * written follows the same job.
  */
 export const startWritingEmail = action(z.object({ id: z.string().min(1) }), async ({ id }) => {
-  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(GONE);
-  if (!(await isAiConfigured())) throw new ActionError("That needs an AI provider. Choose one in Settings → AI provider.");
+  if (!(await prisma.application.count({ where: { id } }))) throw new ActionError(t(GONE));
+  if (!(await isAiConfigured())) throw new ActionError(t("That needs an AI provider. Choose one in Settings → AI provider."));
   const [running] = await findUnfinishedJobs(emailJobKey(id));
   return running?.id ?? startJob(writeEmailJob, { applicationId: id }, { key: emailJobKey(id), applicationId: id });
 });
@@ -503,14 +510,14 @@ export const undoEmailRewrite = action(z.object({ id: z.string().min(1), jobId: 
   const job = await prisma.job.findFirst({ where: { id: jobId, key: emailJobKey(id), status: "DONE" }, select: { result: true } });
   const result = writeEmailJob.result.safeParse(job?.result);
   const previous = result.success ? result.data.previous : null;
-  if (!result.success || !previous) throw new ActionError("There's nothing to undo.");
+  if (!result.success || !previous) throw new ActionError(t("There's nothing to undo."));
 
   const same = (a: unknown, b: unknown) => JSON.stringify(unitsSchema.parse(a)) === JSON.stringify(unitsSchema.parse(b));
   await updateDocuments(id, async (documents) => {
     const current = documents[DocumentKind.EMAIL];
     if (!current) throw new ActionError(PART_GONE);
     if (!same(current, result.data.units)) {
-      throw new ActionError("The email has changed since, so this can't be undone. Earlier versions are in its history.");
+      throw new ActionError(t("The email has changed since, so this can't be undone. Earlier versions are in its history."));
     }
     documents[DocumentKind.EMAIL] = previous;
   }, { version: { cause: VersionCause.UNDONE } });

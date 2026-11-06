@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env, type Env } from "@/lib/env";
+import { t } from "@/lib/i18n";
 import { decryptSecret, JOB_SOURCE_KEY, SecretUnreadable } from "@/lib/secrets";
 import type { SettingsData } from "@/lib/settings";
 import { loadSettings } from "@/lib/settings-data";
@@ -86,7 +87,7 @@ export async function loadJobSearchConfig(): Promise<JobSearchConfig> {
  */
 export function arbeitsagenturStartupNotice(config: JobSearchConfig): string | null {
   if (config.source !== "ARBEITSAGENTUR" || config.saved) return null;
-  const waiting = config.arbeitsagentur.acceptedAt ? "" : " It isn't searched until you tick “I understand” in Settings → Job search.";
+  const waiting = config.arbeitsagentur.acceptedAt ? "" : t(" It isn't searched until you tick “I understand” in Settings → Job search.");
   return `Job search: DOSSIER_JOBS_SOURCE chooses the Bundesagentur für Arbeit. ${ARBEITSAGENTUR_NOTE}${waiting}`;
 }
 
@@ -116,7 +117,7 @@ export function requestContext(source: JobSource, base = env.DOSSIER_JOBS_TEST_B
 export function credentialsFor<S extends JobSource>(config: JobSearchConfig, source: S): SourceCredentials[S] {
   const missing = (keyState: JobKeyState) =>
     keyState === "unreadable"
-      ? new JobSearchError("no-key", `Your saved ${SOURCE_INFO[source].name} key can't be read. Enter it again in Settings → Job search.`)
+      ? new JobSearchError("no-key", t("Your saved {name} key can't be read. Enter it again in Settings → Job search.", { name: SOURCE_INFO[source].name }))
       : jobSearchError("no-key", source);
   switch (source) {
     case "JSEARCH": {

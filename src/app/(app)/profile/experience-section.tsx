@@ -21,6 +21,7 @@ import {
 import { EntryList } from "./entry-list";
 import { MonthYearField } from "./month-year-field";
 import { useTrackSave } from "@/components/save-tracker";
+import { t } from "@/lib/i18n";
 import type { UpdateProfile } from "./skills-section";
 import { SkillsUsed } from "./skills-used";
 
@@ -48,46 +49,46 @@ function ExperienceForm({
     <div className="grid grid-cols-2 gap-[18px]" onBlur={flush}>
       <Input
         className="col-span-2"
-        label="Role"
-        placeholder="Product Designer"
+        label={t("Role")}
+        placeholder={t("Product Designer")}
         value={entry.role}
         onChange={(event) => set({ role: event.target.value })}
         autoFocus={autoFocus}
       />
       <Input
-        label="Company"
-        placeholder="Acme Inc."
+        label={t("Company")}
+        placeholder={t("Acme Inc.")}
         value={entry.company}
         onChange={(event) => set({ company: event.target.value })}
       />
       <Input
-        label="Location"
-        placeholder="Springfield"
+        label={t("Location")}
+        placeholder={t("Springfield")}
         value={entry.location}
         onChange={(event) => set({ location: event.target.value })}
       />
       <MonthYearField
-        label="Started"
+        label={t("Started")}
         value={{ month: entry.startMonth, year: entry.startYear }}
         onChange={({ month, year }) => set({ startMonth: month, startYear: year })}
       />
       <div className="flex flex-col gap-2.5">
         <MonthYearField
-          label="Ended"
+          label={t("Ended")}
           value={{ month: entry.endMonth, year: entry.endYear }}
           onChange={({ month, year }) => set({ endMonth: month, endYear: year })}
           disabled={entry.current}
         />
         <Checkbox
-          label="I still work here"
+          label={t("I still work here")}
           checked={entry.current}
           onChange={(event) => set({ current: event.target.checked })}
         />
       </div>
       <Textarea
         className="col-span-2"
-        label="What you did"
-        placeholder="One point per line. Rough is fine."
+        label={t("What you did")}
+        placeholder={t("One point per line. Rough is fine.")}
         rows={4}
         value={entry.bullets}
         onChange={(event) => set({ bullets: event.target.value })}
@@ -96,7 +97,7 @@ function ExperienceForm({
   );
 }
 
-const roleTitle = (entry: ExperienceItem) => entry.role.trim() || "New role";
+const roleTitle = (entry: ExperienceItem) => entry.role.trim() || t("New role");
 
 /** Work experience (PRO-5): one card open at a time, autosaved, with Undo on Remove. */
 export function ExperienceSection({ profile, update, order }: { profile: ProfileData; update: UpdateProfile; order: EntryOrder }) {
@@ -107,7 +108,7 @@ export function ExperienceSection({ profile, update, order }: { profile: Profile
     <EntryList
       items={profile.experience}
       setItems={(change) => update((current) => ({ ...current, experience: change(current.experience) }))}
-      addLabel="Add a role"
+      addLabel={t("Add a role")}
       ordering={{
         mode: order,
         save: (ids) => reorderEntries({ section: "experience", ids }),
@@ -127,7 +128,7 @@ export function ExperienceSection({ profile, update, order }: { profile: Profile
           <ExperienceForm entry={entry} onChange={onChange} autoFocus={autoFocus} />
           <SkillsUsed
             entry={entry}
-            noun="role"
+            noun={t("role")}
             skills={profile.skills}
             update={update}
             setLinks={(change) =>

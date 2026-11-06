@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProgressSteps } from "@/components/ui/progress-steps";
+import { t } from "@/lib/i18n";
 import type { JobView } from "@/lib/jobs/runner";
 
 /** The step a job is on: its own last-named step, or past the end once it's done. */
@@ -22,7 +23,7 @@ export function JobProgress({
   error,
   onRetry,
   onBack,
-  backLabel = "← Back to the posting",
+  backLabel = t("← Back to the posting"),
 }: {
   title: string;
   steps: readonly string[];
@@ -37,21 +38,21 @@ export function JobProgress({
     <Card className="flex flex-col gap-[22px] px-9 py-10">
       {/* Takes focus when its step starts (E11-3). */}
       <h2 tabIndex={-1} className="font-serif text-section">
-        {title}
+        {t(title)}
       </h2>
       <ProgressSteps steps={steps} current={current} />
       {error ? (
         <div role="alert" className="flex flex-col gap-3.5">
           <p className="text-control text-error">{error}</p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={onRetry}>Retry</Button>
+            <Button onClick={onRetry}>{t("Retry")}</Button>
             <Button variant="text" onClick={onBack}>
               {backLabel}
             </Button>
           </div>
         </div>
       ) : (
-        <p className="text-meta text-muted">This can take a little longer on a local model.</p>
+        <p className="text-meta text-muted">{t("This can take a little longer on a local model.")}</p>
       )}
     </Card>
   );

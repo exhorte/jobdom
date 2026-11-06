@@ -14,6 +14,8 @@ import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { checkInbox, disconnectGoogleAccount, saveGoogleClient, saveGoogleSettings } from "@/lib/google/actions";
 import { cn } from "@/lib/cn";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { SettingsSectionIntro } from "./settings-screen";
 
@@ -44,19 +46,19 @@ export type GoogleConnectionView =
   | { status: "disconnected" }
   | { status: "connected"; email: string; canSend: boolean; canRead: boolean; canUseCalendar: boolean; lastSync: string | null; syncProblem: string | null };
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = [tx("Mon"), tx("Tue"), tx("Wed"), tx("Thu"), tx("Fri"), tx("Sat"), tx("Sun")];
 const INTERVALS = [5, 10, 15, 30, 60];
 const LENGTHS = [15, 30, 45, 60, 90];
 const BUFFERS = [0, 10, 15, 30];
 
 /** What came back from Google's consent page, as a message. */
 export const CALLBACK_MESSAGES: Record<string, string> = {
-  connected: "Connected to Google.",
-  denied: "Google wasn't given access, so nothing changed.",
-  expired: "That took too long or didn't start here. Try connecting again.",
-  rejected: "Google refused the sign-in. Check the client ID and secret below.",
-  failed: "Connecting to Google didn't work. Try again.",
-  "not-configured": "Google isn't set up on this server yet. See the steps below.",
+  connected: tx("Connected to Google."),
+  denied: tx("Google wasn't given access, so nothing changed."),
+  expired: tx("That took too long or didn't start here. Try connecting again."),
+  rejected: tx("Google refused the sign-in. Check the client ID and secret below."),
+  failed: tx("Connecting to Google didn't work. Try again."),
+  "not-configured": tx("Google isn't set up on this server yet. See the steps below."),
 };
 
 /**
@@ -112,8 +114,7 @@ export function GoogleSection({
   return (
     <>
       <SettingsSectionIntro title="Google">
-        Send applications from your Gmail, see employers&apos; replies next to each application, and offer interview times from your
-        calendar. Dossier always asks before it sends anything.
+        {t("Send applications from your Gmail, see employers' replies next to each application, and offer interview times from your calendar. Dossier always asks before it sends anything.")}
       </SettingsSectionIntro>
 
       <Card className="flex flex-col gap-4">
@@ -121,27 +122,25 @@ export function GoogleSection({
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p role="status" className="flex items-center gap-2 text-control">
-                <span aria-hidden className="size-2 flex-none rounded-full bg-success" />
-                Connected as <span className="font-medium">{connection.email}</span>
+                {rich("{span}Connected as {span2}", { span: <span aria-hidden className="size-2 flex-none rounded-full bg-success" />, span2: <span className="font-medium">{connection.email}</span> })}
               </p>
               <Button variant="danger-outline" size="sm" onClick={() => setConfirming(true)}>
-                Disconnect
+                {t("Disconnect")}
               </Button>
             </div>
             <ul className="flex flex-col gap-1.5 text-meta text-muted">
-              <Permission granted={connection.canSend} group="send" label="Send email from your address" />
-              <Permission granted={connection.canRead} group="read" label="Read your mail, to find replies to your applications" />
-              <Permission granted={connection.canUseCalendar} group="calendar" label="See when you're free and add interviews to your calendar" />
+              <Permission granted={connection.canSend} group="send" label={t("Send email from your address")} />
+              <Permission granted={connection.canRead} group="read" label={t("Read your mail, to find replies to your applications")} />
+              <Permission granted={connection.canUseCalendar} group="calendar" label={t("See when you're free and add interviews to your calendar")} />
             </ul>
           </>
         ) : (
           <div className="flex flex-col items-start gap-3">
             <p className="text-sm text-muted">
-              You&apos;ll sign in on Google&apos;s own page and choose what Dossier may do. Tokens are stored encrypted on your server and
-              never leave it, except to talk to Google.
+              {t("You'll sign in on Google's own page and choose what Dossier may do. Tokens are stored encrypted on your server and never leave it, except to talk to Google.")}
             </p>
             <a href="/api/google/connect" className={buttonClassName("primary", "md", "hover:text-on-primary")}>
-              Connect Google account
+              {t("Connect Google account")}
             </a>
           </div>
         )}
@@ -152,8 +151,8 @@ export function GoogleSection({
           <Card padding="none" className="flex flex-col px-7 pt-1.5 pb-5">
             <Toggle
               className="py-4"
-              label="Read replies"
-              description="Check Gmail for employers' replies, link them to applications and have the AI read them."
+              label={t("Read replies")}
+              description={t("Check Gmail for employers' replies, link them to applications and have the AI read them.")}
               checked={settings.gmailRead}
               disabled={!connection.canRead}
               onCheckedChange={(gmailRead) => change({ gmailRead })}
@@ -162,7 +161,7 @@ export function GoogleSection({
               <div className="flex flex-col gap-4 border-t border-line pt-4">
                 <div className="flex flex-col gap-[7px]">
                   <span id="gmail-scope" className="text-label text-muted">
-                    Which mail
+                    {t("Which mail")}
                   </span>
                   <SegmentedControl<"known" | "all">
                     aria-labelledby="gmail-scope"
@@ -176,28 +175,28 @@ export function GoogleSection({
                   />
                   <p className="text-meta text-muted">
                     {settings.gmailScope === "known"
-                      ? "Only mail that matches an application is kept and sent to the AI."
-                      : "Mail that doesn't match an application waits under Needs a look. With a hosted AI, it's sent to the provider to be read."}
+                      ? t("Only mail that matches an application is kept and sent to the AI.")
+                      : t("Mail that doesn't match an application waits under Needs a look. With a hosted AI, it's sent to the provider to be read.")}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-end gap-4">
                   <Select
-                    label="Check every"
+                    label={t("Check every")}
                     className="w-40"
                     value={settings.gmailInterval}
                     onChange={(event) => change({ gmailInterval: Number(event.target.value) })}
                   >
                     {INTERVALS.map((minutes) => (
                       <option key={minutes} value={minutes}>
-                        {minutes} minutes
+                        {t("{minutes} minutes", { minutes })}
                       </option>
                     ))}
                   </Select>
                   <Button variant="secondary" onClick={checkNow} disabled={checking}>
-                    {checking ? "Checking…" : "Check now"}
+                    {checking ? t("Checking…") : t("Check now")}
                   </Button>
                   <p role="status" className={cn("flex items-center gap-2 pb-2 text-control", connection.syncProblem ? "text-error" : "text-muted")}>
-                    {connection.syncProblem ?? (connection.lastSync ? `Last checked ${connection.lastSync}` : "Not checked yet")}
+                    {connection.syncProblem ?? (connection.lastSync ? t("Last checked {lastSync}", { lastSync: connection.lastSync }) : t("Not checked yet"))}
                   </p>
                 </div>
               </div>
@@ -207,16 +206,16 @@ export function GoogleSection({
           <Card padding="none" className="flex flex-col px-7 pt-1.5 pb-6">
             <Toggle
               className="py-4"
-              label="Offer times from my calendar"
-              description="When an employer asks to meet, the drafted answer offers times you're free."
+              label={t("Offer times from my calendar")}
+              description={t("When an employer asks to meet, the drafted answer offers times you're free.")}
               checked={settings.calendarAvailability}
               disabled={!connection.canUseCalendar}
               onCheckedChange={(calendarAvailability) => change({ calendarAvailability })}
             />
             <Toggle
               className="border-t border-line py-4"
-              label="Add interviews to my calendar"
-              description="Once a time is agreed, add it with a link back to the application, and keep it in step: a time changed here or in Google changes on both sides."
+              label={t("Add interviews to my calendar")}
+              description={t("Once a time is agreed, add it with a link back to the application, and keep it in step: a time changed here or in Google changes on both sides.")}
               checked={settings.calendarEvents}
               disabled={!connection.canUseCalendar}
               onCheckedChange={(calendarEvents) => change({ calendarEvents })}
@@ -224,7 +223,7 @@ export function GoogleSection({
             <div className="grid gap-x-[18px] gap-y-5 border-t border-line pt-5 sm:grid-cols-2">
               <div className="flex flex-col gap-[7px] sm:col-span-2">
                 <span id="work-days" className="text-label text-muted">
-                  Working days
+                  {t("Working days")}
                 </span>
                 <div role="group" aria-labelledby="work-days" className="flex flex-wrap gap-1.5">
                   {DAYS.map((label, index) => {
@@ -240,40 +239,40 @@ export function GoogleSection({
                           on ? "border-primary bg-selected font-medium text-ink" : "border-line-field bg-input text-muted hover:border-line-strong",
                         )}
                       >
-                        {label}
+                        {t(label)}
                       </button>
                     );
                   })}
                 </div>
               </div>
-              <Input label="From" type="time" value={settings.workStart} onChange={(event) => event.target.value && change({ workStart: event.target.value })} />
-              <Input label="Until" type="time" value={settings.workEnd} onChange={(event) => event.target.value && change({ workEnd: event.target.value })} />
-              <Select label="Interview length" value={settings.slotMinutes} onChange={(event) => change({ slotMinutes: Number(event.target.value) })}>
+              <Input label={t("From")} type="time" value={settings.workStart} onChange={(event) => event.target.value && change({ workStart: event.target.value })} />
+              <Input label={t("Until")} type="time" value={settings.workEnd} onChange={(event) => event.target.value && change({ workEnd: event.target.value })} />
+              <Select label={t("Interview length")} value={settings.slotMinutes} onChange={(event) => change({ slotMinutes: Number(event.target.value) })}>
                 {LENGTHS.map((minutes) => (
                   <option key={minutes} value={minutes}>
-                    {minutes} minutes
+                    {t("{minutes} minutes", { minutes })}
                   </option>
                 ))}
               </Select>
-              <Select label="Keep free around meetings" value={settings.bufferMinutes} onChange={(event) => change({ bufferMinutes: Number(event.target.value) })}>
+              <Select label={t("Keep free around meetings")} value={settings.bufferMinutes} onChange={(event) => change({ bufferMinutes: Number(event.target.value) })}>
                 {BUFFERS.map((minutes) => (
                   <option key={minutes} value={minutes}>
-                    {minutes === 0 ? "No gap" : `${minutes} minutes`}
+                    {minutes === 0 ? t("No gap") : t("{minutes} minutes", { minutes })}
                   </option>
                 ))}
               </Select>
               <Input
-                label="Time zone"
+                label={t("Time zone")}
                 placeholder={browserTimeZone ?? "Europe/Berlin"}
-                hint={browserTimeZone ? `Empty uses your browser's: ${browserTimeZone}` : "Empty uses your browser's"}
+                hint={browserTimeZone ? t("Empty uses your browser's: {browserTimeZone}", { browserTimeZone }) : t("Empty uses your browser's")}
                 value={timeZone}
                 spellCheck={false}
                 onChange={(event) => setTimeZone(event.target.value)}
                 onBlur={() => timeZone.trim() !== (settings.workTimeZone ?? "") && change({ workTimeZone: timeZone.trim() || null })}
               />
               <Input
-                label="Calendar"
-                hint="primary is your main calendar; or a calendar's ID from Google Calendar's settings"
+                label={t("Calendar")}
+                hint={t("primary is your main calendar; or a calendar's ID from Google Calendar's settings")}
                 value={calendarId}
                 spellCheck={false}
                 onChange={(event) => setCalendarId(event.target.value)}
@@ -289,9 +288,9 @@ export function GoogleSection({
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title="Disconnect Google?"
-        description="Dossier's access is revoked at Google. Mail already in Dossier stays; nothing new comes in until you connect again."
-        confirmLabel="Disconnect"
+        title={t("Disconnect Google?")}
+        description={t("Dossier's access is revoked at Google. Mail already in Dossier stays; nothing new comes in until you connect again.")}
+        confirmLabel={t("Disconnect")}
         onConfirm={() => void disconnect()}
       />
     </>
@@ -303,10 +302,10 @@ function Permission({ granted, group, label }: { granted: boolean; group: string
   return (
     <li className="flex flex-wrap items-center gap-2">
       <span aria-hidden className={cn("size-1.5 flex-none rounded-full", granted ? "bg-success" : "bg-faint")} />
-      <span className={cn(granted && "text-ink")}>{label}</span>
+      <span className={cn(granted && "text-ink")}>{t(label)}</span>
       {!granted && (
         <a href={`/api/google/connect?scopes=${group}`} className="underline underline-offset-3">
-          Allow
+          {t("Allow")}
         </a>
       )}
       <span className="sr-only">{granted ? "(allowed)" : "(not allowed)"}</span>
@@ -319,39 +318,35 @@ function SetupSteps({ redirectUri, client }: { redirectUri: string; client: Goog
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(redirectUri);
-      toast("Copied the redirect URI.");
+      toast(t("Copied the redirect URI."));
     } catch {
-      toast("That didn't copy. Select it and copy it yourself.");
+      toast(t("That didn't copy. Select it and copy it yourself."));
     }
   };
   return (
     <>
       <SettingsSectionIntro title="Google">
-        Connect Gmail and Google Calendar to send applications, read replies and offer interview times. First, give this server a
-        Google OAuth client.
+        {t("Connect Gmail and Google Calendar to send applications, read replies and offer interview times. First, give this server a Google OAuth client.")}
       </SettingsSectionIntro>
       <Card className="flex flex-col gap-4 text-sm">
         <ol className="flex list-decimal flex-col gap-2.5 pl-5">
           <li>
-            In <span className="font-medium">Google Cloud Console</span>, create a project and enable the{" "}
-            <span className="font-medium">Gmail API</span> and the <span className="font-medium">Google Calendar API</span>.
+            {rich("In {span}, create a project and enable the {span2} and the {span3}.", { span: <span className="font-medium">{t("Google Cloud Console")}</span>, span2: <span className="font-medium">{t("Gmail API")}</span>, span3: <span className="font-medium">{t("Google Calendar API")}</span> })}
           </li>
           <li>
-            Set up the <span className="font-medium">OAuth consent screen</span> as External, add yourself as a test user, then{" "}
-            <span className="font-medium">publish</span> it (In production). Unpublished, Google stops the access after 7 days.
+            {rich("Set up the {span} as External, add yourself as a test user, then {span2} it (In production). Unpublished, Google stops the access after 7 days.", { span: <span className="font-medium">{t("OAuth consent screen")}</span>, span2: <span className="font-medium">{t("publish")}</span> })}
           </li>
           <li>
-            Create an <span className="font-medium">OAuth client ID</span> of type Web application, with this authorised redirect URI:
-            <span className="mt-1.5 flex items-center gap-2">
+            {rich("Create an {span} of type Web application, with this authorised redirect URI:{span2}", { span: <span className="font-medium">{t("OAuth client ID")}</span>, span2: <span className="mt-1.5 flex items-center gap-2">
               <code className="rounded-control border border-line-field bg-input px-2 py-1 font-mono text-label [overflow-wrap:anywhere]">
                 {redirectUri}
               </code>
               <Button variant="text" size="sm" onClick={() => void copy()}>
-                Copy
+                {t("Copy")}
               </Button>
-            </span>
+            </span> })}
           </li>
-          <li>Paste the client&apos;s ID and secret below.</li>
+          <li>{t("Paste the client's ID and secret below.")}</li>
         </ol>
       </Card>
       <ClientCard initial={client} connected={false} />
@@ -360,10 +355,10 @@ function SetupSteps({ redirectUri, client }: { redirectUri: string; client: Goog
 }
 
 const SECRET_PLACEHOLDER: Record<GoogleClientView["secretState"], string> = {
-  set: "Saved · type a new secret to replace it",
-  env: "Using DOSSIER_GOOGLE_CLIENT_SECRET · type one to save it here",
-  none: "Stored encrypted on your server",
-  unreadable: "Stored encrypted on your server",
+  set: tx("Saved · type a new secret to replace it"),
+  env: tx("Using DOSSIER_GOOGLE_CLIENT_SECRET · type one to save it here"),
+  none: tx("Stored encrypted on your server"),
+  unreadable: tx("Stored encrypted on your server"),
 };
 
 /**
@@ -399,17 +394,17 @@ function ClientCard({ initial, connected }: { initial: GoogleClientView; connect
   return (
     <Card className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <h3 className="text-control font-medium">OAuth client</h3>
+        <h3 className="text-control font-medium">{t("OAuth client")}</h3>
         <p className="text-meta text-muted">
-          {connected ? "Changing the client ID disconnects your Google account; connect again afterwards." : "Saved on this server, so no restart is needed."}
+          {connected ? t("Changing the client ID disconnects your Google account; connect again afterwards.") : t("Saved on this server, so no restart is needed.")}
         </p>
       </div>
       <div className="grid grid-cols-1 gap-x-[18px] gap-y-5 sm:grid-cols-2">
         <Input
-          label="Client ID"
+          label={t("Client ID")}
           value={id}
-          placeholder={view.idState === "env" ? "Using DOSSIER_GOOGLE_CLIENT_ID" : "…apps.googleusercontent.com"}
-          hint={view.idState === "env" ? "From DOSSIER_GOOGLE_CLIENT_ID · type one to save it here" : undefined}
+          placeholder={view.idState === "env" ? t("Using DOSSIER_GOOGLE_CLIENT_ID") : "…apps.googleusercontent.com"}
+          hint={view.idState === "env" ? t("From DOSSIER_GOOGLE_CLIENT_ID · type one to save it here") : undefined}
           spellCheck={false}
           autoComplete="off"
           inputClassName="font-mono text-[13.5px]"
@@ -424,7 +419,7 @@ function ClientCard({ initial, connected }: { initial: GoogleClientView; connect
         />
         <div className="flex flex-col gap-2.5">
           <Input
-            label="Client secret"
+            label={t("Client secret")}
             type="password"
             autoComplete="off"
             value={secret}
@@ -441,7 +436,7 @@ function ClientCard({ initial, connected }: { initial: GoogleClientView; connect
           />
           {(view.secretState === "set" || view.secretState === "unreadable") && (
             <Button variant="text" size="sm" className="self-start" onClick={() => void save({ secret: { action: "clear" } })}>
-              Remove saved secret
+              {t("Remove saved secret")}
             </Button>
           )}
         </div>

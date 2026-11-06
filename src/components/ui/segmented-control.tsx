@@ -4,6 +4,7 @@ import { RadioGroup } from "radix-ui";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 export type SegmentedOption<T extends string> = { value: T; label: ReactNode };
 
@@ -55,7 +56,7 @@ export function SegmentedControl<T extends string>({
               : "rounded-[7px] px-3 py-1.5 text-meta",
           )}
         >
-          {option.label}
+          {t(option.label)}
         </RadioGroup.Item>
       ))}
     </RadioGroup.Root>

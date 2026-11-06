@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 
 import { archiveApplication, DeleteApplicationDialog } from "@/components/application-lifecycle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { t } from "@/lib/i18n";
 
 /** The application's "⋯" menu (E9-5): Archive or Unarchive, and Delete. */
 export function ApplicationMenu({ id, archived }: { id: string; archived: boolean }) {
@@ -16,7 +17,7 @@ export function ApplicationMenu({ id, archived }: { id: string; archived: boolea
       <DropdownMenu>
         <DropdownMenuTrigger
           ref={trigger}
-          aria-label="More actions"
+          aria-label={t("More actions")}
           className="grid size-10 place-items-center rounded-control border border-line-control text-muted hover:border-line-strong hover:text-ink data-[state=open]:border-primary data-[state=open]:text-ink"
         >
           <span aria-hidden="true" className="text-base leading-none">
@@ -24,9 +25,9 @@ export function ApplicationMenu({ id, archived }: { id: string; archived: boolea
           </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-[180px]">
-          <DropdownMenuItem onSelect={() => void archiveApplication(id, !archived)}>{archived ? "Unarchive" : "Archive"}</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => void archiveApplication(id, !archived)}>{archived ? t("Unarchive") : t("Archive")}</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDeleting(true)} className="text-danger data-highlighted:text-error-strong">
-            Delete…
+            {t("Delete…")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

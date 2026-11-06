@@ -10,6 +10,8 @@ import type { Unit } from "@/lib/application-data";
 import { emailParts, mailtoHref } from "@/lib/application-email";
 import { cn } from "@/lib/cn";
 import { copyText } from "@/lib/copy-text";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { SendWithGmail, type GmailSender } from "./send-with-gmail";
 import { aboutWords } from "./tabs";
@@ -59,13 +61,12 @@ export function EmailTab({
     return (
       <div className="flex flex-1 flex-col items-center overflow-auto bg-canvas px-10 pt-11 pb-16">
         <div className="flex w-full max-w-[560px] flex-col items-start gap-3 rounded-panel border border-line-card bg-card px-7 py-7">
-          <h2 className="font-serif text-section">An email to send it with</h2>
+          <h2 className="font-serif text-section">{t("An email to send it with")}</h2>
           <p className="text-sm text-muted">
-            I&apos;ll write a short email to go with your resume and cover letter, to whoever the posting says to send applications
-            to. Copy it into your mail app or open it there, and attach the PDFs.
+            {t("I'll write a short email to go with your resume and cover letter, to whoever the posting says to send applications to. Copy it into your mail app or open it there, and attach the PDFs.")}
           </p>
           <Button className="mt-1" aria-disabled={writing || undefined} onClick={() => !writing && onWrite()}>
-            {writing ? "Writing the email…" : "Write the email"}
+            {writing ? t("Writing the email…") : t("Write the email")}
           </Button>
         </div>
       </div>
@@ -74,21 +75,21 @@ export function EmailTab({
 
   const { to, subject, body } = emailParts(units);
   const copy = async (text: string, what: string) =>
-    toast((await copyText(text)) ? `Copied the ${what}.` : "That didn't copy. Select the text and copy it yourself.");
+    toast((await copyText(text)) ? t("Copied the {what}.", { what }) : t("That didn't copy. Select the text and copy it yourself."));
 
   return (
     <div className="flex flex-1 flex-col items-center gap-4 overflow-auto bg-canvas px-10 pt-11 pb-16">
       <div className="flex w-full max-w-[680px] flex-wrap items-center justify-between gap-x-3 gap-y-1 text-meta text-muted">
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span>Email · {aboutWords([body])}</span>
+          <span>{t("Email · {aboutWords}", { aboutWords: aboutWords([body]) })}</span>
           {history}
         </span>
-        {hint && <span>{hint}</span>}
+        {hint && <span>{t(hint)}</span>}
       </div>
       {notice && <div className="w-full max-w-[680px]">{notice}</div>}
 
       <article
-        aria-label="Email"
+        aria-label={t("Email")}
         aria-busy={writing || undefined}
         // The parts' highlight and toolbar are measured in page units, which are pixels here.
         style={{ "--u": "1px" } as CSSProperties}
@@ -97,10 +98,10 @@ export function EmailTab({
         <Field label="To" onCopy={to ? () => void copy(to, "recipient") : undefined}>
           {renderUnit({
             id: "to",
-            children: to || <span className="text-muted">The posting doesn&apos;t give an address. Edit to add one.</span>,
+            children: to || <span className="text-muted">{t("The posting doesn't give an address. Edit to add one.")}</span>,
           })}
         </Field>
-        <Field label="Subject" onCopy={subject ? () => void copy(subject, "subject") : undefined}>
+        <Field label={t("Subject")} onCopy={subject ? () => void copy(subject, "subject") : undefined}>
           {renderUnit({ id: "subject", children: subject })}
         </Field>
         <div className="px-7 pt-6 pb-7">
@@ -109,13 +110,13 @@ export function EmailTab({
 
         {(attachments.resume || attachments.letter) && (
           <div className="flex flex-col gap-2.5 border-t border-line px-7 pt-4 pb-5">
-            <h3 className="text-meta text-muted">Attach</h3>
+            <h3 className="text-meta text-muted">{t("Attach")}</h3>
             <ul className="flex flex-col gap-2">
               {attachments.resume && (
-                <Attachment name={attachments.resume} href={`/api/pdf?doc=resume&application=${applicationId}`} what="tailored resume" />
+                <Attachment name={attachments.resume} href={`/api/pdf?doc=resume&application=${applicationId}`} what={t("tailored resume")} />
               )}
               {attachments.letter && (
-                <Attachment name={attachments.letter} href={`/api/pdf?doc=letter&application=${applicationId}`} what="cover letter" />
+                <Attachment name={attachments.letter} href={`/api/pdf?doc=letter&application=${applicationId}`} what={t("cover letter")} />
               )}
             </ul>
           </div>
@@ -134,14 +135,14 @@ export function EmailTab({
           />
         )}
         <Button variant={gmail?.sender.from ? "secondary" : "primary"} onClick={() => void copy(body, "message")}>
-          Copy message
+          {t("Copy message")}
         </Button>
         {/* Mail apps can't take attachments from a link: the PDFs are attached by hand. */}
         <a href={mailtoHref({ to, subject, body })} className={buttonClassName("secondary", "md")}>
-          Open in mail app
+          {t("Open in mail app")}
         </a>
         <Button variant="text" className="ml-auto" aria-disabled={writing || undefined} onClick={() => !writing && onWrite()}>
-          {writing ? "Rewriting…" : "Rewrite"}
+          {writing ? t("Rewriting…") : t("Rewrite")}
         </Button>
       </div>
     </div>
@@ -152,11 +153,11 @@ export function EmailTab({
 function Field({ label, onCopy, children }: { label: string; onCopy?: () => void; children: ReactNode }) {
   return (
     <div className="flex items-baseline gap-4 border-b border-line px-7 py-3.5">
-      <span className="w-14 shrink-0 text-meta text-muted">{label}</span>
+      <span className="w-14 shrink-0 text-meta text-muted">{t(label)}</span>
       <div className="min-w-0 flex-1 text-field break-words">{children}</div>
       {onCopy && (
-        <Button variant="text" size="sm" className="py-0!" aria-label={`Copy the ${label === "To" ? "recipient" : label.toLowerCase()}`} onClick={onCopy}>
-          Copy
+        <Button variant="text" size="sm" className="py-0!" aria-label={t("Copy the {label}", { label: label === "To" ? "recipient" : label.toLowerCase() })} onClick={onCopy}>
+          {t("Copy")}
         </Button>
       )}
     </div>
@@ -169,12 +170,12 @@ function Attachment({ name, href, what }: { name: string; href: string; what: st
     <li className="flex items-center justify-between gap-3 rounded-control border border-line-card bg-input py-2 pr-2 pl-3">
       <span className="flex min-w-0 items-center gap-2.5">
         <span aria-hidden className="rounded-[5px] bg-danger-surface px-1.5 py-0.5 text-[10.5px] font-semibold tracking-wide text-danger">
-          PDF
+          {t("PDF")}
         </span>
         <span className="truncate text-control">{name}</span>
       </span>
       <DownloadPdfButton variant="secondary" size="sm" href={href} progress={`Rendering your ${what} as a PDF…`}>
-        Download <span className="sr-only">{name}</span>
+        {rich("Download {span}", { span: <span className="sr-only">{name}</span> })}
       </DownloadPdfButton>
     </li>
   );

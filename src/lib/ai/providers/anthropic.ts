@@ -3,6 +3,8 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 
+import { t } from "@/lib/i18n";
+
 import { AiError } from "../errors";
 import { BaseProvider, type ChatAnswer, type ChatCall, type Effort } from "../provider";
 import { keyGuardedFetch } from "./guarded-fetch";
@@ -42,7 +44,7 @@ export class AnthropicProvider extends BaseProvider {
   }
 
   protected async chat(call: ChatCall): Promise<ChatAnswer> {
-    if (!this.client) throw AiError.config("Add your Anthropic API key in Settings → AI provider first.");
+    if (!this.client) throw AiError.config(t("Add your Anthropic API key in Settings → AI provider first."));
     const effort = call.effort && (await this.effortLevels(this.client, call.model, call.signal)).has(call.effort) ? call.effort : undefined;
     const outputConfig = { ...(call.json ? { format: zodOutputFormat(call.json.schema) } : {}), ...(effort ? { effort } : {}) };
     const message = await this.client.messages.create(
@@ -56,7 +58,7 @@ export class AnthropicProvider extends BaseProvider {
       { signal: call.signal },
     );
     if (message.stop_reason === "refusal") {
-      throw new AiError("provider", "The model declined to answer this one. Try rewording it, or try again.", "refusal");
+      throw new AiError("provider", t("The model declined to answer this one. Try rewording it, or try again."), "refusal");
     }
     return {
       text: message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join(""),

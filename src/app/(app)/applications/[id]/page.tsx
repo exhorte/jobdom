@@ -14,6 +14,7 @@ import { emailJobKey } from "@/lib/jobs/write-email";
 import { googleConnection } from "@/lib/google/account";
 import { pullInterviewEvents } from "@/lib/google/availability";
 import { loadConversation } from "@/lib/google/inbox-data";
+import { t } from "@/lib/i18n";
 import { refineSuggestions } from "@/lib/refine-suggestions";
 import { loadThemes } from "@/lib/theme-data";
 import { userTimeZone } from "@/lib/time-zone";
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/applications/[id]
   const { id } = await params;
   await pullCalendar(id);
   const application = await loadApplication(id);
-  return { title: application.title.trim() || "Untitled application" };
+  return { title: application.title.trim() || t("Untitled application") };
 }
 
 /** One application (PRD §6.5): its status, tailored documents, email, posting and notes. */

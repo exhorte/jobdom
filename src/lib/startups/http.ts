@@ -3,6 +3,7 @@ import "server-only";
 import { lookup as dnsLookup } from "node:dns";
 
 import { env } from "@/lib/env";
+import { t } from "@/lib/i18n";
 import { fetchHtml, type FetchedPage } from "@/lib/posting-fetch";
 import { appVersion } from "@/lib/version";
 
@@ -42,14 +43,14 @@ export async function getText(url: string, { signal }: { signal?: AbortSignal } 
       cache: "no-store",
     });
   } catch {
-    if (signal?.aborted) throw new SourceError("was stopped");
-    throw new SourceError(timeout.aborted ? "took too long to answer" : "couldn't be reached");
+    if (signal?.aborted) throw new SourceError(t("was stopped"));
+    throw new SourceError(timeout.aborted ? "took too long to answer" : t("couldn't be reached"));
   }
-  if (!response.ok) throw new SourceError(`answered with an error (${response.status})`);
+  if (!response.ok) throw new SourceError(t("answered with an error ({status})", { status: response.status }));
   const length = Number(response.headers.get("content-length") ?? 0);
-  if (length > MAX_BYTES) throw new SourceError("sent too much");
+  if (length > MAX_BYTES) throw new SourceError(t("sent too much"));
   const text = await response.text();
-  if (text.length > MAX_BYTES) throw new SourceError("sent too much");
+  if (text.length > MAX_BYTES) throw new SourceError(t("sent too much"));
   return text;
 }
 
@@ -58,7 +59,7 @@ export async function getJson(url: string, options: { signal?: AbortSignal } = {
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new SourceError("didn't answer with JSON");
+    throw new SourceError(t("didn't answer with JSON"));
   }
 }
 

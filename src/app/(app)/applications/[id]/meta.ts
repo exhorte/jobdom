@@ -1,4 +1,5 @@
 import { formatCalendarDate, formatDate } from "@/lib/dates";
+import { t } from "@/lib/i18n";
 
 /** Location · work mode · salary · "Apply by …" · "Created …", leaving out empty parts (APP-1). */
 export function metaLine(application: {
@@ -12,7 +13,7 @@ export function metaLine(application: {
     application.location.trim(),
     application.mode.trim(),
     application.salary.trim(),
-    application.deadline ? `Apply by ${formatCalendarDate(application.deadline)}` : "",
-    `Created ${formatDate(application.createdAt)}`,
+    application.deadline ? t("Apply by {formatCalendarDate}", { formatCalendarDate: formatCalendarDate(application.deadline) }) : "",
+    t("Created {formatDate}", { formatDate: formatDate(application.createdAt) }),
   ].filter(Boolean);
 }

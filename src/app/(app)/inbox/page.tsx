@@ -3,13 +3,18 @@ import type { Metadata } from "next";
 import { isAiConfigured } from "@/lib/ai/config";
 import { googleConnection } from "@/lib/google/account";
 import { loadInbox } from "@/lib/google/inbox-data";
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { loadSettings } from "@/lib/settings-data";
 import { userTimeZone } from "@/lib/time-zone";
 
 import { InboxScreen } from "./inbox-screen";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Inbox" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Inbox") };
+}
 
 /**
  * Employers' replies from Gmail (E15-3): the ones waiting for an answer,

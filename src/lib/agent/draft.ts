@@ -8,6 +8,7 @@ import { ActionError } from "@/lib/action";
 import { AiError } from "@/lib/ai/errors";
 import { createApplicationFromDocuments, type ApplicationDetails } from "@/lib/application-create";
 import type { Extracted } from "@/lib/application-data";
+import { t } from "@/lib/i18n";
 import { fullText } from "@/lib/job-search/find";
 import { postingText, type FoundPosting } from "@/lib/job-search/search";
 import { readPostingJob } from "@/lib/jobs/read-posting";
@@ -65,25 +66,25 @@ function detailsFrom(extracted: Extracted): ApplicationDetails {
  */
 export async function draftCandidate(candidateId: string, context: JobContext): Promise<string> {
   const candidate = await prisma.agentCandidate.findUnique({ where: { id: candidateId } });
-  if (!candidate) throw new ActionError("That posting is no longer in the agent's queue.");
+  if (!candidate) throw new ActionError(t("That posting is no longer in the agent's queue."));
   if (candidate.status === AgentCandidateStatus.DRAFTED && candidate.applicationId) return candidate.applicationId;
   const { count } = await prisma.agentCandidate.updateMany({
     where: { id: candidateId, status: AgentCandidateStatus.SCORED },
     data: { status: AgentCandidateStatus.DRAFTING, error: null },
   });
-  if (count === 0) throw new ActionError("That posting is no longer waiting for a draft.");
+  if (count === 0) throw new ActionError(t("That posting is no longer waiting for a draft."));
 
-  const name = candidate.company || candidate.title || "the posting";
+  const name = candidate.company || candidate.title || t("the posting");
   try {
     const found = foundFromCandidate(candidate);
     // The source may have given only a snippet; the whole text writes a better draft.
     const description = (await fullText(found)) ?? candidate.description;
-    if (!description.trim()) throw new ActionError("That posting has no text to write from. Open it and start an application by hand.");
+    if (!description.trim()) throw new ActionError(t("That posting has no text to write from. Open it and start an application by hand."));
     const posting = postingText({ ...found, description });
 
-    await context.step(`Reading the posting from ${name}`);
+    await context.step(t("Reading the posting from {name}", { name }));
     const reading = await readPostingJob.run({ posting }, context);
-    await context.step(`Writing the draft for ${name}`);
+    await context.step(t("Writing the draft for {name}", { name }));
     const settings = await loadSettings();
     const documents = await writeDocumentsJob.run(
       { readJobId: context.id, posting, extracted: reading.extracted, match: reading.match, tone: settings.defaultTone, note: "" },
@@ -109,7 +110,7 @@ export async function draftCandidate(candidateId: string, context: JobContext): 
     return applicationId;
   } catch (error) {
     const known = error instanceof AiError || error instanceof ActionError;
-    const message = context.signal.aborted ? "Cancelled." : known ? error.message : "The draft couldn't be prepared. Try again.";
+    const message = context.signal.aborted ? t("Cancelled.") : known ? error.message : t("The draft couldn't be prepared. Try again.");
     await prisma.agentCandidate.updateMany({ where: { id: candidateId, status: AgentCandidateStatus.DRAFTING }, data: { status: AgentCandidateStatus.SCORED, error: message } });
     if (!known && !context.signal.aborted) logServerError("job agent draft", error);
     throw error;
@@ -131,7 +132,7 @@ export const agentDraftJob = defineJob({
 export async function approveCandidate(candidateId: string): Promise<string> {
   const candidate = await prisma.agentCandidate.findUnique({ where: { id: candidateId } });
   if (!candidate || candidate.status !== AgentCandidateStatus.DRAFTED || !candidate.applicationId) {
-    throw new ActionError("That draft isn't ready to approve.");
+    throw new ActionError(t("That draft isn't ready to approve."));
   }
   const applicationId = candidate.applicationId;
   const posting = await storePosting(foundFromCandidate(candidate));
@@ -158,9 +159,9 @@ export type DismissedCandidate = Pick<
  */
 export async function dismissCandidate(candidateId: string): Promise<{ undo: DismissedCandidate | null }> {
   const candidate = await prisma.agentCandidate.findUnique({ where: { id: candidateId } });
-  if (!candidate) throw new ActionError("That posting is no longer in the agent's queue.");
+  if (!candidate) throw new ActionError(t("That posting is no longer in the agent's queue."));
   if (candidate.status === AgentCandidateStatus.DISMISSED) return { undo: null };
-  if (candidate.status === AgentCandidateStatus.APPROVED) throw new ActionError("That draft was approved: it's in Applications now.");
+  if (candidate.status === AgentCandidateStatus.APPROVED) throw new ActionError(t("That draft was approved: it's in Applications now."));
 
   for (const job of await findUnfinishedJobs(draftJobKey(candidateId))) await cancelJob(job.id);
   const hadDraft = Boolean(candidate.applicationId) || candidate.status !== AgentCandidateStatus.SCORED;

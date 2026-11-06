@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import type { JobSource } from "@/lib/job-search/search";
 import { attributionHref, SOURCE_INFO } from "@/lib/job-search/sources";
+import { t } from "@/lib/i18n";
 
 /** At least 116 × 23 px, as Adzuna's terms ask of its label. */
 const badge = "inline-flex min-h-[23px] min-w-[116px] shrink-0 items-center justify-center rounded-full border border-line-strong px-2.5 py-0.5 text-xs font-medium";
@@ -31,7 +32,7 @@ export function SourceAttribution({ source, url, placeholder, className }: { sou
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={cn(badge, "text-muted hover:border-muted hover:text-ink", className)}>
       {text}{" "}
-      <span className="sr-only">(opens in a new tab)</span>
+      <span className="sr-only">{t("(opens in a new tab)")}</span>
     </a>
   );
 }

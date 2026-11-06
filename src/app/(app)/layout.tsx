@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { countAgentQueue } from "@/lib/agent/view";
 import { verifySession } from "@/lib/auth/session";
 import { inboxCount } from "@/lib/google/inbox-data";
+import { t } from "@/lib/i18n";
 import { loadProfileName } from "@/lib/profile-data";
 import { loadSettings } from "@/lib/settings-data";
 import { COLOR_SCHEME_COOKIE, parseColorScheme, parseSidebarCollapsed, SIDEBAR_COOKIE } from "@/lib/ui-preferences";
@@ -31,7 +32,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   after(() => rememberBrowserTimeZone(zone));
 
   const [name, settings, jar] = await Promise.all([loadProfileName(), loadSettings(), cookies()]);
-  const userName = name.trim() || "New user";
+  const userName = name.trim() || t("New user");
   // Replies waiting for an answer or a link, on the Inbox item; the job agent's finds and drafts on its own (E16-6).
   const [waiting, agent] = await Promise.all([inboxCount().catch(() => 0), countAgentQueue().catch(() => 0)]);
 
@@ -41,7 +42,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         href="#main"
         className="fixed top-3 left-3 z-50 -translate-y-[200%] rounded-control bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:text-on-primary focus:translate-y-0"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
       <Sidebar
         userName={userName}

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { loadSettings } from "@/lib/settings-data";
 import { lastKnownTimeZone } from "@/lib/time-zone";
@@ -42,7 +43,7 @@ export async function proposeSlots(now = new Date()): Promise<{ slots: Interval[
  */
 export async function scheduleInterview(applicationId: string, start: Date): Promise<CalendarSync> {
   const { count } = await prisma.application.updateMany({ where: { id: applicationId }, data: { nextInterviewAt: start } });
-  if (count === 0) throw new GoogleError("unavailable", "That application no longer exists.");
+  if (count === 0) throw new GoogleError("unavailable", t("That application no longer exists."));
   return syncInterviewToCalendar(applicationId);
 }
 

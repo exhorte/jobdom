@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 export type ProgressStepsProps = {
   steps: readonly string[];
@@ -13,7 +14,7 @@ export type ProgressStepsProps = {
  */
 export function ProgressSteps({ steps, current, className }: ProgressStepsProps) {
   const status =
-    current < steps.length ? `${steps[current]}…` : "Done.";
+    current < steps.length ? `${steps[current]}…` : t("Done.");
   return (
     <div className={className}>
       <ol className="flex flex-col gap-3.5">
@@ -39,8 +40,8 @@ export function ProgressSteps({ steps, current, className }: ProgressStepsProps)
               >
                 {state === "done" ? "✓" : state === "current" ? "·" : ""}
               </span>
-              {label}
-              {state === "done" && <span className="sr-only"> (done)</span>}
+              {t(label)}
+              {state === "done" && <span className="sr-only"> {t("(done)")}</span>}
             </li>
           );
         })}

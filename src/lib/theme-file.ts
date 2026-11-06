@@ -12,6 +12,7 @@ import {
   ThemeFont,
   ThemeLayout,
 } from "@/generated/prisma/enums";
+import { t, tx } from "@/lib/i18n";
 
 import { THEME_STYLE_DEFAULTS, type ThemeData } from "./themes";
 
@@ -26,20 +27,20 @@ export const THEME_FILE_FORMAT = "dossier-theme";
  */
 export const THEME_FILE_VERSION = 3;
 
-const font = z.enum(ThemeFont, { error: (issue) => `That theme uses a font Dossier doesn't have (${String(issue.input)}).` });
+const font = z.enum(ThemeFont, { error: (issue) => t("That theme uses a font Dossier doesn't have ({issue}).", { issue: String(issue.input) }) });
 
 /** A theme's name and look, checked the same way wherever it comes from. */
 export const themeFieldsSchema = z.object({
   name: z
     .string()
     .trim()
-    .max(60, "Keep the name under 60 characters.")
-    .transform((name) => name || "My theme"),
+    .max(60, tx("Keep the name under 60 characters."))
+    .transform((name) => name || t("My theme")),
   headFont: font,
   bodyFont: font,
   accent: z
     .string()
-    .regex(/^#[0-9a-f]{6}$/i, "The accent has to be a color like #1f6f5c.")
+    .regex(/^#[0-9a-f]{6}$/i, tx("The accent has to be a color like #1f6f5c."))
     .transform((accent) => accent.toLowerCase()),
   layout: z.enum(ThemeLayout),
   align: z.enum(ThemeAlign),
@@ -78,7 +79,7 @@ export function themeFile(theme: ThemeData) {
 
 /** "Quiet green.dossier-theme.json": the name, without characters files can't have. */
 export function themeFileName(theme: Pick<ThemeData, "name">): string {
-  const name = theme.name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim() || "Theme";
+  const name = theme.name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim() || t("Theme");
   return `${name}.dossier-theme.json`;
 }
 
@@ -86,16 +87,16 @@ export function themeFileName(theme: Pick<ThemeData, "name">): string {
 export function parseThemeFile(json: unknown): { ok: true; theme: ThemeFields } | { ok: false; error: string } {
   const header = json as { format?: unknown; version?: unknown } | null;
   if (typeof json !== "object" || json === null || header?.format !== THEME_FILE_FORMAT) {
-    return { ok: false, error: "That file isn't a Dossier theme." };
+    return { ok: false, error: t("That file isn't a Dossier theme.") };
   }
   if (typeof header.version !== "number" || header.version > THEME_FILE_VERSION) {
-    return { ok: false, error: "That theme comes from a newer version of Dossier. Update this server first." };
+    return { ok: false, error: t("That theme comes from a newer version of Dossier. Update this server first.") };
   }
   const parsed = themeFileSchema.safeParse(json);
   if (!parsed.success) {
     const [issue] = parsed.error.issues;
     // The font message is written for people; others only say where the file is broken.
-    return { ok: false, error: issue.message.startsWith("That") ? issue.message : `That theme file is damaged (${issue.path.join(".")}).` };
+    return { ok: false, error: issue.message.startsWith("That") ? t(issue.message) : t("That theme file is damaged ({issue}).", { issue: issue.path.join(".") }) };
   }
   return { ok: true, theme: parsed.data.theme };
 }

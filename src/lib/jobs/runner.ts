@@ -7,6 +7,8 @@ import { JobStatus } from "@/generated/prisma/enums";
 import { loadAiConfig } from "@/lib/ai/config";
 import { AiError } from "@/lib/ai/errors";
 import { providerOption } from "@/lib/ai/provider-options";
+import { tx } from "@/lib/i18n";
+import { applyLocale } from "@/lib/locale";
 import { logServerError } from "@/lib/log";
 import { prisma } from "@/lib/prisma";
 
@@ -47,9 +49,9 @@ export type JobView<R = unknown> = {
 };
 
 export const JOB_MESSAGES = {
-  failed: "Something went wrong while working on this. Try again.",
-  interrupted: "Dossier restarted before this finished. Try again.",
-  cancelled: "Cancelled.",
+  failed: tx("Something went wrong while working on this. Try again."),
+  interrupted: tx("Dossier restarted before this finished. Try again."),
+  cancelled: tx("Cancelled."),
 } as const;
 
 /** Jobs at once: local models do best with one request at a time (PRD §11). */
@@ -228,6 +230,8 @@ async function execute(id: string, controller: AbortController): Promise<void> {
       select: { type: true, input: true },
     });
     await notify(id);
+    // The steps and messages it writes come out in the language chosen in Settings.
+    await applyLocale();
     // Job types register when their module loads; make sure they all have.
     await import("./definitions");
     const definition = state.definitions.get(job.type);

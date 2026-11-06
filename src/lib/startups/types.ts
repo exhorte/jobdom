@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { tx } from "@/lib/i18n";
+
 // Startups (#222): startups that are hiring, from YC startups' job posts on
 // Hacker News and Hacker News' monthly "Who is hiring?" thread, ranked
 // against the profile, with the addresses they publish for applications.
@@ -9,20 +11,20 @@ export const STARTUP_SOURCES = ["YC", "HN"] as const;
 export type StartupSource = (typeof STARTUP_SOURCES)[number];
 
 export const STARTUP_SOURCE_INFO: Record<StartupSource, { name: string; kind: string }> = {
-  YC: { name: "Y Combinator", kind: "Job post" },
-  HN: { name: "Hacker News", kind: "Who is hiring?" },
+  YC: { name: tx("Y Combinator"), kind: tx("Job post") },
+  HN: { name: tx("Hacker News"), kind: tx("Who is hiring?") },
 };
 
 export const STARTUP_STATUSES = ["NEW", "SAVED", "CONTACTED", "DISMISSED"] as const;
 export type StartupStatusName = (typeof STARTUP_STATUSES)[number];
 
 /** What an address is for: an application address, the founders', a general one, or someone's own. */
-export const EMAIL_LABELS = ["Hiring", "Founders", "General", "Person"] as const;
+export const EMAIL_LABELS = [tx("Hiring"), tx("Founders"), tx("General"), tx("Person")] as const;
 export type EmailLabel = (typeof EMAIL_LABELS)[number];
 
 export const startupEmailSchema = z.object({
   email: z.string().max(200).regex(/^[^\s@]+@[^\s@]+\.[a-z]{2,24}$/i),
-  label: z.enum(EMAIL_LABELS).catch("General"),
+  label: z.enum(EMAIL_LABELS).catch(tx("General")),
   /** Where it was published: a page of the startup's site, or the post. */
   from: z.string().max(500).catch(""),
   /**

@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { toastResult } from "@/components/toast";
 import { Button } from "@/components/ui/button";
+import { t, tp } from "@/lib/i18n";
 import type { Country } from "@/lib/job-search/countries";
 import { describeSearch, searchRunHref, type PastSearchDay } from "@/lib/job-search/search";
 import { SOURCE_INFO } from "@/lib/job-search/sources";
@@ -40,7 +41,7 @@ export function PastSearches({ days, countries }: { days: PastSearchDay[]; count
   if (shown.length === 0) {
     return (
       <div className="mx-10 mb-16 max-w-[860px] rounded-panel border border-line-card bg-card px-5 py-9 text-center text-sm text-muted">
-        No searches yet. Each search you run is kept here with what it found, so you can open it again without spending another search.
+        {t("No searches yet. Each search you run is kept here with what it found, so you can open it again without spending another search.")}
       </div>
     );
   }
@@ -58,11 +59,11 @@ export function PastSearches({ days, countries }: { days: PastSearchDay[]; count
                   <Link href={searchRunHref(search.id)} className="flex min-w-0 flex-col gap-0.5 text-ink hover:text-ink">
                     <span className="truncate text-field font-medium">{what}</span>
                     <span className="text-meta text-muted">
-                      {search.time} · {search.found === 1 ? "1 posting" : `${search.found} postings`} · {SOURCE_INFO[search.source].name}
+                      {search.time} · {tp(search.found, "{count} posting", "{count} postings")} · {SOURCE_INFO[search.source].name}
                     </span>
                   </Link>
-                  <Button variant="text" size="sm" aria-label={`Remove the search “${what}” from ${search.time}`} onClick={() => void remove(search.id)}>
-                    Remove
+                  <Button variant="text" size="sm" aria-label={t("Remove the search “{what}” from {time}", { what, time: search.time })} onClick={() => void remove(search.id)}>
+                    {t("Remove")}
                   </Button>
                 </li>
               );

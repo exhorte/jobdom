@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatusDot } from "@/components/ui/status-dot";
 import { ApplicationStatus } from "@/generated/prisma/enums";
+import { t } from "@/lib/i18n";
 import { STATUSES, statusInfo } from "@/lib/status";
 
 import { InterviewDate } from "./interview-date";
@@ -57,11 +58,11 @@ export function StatusControl({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label={`Status: ${label}`}
+            aria-label={t("Status: {label}", { label })}
             className="flex items-center gap-[9px] rounded-full border border-line-control bg-card px-3.5 py-[9px] text-sm font-medium hover:border-line-strong data-[state=open]:border-primary"
           >
             <StatusDot status={shown} />
-            {label}
+            {t(label)}
             <span aria-hidden="true" className="text-[10px] text-muted">
               ▼
             </span>
@@ -75,12 +76,12 @@ export function StatusControl({
             setInterview("ask");
           }}
         >
-          <DropdownMenuLabel>Move this application to</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("Move this application to")}</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={shown} onValueChange={(value) => move(value as ApplicationStatus)}>
             {STATUSES.map((entry) => (
               <DropdownMenuRadioItem key={entry.value} value={entry.value}>
                 <StatusDot status={entry.value} />
-                {entry.label}
+                {t(entry.label)}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
@@ -96,7 +97,7 @@ export function StatusControl({
           onOpenChange={(open) => setInterview(open ? "edit" : null)}
         />
       )}
-      {shown === ApplicationStatus.DRAFT && <Button onClick={() => move(ApplicationStatus.SENT)}>Mark as sent</Button>}
+      {shown === ApplicationStatus.DRAFT && <Button onClick={() => move(ApplicationStatus.SENT)}>{t("Mark as sent")}</Button>}
     </>
   );
 }

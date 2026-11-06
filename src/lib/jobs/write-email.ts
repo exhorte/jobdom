@@ -11,6 +11,7 @@ import { extractedOf, matchSchema, unitsSchema, type Unit } from "@/lib/applicat
 import { emailParts } from "@/lib/application-email";
 import { updateDocuments } from "@/lib/document-units";
 import { saveVersion } from "@/lib/document-versions";
+import { t } from "@/lib/i18n";
 import { isParagraph } from "@/lib/letter-frame";
 import { prisma } from "@/lib/prisma";
 import { loadFactTexts, loadProfile } from "@/lib/profile-data";
@@ -39,7 +40,7 @@ export const writeEmailJob = defineJob({
     previous: unitsSchema.nullable(),
   }),
   async run({ applicationId }, { step, signal }) {
-    await step("Writing the email");
+    await step(t("Writing the email"));
     const application = await prisma.application.findUniqueOrThrow({ where: { id: applicationId }, include: { documents: true, startup: { select: { emails: true } } } });
     const unitsOf = (kind: DocumentKind): Unit[] | null => {
       const parsed = unitsSchema.safeParse(application.documents.find((document) => document.kind === kind)?.units);

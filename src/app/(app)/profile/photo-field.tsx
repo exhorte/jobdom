@@ -8,6 +8,8 @@ import { useTrackSave } from "@/components/save-tracker";
 import { toast } from "@/components/toast";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import {
   centredCrop,
   clampCrop,
@@ -46,7 +48,7 @@ export function PhotoField({ photo, onChange }: { photo: ProfilePhoto | null; on
       setPicked(image);
     } catch {
       URL.revokeObjectURL(image.src);
-      toast("That file isn't a photo this browser can open. Try a JPEG or PNG.");
+      toast(t("That file isn't a photo this browser can open. Try a JPEG or PNG."));
     }
   }
 
@@ -72,14 +74,14 @@ export function PhotoField({ photo, onChange }: { photo: ProfilePhoto | null; on
       onChange(before);
       return toast(result.error);
     }
-    toast("Removed your photo.", {
+    toast(t("Removed your photo."), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: async () => {
           const restored = await track(savePhoto(before));
           if (!restored.ok) return toast(restored.error);
           onChange(before);
-          toast("Put your photo back.");
+          toast(t("Put your photo back."));
         },
       },
     });
@@ -100,32 +102,32 @@ export function PhotoField({ photo, onChange }: { photo: ProfilePhoto | null; on
       <div className="flex h-24 w-[72px] flex-none items-center justify-center overflow-hidden rounded-control border border-line-field bg-paper text-faint">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element -- a data URL: there's nothing for next/image to optimise.
-          <img src={photo.src} alt="Your photo" className="size-full object-cover" />
+          <img src={photo.src} alt={t("Your photo")} className="size-full object-cover" />
         ) : (
           <UserRound aria-hidden size={32} strokeWidth={1.5} />
         )}
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <p className="text-label font-medium text-ink">
-          Photo <span className="font-normal text-muted">(optional)</span>
+          {rich("Photo {span}", { span: <span className="font-normal text-muted">{t("(optional)")}</span> })}
         </p>
         <p className="text-label text-muted">
-          For resumes: each theme shows it in its own shape and place. It stays on this server and is never sent to the AI.
+          {t("For resumes: each theme shows it in its own shape and place. It stays on this server and is never sent to the AI.")}
         </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
-            {photo ? "Change photo" : "Add a photo"}
+            {photo ? t("Change photo") : t("Add a photo")}
           </Button>
           {photo && (
             <Button variant="danger-text" size="sm" onClick={() => void remove()}>
-              Remove
+              {t("Remove")}
             </Button>
           )}
           <input
             ref={fileInput}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            aria-label="Photo file"
+            aria-label={t("Photo file")}
             className="sr-only"
             tabIndex={-1}
             onChange={(event) => {
@@ -138,8 +140,8 @@ export function PhotoField({ photo, onChange }: { photo: ProfilePhoto | null; on
         </div>
         {photo && (
           <Checkbox
-            label="Show on resumes"
-            hint="Each application can still leave it out, or put it on, from its Resume tab."
+            label={t("Show on resumes")}
+            hint={t("Each application can still leave it out, or put it on, from its Resume tab.")}
             checked={photo.onResumes}
             onChange={(event) => void showOnResumes(event.target.checked)}
           />
@@ -198,14 +200,14 @@ function CropDialog({ image, onCancel, onUse }: { image: HTMLImageElement; onCan
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-32px)] w-[min(400px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-dialog border border-line-popover bg-card p-6 shadow-menu">
-          <Dialog.Title className="font-serif text-[22px] leading-tight">Crop your photo</Dialog.Title>
+          <Dialog.Title className="font-serif text-[22px] leading-tight">{t("Crop your photo")}</Dialog.Title>
           <Dialog.Description className="text-sm text-muted">
-            Drag it, or use the arrow keys, to move it. Themes with a round or square photo show what&apos;s inside the circle.
+            {t("Drag it, or use the arrow keys, to move it. Themes with a round or square photo show what's inside the circle.")}
           </Dialog.Description>
           <div
             role="group"
             tabIndex={0}
-            aria-label="Photo crop: arrow keys move the photo, plus and minus zoom"
+            aria-label={t("Photo crop: arrow keys move the photo, plus and minus zoom")}
             className="relative mx-auto cursor-grab touch-none overflow-hidden rounded-control bg-paper select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:cursor-grabbing"
             style={{ width: FRAME.width, height: FRAME.height }}
             onPointerDown={onPointerDown}
@@ -229,8 +231,7 @@ function CropDialog({ image, onCancel, onUse }: { image: HTMLImageElement; onCan
             />
           </div>
           <label className="flex items-center gap-3 text-sm text-muted">
-            Zoom
-            <input
+            {rich("Zoom{input}", { input: <input
               type="range"
               min={1}
               max={MAX_ZOOM}
@@ -238,12 +239,12 @@ function CropDialog({ image, onCancel, onUse }: { image: HTMLImageElement; onCan
               value={crop.zoom}
               onChange={(event) => zoom(Number(event.target.value))}
               className="flex-1 accent-primary"
-            />
+            /> })}
           </label>
           <div className="flex justify-end gap-2">
-            <Dialog.Close className={buttonClassName("secondary", "sm")}>Cancel</Dialog.Close>
+            <Dialog.Close className={buttonClassName("secondary", "sm")}>{t("Cancel")}</Dialog.Close>
             <Button size="sm" disabled={saving} onClick={() => void use()}>
-              {saving ? "Saving…" : "Use photo"}
+              {saving ? t("Saving…") : t("Use photo")}
             </Button>
           </div>
         </Dialog.Content>

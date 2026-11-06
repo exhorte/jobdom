@@ -14,6 +14,7 @@ import { formatShortDate } from "@/lib/dates";
 import { env } from "@/lib/env";
 import { googleConnection } from "@/lib/google/account";
 import { loadGoogleClientConfig, redirectUri } from "@/lib/google/oauth";
+import { DEFAULT_LOCALE, intlLocale, t } from "@/lib/i18n";
 import { lastKnownTimeZone, userTimeZone } from "@/lib/time-zone";
 import { appVersion } from "@/lib/version";
 import { prisma } from "@/lib/prisma";
@@ -30,12 +31,17 @@ import { DocumentsSection } from "./documents-section";
 import { GoogleSection } from "./google-section";
 import { GoogleNotice } from "./google-notice";
 import { JobSearchSection } from "./job-search-section";
+import { LanguageSection } from "./language-section";
 import { AboutSection, type AboutFacts, type UsagePingView } from "./about-section";
 import { ConnectorSection } from "./connector-section";
 import { settingsSectionFromParam } from "./sections";
 import { SettingsScreen } from "./settings-screen";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Settings") };
+}
 
 /** Settings (PRD §6.8); the section is in `?section=` (E10-1). */
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
@@ -124,6 +130,8 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           }}
           preview={await filePreview()}
         />
+      ) : section === "language" ? (
+        <LanguageSection initial={settings.locale ?? DEFAULT_LOCALE} />
       ) : (
         <AboutSection
           facts={await aboutFacts()}
@@ -164,20 +172,20 @@ async function filePreview() {
     prisma.application.findFirst({ where: { awaitingReview: false }, orderBy: { createdAt: "desc" }, select: { company: true, role: true } }),
   ]);
   return {
-    name: name.trim() || "Jane Doe",
-    company: latest?.company.trim() || "Ledgerly",
-    role: latest?.role.trim() || "Senior Product Designer",
+    name: name.trim() || t("Jane Doe"),
+    company: latest?.company.trim() || t("Ledgerly"),
+    role: latest?.role.trim() || t("Senior Product Designer"),
   };
 }
 
 /** "today at 03:00", "yesterday at 03:00" or "on 25 Sep at 03:00", in the server's time zone. */
 function whenRan(date: Date | null, now = new Date()): string | null {
   if (!date) return null;
-  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const time = date.toLocaleTimeString(intlLocale("en-GB"), { hour: "2-digit", minute: "2-digit" });
   const day = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
   const days = Math.round((day(now) - day(date)) / 86_400_000);
-  if (days === 0) return `today at ${time}`;
-  if (days === 1) return `yesterday at ${time}`;
+  if (days === 0) return t("today at {time}", { time });
+  if (days === 1) return t("yesterday at {time}", { time });
   return `on ${formatShortDate(date, now)} at ${time}`;
 }
 
@@ -196,19 +204,19 @@ function formatBytes(bytes: number): string {
 /** The About rows (SET-12). */
 async function aboutFacts(): Promise<AboutFacts> {
   const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim() || requestHeaders.get("host") || "Unknown";
+  const host = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim() || requestHeaders.get("host") || t("Unknown");
   const [[database], ai, applications] = await Promise.all([
     prisma.$queryRaw<{ size: bigint }[]>`SELECT pg_database_size(current_database()) AS size`,
     loadAiConfig(),
     prisma.application.count({ where: { awaitingReview: false } }),
   ]);
   return [
-    { label: "Version", value: appVersion },
-    { label: "Server", value: host },
-    { label: "Database", value: `PostgreSQL · ${formatBytes(Number(database.size))}` },
-    { label: "Sign-in", value: "set via DOSSIER_PASSWORD" },
+    { label: t("Version"), value: appVersion },
+    { label: t("Server"), value: host },
+    { label: t("Database"), value: `PostgreSQL · ${formatBytes(Number(database.size))}` },
+    { label: t("Sign-in"), value: t("set via DOSSIER_PASSWORD") },
     { label: "AI", value: [providerOption(ai.provider).name, ai.model].filter(Boolean).join(" · ") },
-    { label: "Applications", value: String(applications) },
+    { label: t("Applications"), value: String(applications) },
   ];
 }
 

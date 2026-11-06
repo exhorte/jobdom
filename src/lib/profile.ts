@@ -1,15 +1,16 @@
 import { LanguageLevel } from "@/generated/prisma/enums";
+import { t, tx } from "@/lib/i18n";
 import type { ProfilePhoto } from "@/lib/photo";
 
 /** Proficiency levels in the order the language select lists them (PRD PRO-4). */
 export const LANGUAGE_LEVELS: readonly { value: LanguageLevel; label: string }[] = [
-  { value: LanguageLevel.NATIVE, label: "Native" },
-  { value: LanguageLevel.C2, label: "Fluent (C2)" },
-  { value: LanguageLevel.C1, label: "Advanced (C1)" },
-  { value: LanguageLevel.B2, label: "Upper intermediate (B2)" },
-  { value: LanguageLevel.B1, label: "Intermediate (B1)" },
-  { value: LanguageLevel.A2, label: "Elementary (A2)" },
-  { value: LanguageLevel.A1, label: "Beginner (A1)" },
+  { value: LanguageLevel.NATIVE, label: tx("Native") },
+  { value: LanguageLevel.C2, label: tx("Fluent (C2)") },
+  { value: LanguageLevel.C1, label: tx("Advanced (C1)") },
+  { value: LanguageLevel.B2, label: tx("Upper intermediate (B2)") },
+  { value: LanguageLevel.B1, label: tx("Intermediate (B1)") },
+  { value: LanguageLevel.A2, label: tx("Elementary (A2)") },
+  { value: LanguageLevel.A1, label: tx("Beginner (A1)") },
 ];
 
 export function languageLevelLabel(level: LanguageLevel): string {
@@ -55,7 +56,7 @@ export function formatMonthYear(
 export function formatDateRange(span: DateSpan, options: DateFormatOptions = {}): string {
   const start = formatMonthYear(span.startYear, span.startMonth, options);
   const end = span.current
-    ? (options.present ?? "Present")
+    ? (options.present ?? t("Present"))
     : formatMonthYear(span.endYear, span.endMonth, options);
   return [start, end].filter(Boolean).join(" – ");
 }
@@ -200,12 +201,12 @@ export function profileStrength(profile: {
   );
   const hint =
     percent === 100
-      ? "All set. The optional sections are there if they help."
+      ? t("All set. The optional sections are there if they help.")
       : percent >= 90
-        ? "Looking great. The AI has plenty to work with."
+        ? t("Looking great. The AI has plenty to work with.")
         : percent >= 50
-          ? "Nice progress. A bit more detail makes tailoring sharper."
-          : "A good start. Experience matters most.";
+          ? t("Nice progress. A bit more detail makes tailoring sharper.")
+          : t("A good start. Experience matters most.");
   return { percent, hint };
 }
 

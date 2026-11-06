@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { PAGE_WIDTH } from "@/lib/themes";
 
 import styles from "./document.module.css";
+import { t } from "@/lib/i18n";
 
 /** The canvas between two sheets of a paged preview, in page units. */
 export const SHEET_GAP = 32;
@@ -109,7 +110,7 @@ export function DocumentPreview({
     >
       <div className="flex flex-col gap-4" style={{ "--u": "min(1px, calc(100cqw / 640))" } as CSSProperties}>
         <div className="flex w-[calc(var(--u)*640)] justify-between gap-3 text-meta text-muted">
-          <span>{label}</span>
+          <span>{t(label)}</span>
           <span>{typeof meta === "function" ? meta(pages) : meta}</span>
         </div>
         {notice && <div className="w-[calc(var(--u)*640)]">{typeof notice === "function" ? notice(pages) : notice}</div>}

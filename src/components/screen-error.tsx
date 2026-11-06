@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 
 import { ScreenMessage } from "@/components/screen-message";
 import { Button, buttonClassName } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 /** What Next.js passes to an `error.tsx`. */
 export type ErrorPageProps = {
@@ -22,7 +24,7 @@ export function ScreenError({
   retry,
   title,
   children,
-  elsewhere = { href: "/", label: "Go to the dashboard" },
+  elsewhere = { href: "/", label: t("Go to the dashboard") },
   standalone,
 }: ErrorPageProps & {
   /** Outside the app's shell: see ScreenMessage. */
@@ -34,22 +36,22 @@ export function ScreenError({
 }) {
   return (
     <ScreenMessage
-      title={title}
+      title={t(title)}
       standalone={standalone}
       actions={
         <>
-          <Button onClick={() => retry()}>Try again</Button>
+          <Button onClick={() => retry()}>{t("Try again")}</Button>
           <Link href={elsewhere.href} className={buttonClassName("secondary")}>
-            {elsewhere.label}
+            {t(elsewhere.label)}
           </Link>
         </>
       }
     >
-      <p>Something went wrong on the server. Nothing you saved is lost, and trying again usually sorts it out.</p>
+      <p>{t("Something went wrong on the server. Nothing you saved is lost, and trying again usually sorts it out.")}</p>
       {children}
       {error.digest && (
         <p className="text-meta">
-          If it keeps happening, the server log has the details under <code className="font-mono">{error.digest}</code>.
+          {rich("If it keeps happening, the server log has the details under {code}.", { code: <code className="font-mono">{error.digest}</code> })}
         </p>
       )}
     </ScreenMessage>

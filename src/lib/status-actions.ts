@@ -6,12 +6,13 @@ import { z } from "zod";
 import { ApplicationStatus } from "@/generated/prisma/enums";
 import { action, ActionError } from "@/lib/action";
 import { approveCandidate } from "@/lib/agent/draft";
+import { t, tx } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 import { statusInfo } from "./status";
 import { applyStatusChange, undoStatusChange } from "./status-changes";
 
-const NOT_FOUND = "That application no longer exists.";
+const NOT_FOUND = tx("That application no longer exists.");
 
 // Status figures show on the dashboard, the applications list and each
 // application, so every change refreshes all pages (DSH-6).
@@ -49,11 +50,11 @@ export const undoStatus = action(
     const result = await undoStatusChange(prisma, eventId);
     if (result.outcome === "not-found") throw new ActionError(NOT_FOUND);
     if (result.outcome === "superseded") {
-      throw new ActionError("The status has changed again since, so this change can't be undone.");
+      throw new ActionError(t("The status has changed again since, so this change can't be undone."));
     }
 
     refreshEverything();
-    toast(`Moved back to ${statusInfo(result.status).label.toLowerCase()}.`);
+    toast(t("Moved back to {statusInfo}.", { statusInfo: statusInfo(result.status).label.toLowerCase() }));
     return { status: result.status };
   },
 );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { isAiUsable } from "@/lib/ai/config";
 import { handsOffToClaude } from "@/lib/connector/handoff";
+import { t } from "@/lib/i18n";
 import { loadJobSearchConfig } from "@/lib/job-search/config";
 import { COUNTRIES } from "@/lib/job-search/countries";
 import { defaultSearch, latestRole, queryFromParams, viewFromParams } from "@/lib/job-search/search";
@@ -11,8 +12,12 @@ import { prisma } from "@/lib/prisma";
 import { userTimeZone } from "@/lib/time-zone";
 
 import { JobsScreen } from "./jobs-screen";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Find jobs" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Find jobs") };
+}
 
 /**
  * Find jobs (E14-6). Every search is kept with what it found (E14-10):

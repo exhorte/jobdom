@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { LanguageLevel } from "@/generated/prisma/enums";
 import { BASICS_FIELDS } from "@/lib/profile";
+import { tp, tx } from "@/lib/i18n";
 
 // A profile read from a resume file (E4-10, PRO-12), as the preview shows it
 // and the import applies it. Anything the file's text doesn't contain is
@@ -41,19 +42,18 @@ export type ImportedProfile = z.infer<typeof importedProfileSchema>;
 export type ImportMode = "merge" | "replace";
 
 /** The steps of reading a resume, as the progress shows them. */
-export const IMPORT_PROFILE_STEPS = ["Reading your resume", "Sorting it into your profile"] as const;
+export const IMPORT_PROFILE_STEPS = [tx("Reading your resume"), tx("Sorting it into your profile")] as const;
 
 /** "3 roles, 1 project, 12 skills…": what a preview holds, for the page and the toast. */
 export function importCounts(profile: ImportedProfile): string {
-  const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
   return [
-    plural(profile.experience.length, "role", "roles"),
-    plural(profile.projects.length, "project", "projects"),
-    plural(profile.education.length, "degree", "degrees"),
+    tp(profile.experience.length, "{count} role", "{count} roles"),
+    tp(profile.projects.length, "{count} project", "{count} projects"),
+    tp(profile.education.length, "{count} degree", "{count} degrees"),
     // Optional and rare: only said when there are some (#218).
-    ...(profile.publications.length > 0 ? [plural(profile.publications.length, "publication", "publications")] : []),
-    plural(profile.skills.length, "skill", "skills"),
-    plural(profile.languages.length, "language", "languages"),
-    plural(profile.references.length, "reference", "references"),
+    ...(profile.publications.length > 0 ? [tp(profile.publications.length, "{count} publication", "{count} publications")] : []),
+    tp(profile.skills.length, "{count} skill", "{count} skills"),
+    tp(profile.languages.length, "{count} language", "{count} languages"),
+    tp(profile.references.length, "{count} reference", "{count} references"),
   ].join(", ");
 }

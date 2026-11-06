@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ApplicationStatus, EmailDirection, ReplyKind } from "@/generated/prisma/enums";
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 import { questionsSchema } from "./sync";
@@ -123,7 +124,7 @@ export async function waitingByApplication(): Promise<Map<string, { count: numbe
   for (const row of rows) {
     const entry = map.get(row.applicationId!);
     if (entry) entry.count++;
-    else map.set(row.applicationId!, { count: 1, summary: row.summary || `${row.fromName || "They"} wrote back.` });
+    else map.set(row.applicationId!, { count: 1, summary: row.summary || t("{row} wrote back.", { row: row.fromName || t("They") }) });
   }
   return map;
 }

@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 import { COLOR_SCHEME_COOKIE, rememberPreference, type ColorScheme } from "@/lib/ui-preferences";
 
 import { useSidebarCollapsed } from "./sidebar-frame";
@@ -39,7 +40,7 @@ export function ThemeToggle({ serverScheme }: { serverScheme?: ColorScheme }) {
   // guesses light, and the browser corrects it right after hydration.
   const scheme = useSyncExternalStore(subscribe, currentScheme, () => serverScheme ?? "light");
   const next: ColorScheme = scheme === "dark" ? "light" : "dark";
-  const label = next === "dark" ? "Dark mode" : "Light mode";
+  const label = next === "dark" ? t("Dark mode") : t("Light mode");
   const Icon = next === "dark" ? Moon : Sun;
 
   const toggle = () => {
@@ -52,14 +53,14 @@ export function ThemeToggle({ serverScheme }: { serverScheme?: ColorScheme }) {
     <button
       type="button"
       onClick={toggle}
-      title={collapsed ? label : undefined}
+      title={collapsed ? t(label) : undefined}
       className={cn(
         "flex w-full items-center gap-1.5 rounded-control px-3 py-1.5 text-left text-sm font-medium text-muted hover:bg-hover hover:text-ink motion-safe:transition-colors",
         collapsed && "justify-center px-1.5",
       )}
     >
       <Icon size={16} aria-hidden="true" className="shrink-0" />
-      <span className={cn(collapsed && "sr-only")}>{label}</span>
+      <span className={cn(collapsed && "sr-only")}>{t(label)}</span>
     </button>
   );
 }

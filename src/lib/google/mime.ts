@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 
+
 // Building and reading email messages (RFC 5322, MIME) for Gmail (E15-2,
 // E15-3). Only what Dossier sends and reads: a plain text body with PDF
 // attachments, and the text of replies.

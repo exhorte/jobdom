@@ -1,13 +1,16 @@
+import { tx } from "@/lib/i18n";
+
 /** The settings sections, in order (PRD §6.8). */
 export const SETTINGS_SECTIONS = [
-  { id: "ai", label: "AI provider" },
-  { id: "jobs", label: "Job search" },
-  { id: "agent", label: "Job agent" },
-  { id: "documents", label: "Documents" },
+  { id: "ai", label: tx("AI provider") },
+  { id: "jobs", label: tx("Job search") },
+  { id: "agent", label: tx("Job agent") },
+  { id: "documents", label: tx("Documents") },
+  { id: "language", label: tx("Language") },
   { id: "google", label: "Google" },
-  { id: "claude", label: "Claude connector" },
-  { id: "data", label: "Your data" },
-  { id: "about", label: "About" },
+  { id: "claude", label: tx("Claude connector") },
+  { id: "data", label: tx("Your data") },
+  { id: "about", label: tx("About") },
 ] as const;
 
 export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]["id"];

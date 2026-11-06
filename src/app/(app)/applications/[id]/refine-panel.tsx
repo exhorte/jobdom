@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import type { Tab } from "./tabs";
 
@@ -26,12 +28,12 @@ export type ChatEntry = {
 export type ChatTarget = { label: string; name: string };
 
 const SUBTITLES: Record<Tab, string> = {
-  resume: "Ask for changes to your tailored resume. I'll only use what's in your profile.",
-  letter: "Ask for changes to your cover letter. I'll only use what's in your profile.",
-  email: "Ask for changes to your email. I'll only use what's in your profile.",
-  conversation: "Answers to employers are drafted right in the conversation.",
-  posting: "Switch to the resume, cover letter or email to make changes.",
-  notes: "Switch to the resume, cover letter or email to make changes.",
+  resume: tx("Ask for changes to your tailored resume. I'll only use what's in your profile."),
+  letter: tx("Ask for changes to your cover letter. I'll only use what's in your profile."),
+  email: tx("Ask for changes to your email. I'll only use what's in your profile."),
+  conversation: tx("Answers to employers are drafted right in the conversation."),
+  posting: tx("Switch to the resume, cover letter or email to make changes."),
+  notes: tx("Switch to the resume, cover letter or email to make changes."),
 };
 
 /**
@@ -87,13 +89,13 @@ export function RefinePanel({
       <div className="flex h-[min(100dvh,680px)] flex-col @min-[780px]:h-full">
         <div className="flex flex-col gap-1 px-6 pt-[26px] pb-3.5">
           <h2 id="refine-heading" className="text-[15px] font-medium">
-            Refine with AI
+            {t("Refine with AI")}
           </h2>
           <p className="text-meta leading-[1.45] text-muted">{SUBTITLES[tab]}</p>
         </div>
 
         {/* column-reverse keeps the newest message in view. Focusable, so it scrolls from the keyboard too (E11-3). */}
-        <div role="log" aria-label="Conversation" tabIndex={0} className="flex min-h-0 flex-1 flex-col-reverse overflow-auto px-6">
+        <div role="log" aria-label={t("Conversation")} tabIndex={0} className="flex min-h-0 flex-1 flex-col-reverse overflow-auto px-6">
           <div className="flex flex-col gap-3.5 pt-1.5 pb-4">
             {messages.map((message) => (
               <div key={message.id} className={cn("flex flex-col gap-[5px]", message.role === "USER" ? "items-end" : "items-start")}>
@@ -101,17 +103,16 @@ export function RefinePanel({
                 {children?.(message)}
               </div>
             ))}
-            {thinking && <p className="pl-1 text-meta text-muted">Thinking…</p>}
+            {thinking && <p className="pl-1 text-meta text-muted">{t("Thinking…")}</p>}
           </div>
         </div>
 
         <div className="flex flex-col gap-2.5 border-t border-line px-6 pt-3.5 pb-6">
           {!aiReady && tab !== "posting" && (
             <p className="text-meta text-muted">
-              Refining needs an AI provider.{" "}
-              <Link href="/settings?section=ai" className="font-medium text-ink underline underline-offset-2">
-                Choose one in Settings
-              </Link>
+              {rich("Refining needs an AI provider. {link}", { link: <Link href="/settings?section=ai" className="font-medium text-ink underline underline-offset-2">
+                {t("Choose one in Settings")}
+              </Link> })}
             </p>
           )}
           {aiReady && suggestions.length > 0 && (
@@ -133,24 +134,23 @@ export function RefinePanel({
             {target && (
               <div className="flex">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-track py-1 pr-1.5 pl-2.5 text-label">
-                  About: {target.label}
-                  <button
+                  {rich("About: {label}{button}", { label: target.label, button: <button
                     type="button"
-                    aria-label={`Stop asking about the ${target.name}`}
+                    aria-label={t("Stop asking about the {name}", { name: target.name })}
                     onClick={onClearTarget}
                     className="rounded-full px-1 text-[13px] leading-none text-muted hover:text-ink"
                   >
                     ×
-                  </button>
+                  </button> })}
                 </span>
               </div>
             )}
             <textarea
               ref={input}
-              aria-label="Ask for a change"
+              aria-label={t("Ask for a change")}
               rows={2}
               value={draft}
-              placeholder={target ? `What should change in the ${target.name}?` : "Ask for a change, e.g. “sound more confident”"}
+              placeholder={target ? t("What should change in the {name}?", { name: target.name }) : t("Ask for a change, e.g. “sound more confident”")}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 // Enter sends, Shift+Enter starts a new line; not while an input method is composing.
@@ -162,9 +162,9 @@ export function RefinePanel({
               className="w-full resize-none bg-transparent text-sm leading-normal text-ink outline-none placeholder:text-muted"
             />
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">Enter to send</span>
+              <span className="text-xs text-muted">{t("Enter to send")}</span>
               <Button size="sm" className="px-3.5 py-[7px]" aria-disabled={thinking || !draft.trim() || undefined} onClick={() => void send(draft)}>
-                Send
+                {t("Send")}
               </Button>
             </div>
           </div>
@@ -179,7 +179,7 @@ function Bubble({ message }: { message: ChatEntry }) {
   if (message.role === "USER") {
     return (
       <div className="max-w-[92%] rounded-card border border-primary bg-primary px-3.5 py-[11px] text-[13.5px] leading-[1.55] text-pretty whitespace-pre-wrap text-on-primary">
-        {message.targetUnit && <p className="mb-1 text-xs opacity-70">About: {message.targetUnit}</p>}
+        {message.targetUnit && <p className="mb-1 text-xs opacity-70">{t("About: {targetUnit}", { targetUnit: message.targetUnit })}</p>}
         {message.text}
       </div>
     );

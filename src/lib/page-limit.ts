@@ -11,6 +11,7 @@ import type { ProfileData } from "@/lib/profile";
 import { pagesInWords } from "@/lib/settings";
 import { bulletLines, isPublicationUnit } from "@/lib/unit-text";
 import { citationExcerpt } from "@/lib/citation";
+import { t, tp } from "@/lib/i18n";
 
 // "Resume length" (E10-10, SET-9): a new tailored resume that runs over its
 // page limit is trimmed once, when the application is created (decided 28
@@ -125,16 +126,16 @@ export function describeTrim(trimmed: Trimmed, profile: ProfileData, fits: boole
   const lines = trimmed.map((cut) => {
     if (cut.kind === "bullets") {
       const count = cut.lines.length;
-      return `Shortened the ${cut.label} by ${count} ${count === 1 ? "bullet" : "bullets"} to fit ${limit}`;
+      return tp(count, "Shortened the {label} by {count} bullet to fit {limit}", "Shortened the {label} by {count} bullets to fit {limit}", { label: cut.label, limit });
     }
     const project = profile.projects.find((entry) => `project:${entry.id}` === cut.unit.id);
-    if (project) return `Left out the ${project.name.trim() || "untitled"} project to fit ${limit}`;
-    if (isPublicationUnit(cut.unit.id)) return `Left out the publication “${citationExcerpt(cut.unit.text)}” to fit ${limit}`;
+    if (project) return t("Left out the {project} project to fit {limit}", { project: project.name.trim() || t("untitled"), limit });
+    if (isPublicationUnit(cut.unit.id)) return t("Left out the publication “{citationExcerpt}” to fit {limit}", { citationExcerpt: citationExcerpt(cut.unit.text), limit });
     const entry = profile.experience.find((role) => `experience:${role.id}` === cut.unit.id);
     const name = entry?.company.trim() || entry?.role.trim() || cut.unit.label;
     const years = entry?.startYear ? ` (${entry.startYear}–${entry.current ? "now" : (entry.endYear ?? "")})` : "";
-    return `Left out ${name}${years} to fit ${limit}`;
+    return t("Left out {name}{years} to fit {limit}", { name, years, limit });
   });
-  if (!fits && trimmed.length > 0) lines.push(`It still runs over ${limit}, so shorten it by hand if it has to fit`);
+  if (!fits && trimmed.length > 0) lines.push(t("It still runs over {limit}, so shorten it by hand if it has to fit", { limit }));
   return lines;
 }

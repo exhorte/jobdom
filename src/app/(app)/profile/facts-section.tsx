@@ -1,6 +1,7 @@
 "use client";
 
 import { FactList } from "@/components/fact-list";
+import { t } from "@/lib/i18n";
 import type { ProfileData } from "@/lib/profile";
 
 import type { UpdateProfile } from "./skills-section";
@@ -15,7 +16,7 @@ export function FactsSection({ profile, update }: { profile: ProfileData; update
       applicationId={null}
       facts={profile.facts}
       setFacts={(change) => update((current) => ({ ...current, facts: change(current.facts) }))}
-      placeholder="e.g. I'm moving from teaching into UX research. Or: I have an EU work permit and can start in March."
+      placeholder={t("e.g. I'm moving from teaching into UX research. Or: I have an EU work permit and can start in March.")}
     />
   );
 }

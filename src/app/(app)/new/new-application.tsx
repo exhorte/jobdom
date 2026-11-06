@@ -20,6 +20,8 @@ import type { ReadPostingResult } from "@/lib/jobs/read-posting";
 import type { WriteDocumentsResult } from "@/lib/jobs/write-documents";
 
 import { openPendingTab, sendPendingTab } from "@/lib/claude-tab";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { addSkill } from "../profile/actions";
 
@@ -30,7 +32,7 @@ import { MatchCard } from "./match-card";
 import { TailoringCard } from "./tailoring-card";
 import { JobProgress, jobStep } from "./job-progress";
 
-const STEPS = ["Paste the posting", "Check the details", "Tailored documents"] as const;
+const STEPS = [tx("Paste the posting"), tx("Check the details"), tx("Tailored documents")] as const;
 
 /** The editable details of "The application" (NEW-3). */
 export type Details = {
@@ -93,7 +95,7 @@ const EMPTY_DETAILS: Details = { title: "", company: "", role: "", location: "",
 const draftStore = typeof window === "undefined" ? null : createDraftStore<Draft>();
 const noStore = () => () => {};
 
-const LEAVE_WARNING = "Leave now? I'll stop working on this application, and nothing will be created.";
+const LEAVE_WARNING = tx("Leave now? I'll stop working on this application, and nothing will be created.");
 
 /**
  * While `active`, leaving the page asks first (E7-7): the browser's own
@@ -114,7 +116,7 @@ function useLeaveGuard(active: boolean, onLeave: () => void) {
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const url = new URL(link.href, window.location.href);
       if (url.origin !== window.location.origin || url.href === window.location.href) return;
-      if (!window.confirm(LEAVE_WARNING)) {
+      if (!window.confirm(t(LEAVE_WARNING))) {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -187,10 +189,10 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
     draftStore?.set({ ...initial, posting: fromPosting.text, postingUrl: fromPosting.url, postingId: fromPosting.id, startupId: fromPosting.startup?.id ?? null });
     toast(
       fromPosting.startup
-        ? `Here's what Startups knows about ${fromPosting.startup.company}, without its addresses. Add the role you're after if it doesn't say, then read it.`
+        ? t("Here's what Startups knows about {company}, without its addresses. Add the role you're after if it doesn't say, then read it.", { company: fromPosting.startup.company })
         : fromPosting.complete
-          ? "Here's the posting from Find jobs. Check it, then read it."
-          : "Only the start of this posting came through. Paste the rest from the posting's page, then read it.",
+          ? t("Here's the posting from Find jobs. Check it, then read it.")
+          : t("Only the start of this posting came through. Paste the rest from the posting's page, then read it."),
     );
     router.replace("/new");
   }, [fromPosting, initial, router]);
@@ -220,7 +222,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
 
   const read = async () => {
     if (!draft.posting.trim()) {
-      toast(samplePosting ? "Paste a job posting first, or try the sample." : "Paste a job posting first.");
+      toast(samplePosting ? t("Paste a job posting first, or try the sample.") : t("Paste a job posting first."));
       return;
     }
     // Back and on again with the same posting: keep what was read and edited.
@@ -237,7 +239,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
   // #221: Claude chat writes it on the user's own Claude plan, through the
   // connector, and saves it here as a Draft application.
   const writeWithClaude = async () => {
-    if (!draft.posting.trim()) return toast("Paste a job posting first.");
+    if (!draft.posting.trim()) return toast(t("Paste a job posting first."));
     // Opened now, while the click still counts: a tab opened after waiting is blocked as a pop-up.
     const chat = openPendingTab();
     setStarting(true);
@@ -245,12 +247,12 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
     setStarting(false);
     if (!result.ok) return void chat?.close();
     sendPendingTab(chat, result.data.url);
-    toast("Writing it in Claude. It shows up under Applications as a Draft once Claude has saved it.");
+    toast(t("Writing it in Claude. It shows up under Applications as a Draft once Claude has saved it."));
   };
 
   // E7-8: the posting's text from its link, to check before reading it.
   const fetchFromLink = async () => {
-    if (!draft.postingUrl.trim()) return toast("Enter the link to the posting first.");
+    if (!draft.postingUrl.trim()) return toast(t("Enter the link to the posting first."));
     setFetching(true);
     const result = toastResult(await fetchPostingText({ link: draft.postingUrl }));
     setFetching(false);
@@ -259,8 +261,8 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
     update({ posting: result.data.text });
     const site = new URL(result.data.url).hostname.replace(/^www\./, "");
     toast(
-      `Fetched the posting from ${site}. Check it before reading it.`,
-      previous.trim() ? { action: { label: "Undo", onClick: () => update({ posting: previous }) } } : {},
+      t("Fetched the posting from {site}. Check it before reading it.", { site }),
+      previous.trim() ? { action: { label: t("Undo"), onClick: () => update({ posting: previous }) } } : {},
     );
   };
 
@@ -274,7 +276,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
       const items = current.read.match.items.map((item, position) => (position === index ? withSkillAdded(item, name) : item));
       return { ...current, read: { ...current.read, match: { items } } };
     });
-    toast(`Added “${name}” to your skills. Attach it to a role under Experience to make it count.`);
+    toast(t("Added “{name}” to your skills. Attach it to a role under Experience to make it count.", { name }));
   };
 
   // E7-6: write the documents, then create the application from them.
@@ -298,7 +300,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
       setSaveError(result.error);
       return;
     }
-    toast("Your application is ready. Nothing gets sent until you say so.");
+    toast(t("Your application is ready. Nothing gets sent until you say so."));
     draftStore?.clear();
     router.push(`/applications/${result.data}`);
   };
@@ -342,14 +344,14 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
   return (
     <>
       <PageHeader
-        title="New application"
-        description="Paste a job posting. I'll pull out the details, check it against your profile, and draft a tailored resume and cover letter."
+        title={t("New application")}
+        description={t("Paste a job posting. I'll pull out the details, check it against your profile, and draft a tailored resume and cover letter.")}
       />
       <div className="flex max-w-[816px] flex-col gap-6 px-10 pb-20">
         <Stepper
           steps={STEPS}
           current={draft.step === "creating" ? 2 : draft.step === "review" ? 1 : 0}
-          aria-label="New application steps"
+          aria-label={t("New application steps")}
         />
 
         <div ref={stepArea} className="contents">
@@ -357,27 +359,22 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
             <>
               {writeInClaude ? (
                 <p role="note" className="rounded-card border border-line-card bg-card px-4 py-3 text-meta text-muted">
-                  Dossier has no AI model of its own, so Claude writes this one: <strong className="text-ink">Write it with Claude</strong> opens a
-                  chat in Claude that uses your Claude plan and the Dossier connector, and saves the resume and cover letter here as a Draft. To
-                  have Dossier write it instead,{" "}
-                  <Link href="/settings?section=ai" className="font-medium text-ink underline underline-offset-2">
-                    choose a model in Settings → AI provider
-                  </Link>
-                  .
+                  {rich("Dossier has no AI model of its own, so Claude writes this one: {strong} opens a chat in Claude that uses your Claude plan and the Dossier connector, and saves the resume and cover letter here as a Draft. To have Dossier write it instead, {link}.", { strong: <strong className="text-ink">{t("Write it with Claude")}</strong>, link: <Link href="/settings?section=ai" className="font-medium text-ink underline underline-offset-2">
+                    {t("choose a model in Settings → AI provider")}
+                  </Link> })}
                 </p>
               ) : !aiReady && (
                 <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-                  No AI provider is set up yet, so nothing can read the posting.{" "}
-                  <Link href="/settings?section=ai" className="font-medium text-warning underline underline-offset-2">
-                    Choose one in Settings → AI provider
-                  </Link>
+                  {rich("No AI provider is set up yet, so nothing can read the posting. {link}", { link: <Link href="/settings?section=ai" className="font-medium text-warning underline underline-offset-2">
+                    {t("Choose one in Settings → AI provider")}
+                  </Link> })}
                 </p>
               )}
               <Card className="flex flex-col gap-5">
                 <Textarea
-                  label="Job posting"
+                  label={t("Job posting")}
                   rows={14}
-                  placeholder="Paste the full posting here: title, company, requirements, the lot."
+                  placeholder={t("Paste the full posting here: title, company, requirements, the lot.")}
                   value={draft.posting}
                   onChange={(event) => update({ posting: event.target.value })}
                 />
@@ -387,7 +384,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
                       className="flex-1"
                       label={
                         <>
-                          Link to the posting <span className="text-muted">(optional, saved with the application)</span>
+                          {rich("Link to the posting {span}", { span: <span className="text-muted">{t("(optional, saved with the application)")}</span> })}
                         </>
                       }
                       type="url"
@@ -402,18 +399,18 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
                       aria-disabled={fetching || undefined}
                       onClick={() => void (fetching ? undefined : fetchFromLink())}
                     >
-                      {fetching ? "Fetching…" : "Fetch"}
+                      {fetching ? t("Fetching…") : t("Fetch")}
                     </Button>
                   </div>
                   <p className="text-meta text-muted">
-                    Fetch asks the job site for the page from your server, so it needs internet access. Check what it brings before reading it.
+                    {t("Fetch asks the job site for the page from your server, so it needs internet access. Check what it brings before reading it.")}
                   </p>
                 </div>
               </Card>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {samplePosting ? (
                   <Button variant="text" className="underline underline-offset-[3px]" onClick={() => update({ posting: samplePosting })}>
-                    Use a sample posting
+                    {t("Use a sample posting")}
                   </Button>
                 ) : (
                   <span />
@@ -422,7 +419,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
                   aria-disabled={!draft.posting.trim() || starting || undefined}
                   onClick={() => void (starting ? undefined : writeInClaude ? writeWithClaude() : read())}
                 >
-                  {writeInClaude ? "Write it with Claude →" : "Read the posting →"}
+                  {writeInClaude ? t("Write it with Claude →") : t("Read the posting →")}
                 </Button>
               </div>
             </>
@@ -430,7 +427,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
 
           {draft.step === "reading" && (
             <JobProgress
-              title="Reading the posting…"
+              title={t("Reading the posting…")}
               steps={READ_POSTING_STEPS}
               current={jobStep(READ_POSTING_STEPS, readJob)}
               error={readJob?.status === "FAILED" ? readJob.error : null}
@@ -446,10 +443,10 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
               <TailoringCard tone={draft.tone} note={draft.note} onTone={(tone) => update({ tone })} onNote={(note) => update({ note })} />
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button variant="text" onClick={() => update({ step: "paste" })}>
-                  ← Back to the posting
+                  {t("← Back to the posting")}
                 </Button>
                 <Button aria-disabled={starting || undefined} onClick={() => void create()}>
-                  Create application →
+                  {t("Create application →")}
                 </Button>
               </div>
             </>
@@ -457,14 +454,14 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
 
           {draft.step === "creating" && (
             <JobProgress
-              title="Putting your application together…"
+              title={t("Putting your application together…")}
               steps={WRITE_DOCUMENTS_STEPS}
               // "Saving the application" is the last step, once the documents are written.
               current={writeJob?.status === "DONE" ? 2 : jobStep(WRITE_DOCUMENTS_STEPS, writeJob)}
               error={writeJob?.status === "FAILED" ? writeJob.error : saveError}
               onRetry={() => void retryCreating()}
               onBack={() => update({ step: "review" })}
-              backLabel="← Back to the details"
+              backLabel={t("← Back to the details")}
             />
           )}
         </div>

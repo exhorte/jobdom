@@ -9,6 +9,7 @@ import { draftReply } from "@/lib/ai/tasks";
 import { extractedOf } from "@/lib/application-data";
 import { proposeSlots, workingHours } from "@/lib/google/availability";
 import { formatSlot } from "@/lib/google/slots";
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { loadFactTexts, loadProfile } from "@/lib/profile-data";
 
@@ -35,7 +36,7 @@ export const draftReplyJob = defineJob({
     const email = await prisma.emailMessage.findUniqueOrThrow({ where: { id: emailId }, include: { application: true } });
     const application = email.application;
 
-    await step("Checking your calendar");
+    await step(t("Checking your calendar"));
     // The user's zone, for the offered times and the email's date.
     const { timeZone } = await workingHours();
     let offered: string[] = [];
@@ -50,7 +51,7 @@ export const draftReplyJob = defineJob({
       starts = picked.map((slot) => slot.start.toISOString());
     }
 
-    await step("Writing your answer");
+    await step(t("Writing your answer"));
     const thread = await prisma.emailMessage.findMany({
       where: { threadId: email.threadId, id: { not: email.id }, sentAt: { lt: email.sentAt } },
       orderBy: { sentAt: "asc" },

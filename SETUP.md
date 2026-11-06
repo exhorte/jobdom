@@ -2,7 +2,7 @@
 
 Commandes **réellement exécutées et vérifiées** sur Windows 11, Node 24.15, Docker Desktop 29, PowerShell, le 2026-10-29. Mode « hybride » : PostgreSQL dans Docker, Node et Yarn en natif. Le mode 100 % Docker de [DEVELOPMENT.md](DEVELOPMENT.md) reste valable (non testé ici).
 
-Tout se lance depuis `C:\Ebrain_os\ebrain\20_PROJECTS\ACTIVE\jobdom\04_code`. `yarn` n'est pas sur le PATH : on passe par Corepack (`corepack yarn …`).
+Tout se lance depuis le dossier `04_code` du projet. `yarn` n'est pas sur le PATH : on passe par Corepack (`corepack yarn …`).
 
 ## 1. Prérequis
 
@@ -28,8 +28,11 @@ corepack yarn install --immutable        # 748 paquets, yarn.lock inchangé (≈
 | `POSTGRES_PASSWORD` | aléatoire (hex), `POSTGRES_PORT=5433`, `POSTGRES_USER=postgres`, `POSTGRES_DB=dossier` |
 | `DATABASE_URL` | `"postgresql://postgres:<POSTGRES_PASSWORD>@localhost:5433/dossier"` |
 | `DOSSIER_DATA_DIR` | `./data` (sinon `/data` devient `C:\data`) |
+| `DOSSIER_LOCALE` | `fr` ou `en` (défaut `en`) : langue de l'interface tant qu'aucun choix n'est fait dans **Paramètres → Langue** |
 
 Fournisseur IA et source d'offres : voir §6.
+
+**Langue de l'interface.** L'application est traduite en français (`src/lib/i18n/`). On la choisit dans **Paramètres → Langue** (Français / English) ; `DOSSIER_LOCALE` ne sert que de valeur par défaut. Les documents (CV, lettre) ont leur propre langue : Paramètres → Documents → « Rédiger les documents en ». Un texte sans traduction s'affiche en anglais ; `yarn test` vérifie que le catalogue français est complet (`src/lib/i18n/catalog.test.ts`).
 
 ## 3. Base de données
 
@@ -75,11 +78,41 @@ corepack yarn next dev -p 3300 -H 127.0.0.1     # dans ce même terminal
 
 | Fonction | À fournir | Où |
 | --- | --- | --- |
-| IA (extraction, matching, CV, lettre, e-mail, chat) | clé OpenAI-compatible / Anthropic / Mistral, **ou** Ollama / LM Studio local | Réglages → AI provider (ou `DOSSIER_AI_*`) |
+| IA (extraction, matching, CV, lettre, e-mail, chat) | clé OpenAI-compatible / Anthropic / Mistral, **ou** Ollama / LM Studio local (Anthropic : voir §6 bis) | Réglages → AI provider (ou `DOSSIER_AI_*`) |
 | Recherche d'offres | clé JSearch (OpenWeb Ninja ou RapidAPI) ou Adzuna (app ID + clé) | Réglages → Job search (ou `DOSSIER_JSEARCH_KEY`, `DOSSIER_ADZUNA_*`) |
 | Gmail / Calendar | client OAuth « Web application » Google | Réglages → Google |
 
 Sans ces éléments l'application démarre et affiche des états explicites (ex. Find jobs : « Choose where to search… Until then, nothing is sent anywhere »), mais **aucune génération ni recherche réelle n'est possible**. Rien n'est envoyé (candidature, e-mail) sans ta confirmation.
+
+## 6 bis. Utiliser Claude : clé API ou abonnement
+
+Deux chemins distincts. **Dossier ne peut pas « se connecter à ton abonnement Claude »** : Anthropic n'autorise pas une application tierce à offrir une connexion Claude.ai, ni à router des requêtes avec les identifiants d'un abonnement Free, Pro ou Max (voir « Authentication and credential use » dans les [conditions de Claude Code](https://code.claude.com/docs/en/legal-and-compliance)). Dossier propose donc deux voies autorisées.
+
+### A. Clé API Anthropic : Dossier appelle Claude lui-même
+
+- L'API est facturée **à l'usage**, séparément de l'abonnement Claude. La clé se crée dans la console développeur d'Anthropic (« API keys »).
+- `.env` contient déjà des valeurs par défaut non secrètes : `DOSSIER_AI_PROVIDER=anthropic` et `DOSSIER_AI_MODEL=claude-sonnet-5-5`. Ce qui est enregistré dans Réglages prime sur elles.
+- Lance l'application (§5), ouvre **Réglages → AI provider** : *Anthropic* est sélectionné. Colle la clé dans **API key** (stockée chiffrée avec `DOSSIER_SECRET`, jamais renvoyée au navigateur), puis **Test connection**, puis choisis le modèle dans la liste (lue chez Anthropic avec ta clé). `DOSSIER_AI_KEY` dans `.env` fonctionne aussi, mais en clair : à éviter.
+- Vérifié (2026-10-31) : l'écran affiche Anthropic, `https://api.anthropic.com` et `claude-sonnet-5-5` ; sans clé « Stored encrypted on your server » ; avec une **fausse** clé « The server didn't accept the API key » (donc `api.anthropic.com` est joignable). **Non vérifié** : un appel réussi avec une vraie clé.
+
+### B. Abonnement Claude : le connecteur Claude (c'est Claude qui appelle Dossier)
+
+- Le connecteur fonctionne **dans les applications Claude d'Anthropic**, sur ton abonnement ; Dossier ne voit ni ne garde rien de ton compte. Claude peut chercher des offres, lire ton profil et tes candidatures, enregistrer des scores et des brouillons (contrôlés par le garde-fou factuel) et changer un statut (par exemple « Sent ») ; il n'envoie ni ne supprime rien.
+- Réglages → **Claude connector** → **Let Claude connect**. L'adresse s'affiche : `http://127.0.0.1:3300/api/mcp` avec le lancement du §5.
+- **Claude Code, sur le même ordinateur** (rien n'est exposé au réseau) : serveur Dossier lancé, puis
+
+  ```powershell
+  claude mcp add --transport http dossier http://127.0.0.1:3300/api/mcp
+  ```
+
+  puis `/mcp` dans Claude Code, se connecter, vérifier les droits et **Allow**. Demande ensuite, par exemple : « Using my Dossier connector: write a tailored resume and cover letter for the job posting … ».
+- **claude.ai, Claude Desktop, mobile** : Anthropic appelle Dossier depuis ses serveurs, il faut donc une adresse **HTTPS publique** (`DOSSIER_PUBLIC_URL`). Non mis en place : exposer Dossier sur Internet est une décision de sécurité à prendre explicitement.
+- Vérifié : `e2e/connector.spec.ts` (consentement OAuth, outils, déconnexion) ; sur le serveur local, métadonnées OAuth 200, `/api/mcp` sans jeton 401, connecteur désactivé 404. **Non vérifié** : une connexion réelle depuis un compte Claude.
+- **Disconnect Claude**, ou un changement de `DOSSIER_PASSWORD` / `DOSSIER_SECRET`, déconnecte tous les clients. Toute application connectée peut lire et modifier Dossier : n'en connecte que de confiance.
+
+### Lequel est utilisé ?
+
+Avec une clé valide, les boutons de Dossier (New application, Score…) appellent l'API. Sans modèle utilisable et avec le connecteur actif, ces boutons ouvrent un chat claude.ai (adresse HTTPS publique requise). Le connecteur reste utilisable depuis Claude dans les deux cas.
 
 ## 7. Contrôles
 

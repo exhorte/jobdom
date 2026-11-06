@@ -7,6 +7,7 @@ import { toast } from "@/components/toast";
 import { ToggleChip } from "@/components/ui/chip";
 import { Input } from "@/components/ui/input";
 import type { ActionResult } from "@/lib/action";
+import { t } from "@/lib/i18n";
 import { sameName, type SkillItem } from "@/lib/profile";
 
 import type { UpdateProfile } from "./skills-section";
@@ -82,12 +83,12 @@ export function SkillsUsed({
     <div role="group" aria-labelledby={labelId} className="flex flex-col gap-2.5 pt-1">
       <div className="flex items-baseline justify-between gap-3">
         <span id={labelId} className="text-label text-muted">
-          Skills you used here
+          {t("Skills you used here")}
         </span>
         <span className="text-xs text-muted">
           {skills.length > 0
-            ? `${attached} of ${skills.length} attached`
-            : "Add skills in Skills & languages, or type one below"}
+            ? t("{attached} of {length} attached", { attached, length: skills.length })
+            : t("Add skills in Skills & languages, or type one below")}
         </span>
       </div>
       {skills.length > 0 && (
@@ -105,8 +106,8 @@ export function SkillsUsed({
         </div>
       )}
       <Input
-        aria-label={`Add a new skill to this ${noun}`}
-        placeholder="New skill? Type it and press Enter to add it to your profile too"
+        aria-label={t("Add a new skill to this {noun}", { noun })}
+        placeholder={t("New skill? Type it and press Enter to add it to your profile too")}
         inputClassName="py-[9px] text-control"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
@@ -117,7 +118,7 @@ export function SkillsUsed({
         }}
       />
       <p className="text-label text-muted">
-        The AI uses these links to show where you actually applied a skill when it tailors a resume.
+        {t("The AI uses these links to show where you actually applied a skill when it tailors a resume.")}
       </p>
     </div>
   );

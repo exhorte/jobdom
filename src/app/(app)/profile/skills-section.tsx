@@ -13,6 +13,7 @@ import { LANGUAGE_LEVELS, languageLevelLabel, sameName, type ProfileData } from 
 
 import { addLanguage, addSkill, removeLanguage, removeSkill, setLanguageLevel } from "./actions";
 import { useTrackSave } from "@/components/save-tracker";
+import { t, tp } from "@/lib/i18n";
 
 export type UpdateProfile = (change: (profile: ProfileData) => ProfileData) => void;
 
@@ -33,10 +34,10 @@ export function ChipCard({
     <Card className="flex flex-col gap-4 px-7 py-6">
       <div className="flex items-baseline justify-between">
         <h3 className="text-lead font-medium">
-          {title}
-          {optional && <span className="font-normal text-muted"> (optional)</span>}
+          {t(title)}
+          {optional && <span className="font-normal text-muted"> {t("(optional)")}</span>}
         </h3>
-        <span className="text-meta text-muted">{count} added</span>
+        <span className="text-meta text-muted">{t("{count} added", { count })}</span>
       </div>
       {children}
     </Card>
@@ -57,7 +58,7 @@ function SkillsCard({ profile, update }: { profile: ProfileData; update: UpdateP
     const existing = profile.skills.find((skill) => sameName(skill.name, name));
     if (existing) {
       setDraft("");
-      toast(`“${existing.name}” is already in your skills.`);
+      toast(t("“{name}” is already in your skills.", { name: existing.name }));
       return;
     }
     setDraft("");
@@ -100,15 +101,15 @@ function SkillsCard({ profile, update }: { profile: ProfileData; update: UpdateP
   };
 
   return (
-    <ChipCard title="Skills" count={profile.skills.length}>
+    <ChipCard title={t("Skills")} count={profile.skills.length}>
       {profile.skills.length > 0 && (
-        <ul className="flex flex-wrap gap-2" aria-label="Your skills">
+        <ul className="flex flex-wrap gap-2" aria-label={t("Your skills")}>
           {profile.skills.map((skill) => {
             const roles = roleCount(skill.id);
             return (
               <li key={skill.id}>
                 <RemovableChip
-                  meta={roles > 0 ? `${roles} ${roles === 1 ? "role" : "roles"}` : undefined}
+                  meta={roles > 0 ? tp(roles, "{count} role", "{count} roles") : undefined}
                   removeLabel={`Remove ${skill.name}`}
                   onRemove={() => void remove(skill.id)}
                 >
@@ -120,8 +121,8 @@ function SkillsCard({ profile, update }: { profile: ProfileData; update: UpdateP
         </ul>
       )}
       <Input
-        aria-label="Add a skill"
-        placeholder="e.g. Accessibility"
+        aria-label={t("Add a skill")}
+        placeholder={t("e.g. Accessibility")}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={onKeyDown}
@@ -134,7 +135,7 @@ function SkillsCard({ profile, update }: { profile: ProfileData; update: UpdateP
 function LevelOptions() {
   return LANGUAGE_LEVELS.map(({ value, label }) => (
     <option key={value} value={value}>
-      {label}
+      {t(label)}
     </option>
   ));
 }
@@ -158,7 +159,7 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
           language.id === existing.id ? { ...language, level } : language,
         ),
       }));
-      toast(`Updated ${existing.name} to ${languageLevelLabel(level)}.`);
+      toast(t("Updated {name} to {languageLevelLabel}.", { name: existing.name, languageLevelLabel: languageLevelLabel(level) }));
     }
     const result = await track(addLanguage({ name: trimmed, level }));
     if (!result.ok) {
@@ -198,14 +199,14 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
   }
 
   return (
-    <ChipCard title="Languages" count={profile.languages.length} optional>
+    <ChipCard title={t("Languages")} count={profile.languages.length} optional>
       {profile.languages.length > 0 && (
-        <ul className="flex flex-col border-t border-line" aria-label="Your languages">
+        <ul className="flex flex-col border-t border-line" aria-label={t("Your languages")}>
           {profile.languages.map((language) => (
             <li key={language.id} className="flex items-center gap-3 border-b border-line py-2.5">
               <span className="min-w-0 flex-1 text-field">{language.name}</span>
               <Select
-                aria-label={`${language.name} level`}
+                aria-label={t("{name} level", { name: language.name })}
                 selectClassName="w-auto text-sm"
                 value={language.level}
                 onChange={(event) => void changeLevel(language.id, event.target.value as LanguageLevel)}
@@ -214,7 +215,7 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
               </Select>
               <button
                 type="button"
-                aria-label={`Remove ${language.name}`}
+                aria-label={t("Remove {name}", { name: language.name })}
                 onClick={() => void remove(language.id)}
                 className="rounded-control px-1.5 py-1 text-base leading-none text-muted hover:text-ink"
               >
@@ -227,8 +228,8 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
       <div className="flex flex-wrap gap-2">
         <Input
           className="min-w-0 flex-[1_1_180px]"
-          aria-label="Language"
-          placeholder="Language, e.g. French"
+          aria-label={t("Language")}
+          placeholder={t("Language, e.g. French")}
           value={name}
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
@@ -239,7 +240,7 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
         />
         <Select
           className="flex-[0_1_220px]"
-          aria-label="Level"
+          aria-label={t("Level")}
           selectClassName="text-sm"
           value={level}
           onChange={(event) => setLevel(event.target.value as LanguageLevel)}
@@ -247,7 +248,7 @@ function LanguagesCard({ profile, update }: { profile: ProfileData; update: Upda
           <LevelOptions />
         </Select>
         <Button variant="secondary" className="bg-input" onClick={() => void add()}>
-          Add
+          {t("Add")}
         </Button>
       </div>
     </ChipCard>

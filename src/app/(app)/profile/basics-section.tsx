@@ -13,6 +13,8 @@ import { ageOn, isOptionalBasic, type Basics, type BasicsField } from "@/lib/pro
 import { saveBasics } from "./actions";
 import { PhotoField } from "./photo-field";
 import { useTrackSave } from "@/components/save-tracker";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 type FieldSpec = {
   field: Exclude<BasicsField, "summary">;
@@ -25,15 +27,15 @@ type FieldSpec = {
 
 // PRO-1, in the prototype's order and layout.
 const FIELDS: FieldSpec[] = [
-  { field: "name", label: "Full name", wide: true, placeholder: "John Doe", autoComplete: "name" },
-  { field: "headline", label: "Headline", wide: true, placeholder: "Senior Product Designer" },
-  { field: "email", label: "Email", type: "email", placeholder: "john.doe@example.com", autoComplete: "email" },
-  { field: "phone", label: "Phone", type: "tel", placeholder: "+1 555 010 0000", autoComplete: "tel" },
-  { field: "dob", label: "Date of birth", type: "date", autoComplete: "bday" },
-  { field: "website", label: "Website", placeholder: "johndoe.example.com", autoComplete: "url" },
-  { field: "address", label: "Street address", wide: true, placeholder: "12 Main Street", autoComplete: "street-address" },
-  { field: "city", label: "City", placeholder: "Springfield", autoComplete: "address-level2" },
-  { field: "country", label: "Country", placeholder: "United States", autoComplete: "country-name" },
+  { field: "name", label: tx("Full name"), wide: true, placeholder: tx("John Doe"), autoComplete: "name" },
+  { field: "headline", label: tx("Headline"), wide: true, placeholder: tx("Senior Product Designer") },
+  { field: "email", label: tx("Email"), type: "email", placeholder: "john.doe@example.com", autoComplete: "email" },
+  { field: "phone", label: tx("Phone"), type: "tel", placeholder: "+1 555 010 0000", autoComplete: "tel" },
+  { field: "dob", label: tx("Date of birth"), type: "date", autoComplete: "bday" },
+  { field: "website", label: tx("Website"), placeholder: "johndoe.example.com", autoComplete: "url" },
+  { field: "address", label: tx("Street address"), wide: true, placeholder: tx("12 Main Street"), autoComplete: "street-address" },
+  { field: "city", label: tx("City"), placeholder: tx("Springfield"), autoComplete: "address-level2" },
+  { field: "country", label: tx("Country"), placeholder: tx("United States"), autoComplete: "country-name" },
   { field: "linkedin", label: "LinkedIn", wide: true, placeholder: "linkedin.com/in/johndoe" },
 ];
 
@@ -44,9 +46,9 @@ const looksLikeWebAddress = (value: string) =>
 
 function formatHint(field: BasicsField, value: string): string | undefined {
   if (!value.trim()) return undefined;
-  if (field === "email" && !looksLikeEmail(value)) return "That doesn't look like an email address yet.";
+  if (field === "email" && !looksLikeEmail(value)) return t("That doesn't look like an email address yet.");
   if ((field === "website" || field === "linkedin") && !looksLikeWebAddress(value)) {
-    return "That doesn't look like a web address yet, e.g. johndoe.example.com.";
+    return t("That doesn't look like a web address yet, e.g. johndoe.example.com.");
   }
   return undefined;
 }
@@ -55,7 +57,7 @@ function formatHint(field: BasicsField, value: string): string | undefined {
 function Optional({ label }: { label: string }) {
   return (
     <>
-      {label} <span className="font-normal text-muted">(optional)</span>
+      {t(label)} <span className="font-normal text-muted">{t("(optional)")}</span>
     </>
   );
 }
@@ -91,9 +93,9 @@ export function BasicsSection({
         <Input
           key={field}
           className={wide ? "col-span-2" : undefined}
-          label={isOptionalBasic(field) ? <Optional label={label} /> : label}
+          label={isOptionalBasic(field) ? <Optional label={t(label)} /> : t(label)}
           type={type}
-          placeholder={placeholder}
+          placeholder={t(placeholder)}
           autoComplete={autoComplete}
           value={basics[field]}
           onChange={(event) => set(field, event.target.value)}
@@ -103,8 +105,8 @@ export function BasicsSection({
       ))}
       <Textarea
         className="col-span-2"
-        label="A few lines about you"
-        placeholder="What you do, what you're good at, what you're looking for."
+        label={t("A few lines about you")}
+        placeholder={t("What you do, what you're good at, what you're looking for.")}
         rows={4}
         value={basics.summary}
         onChange={(event) => set("summary", event.target.value)}
@@ -114,12 +116,11 @@ export function BasicsSection({
         className="col-span-2 pt-1"
         label={
           <>
-            Show my age on resumes{" "}
-            <span className="text-meta text-muted">
+            {rich("Show my age on resumes {span}", { span: <span className="text-meta text-muted">
               {age === null
                 ? "(add your date of birth first)"
-                : `(you're ${age}; off by default, as many places advise leaving it out)`}
-            </span>
+                : t("(you're {age}; off by default, as many places advise leaving it out)", { age })}
+            </span> })}
           </>
         }
         checked={basics.showAge}

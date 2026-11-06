@@ -20,6 +20,7 @@ import { cancelJob, startJob } from "@/lib/jobs/runner";
 import { checkForUpdate } from "@/lib/update-check";
 import { countTailoredDocuments, deleteAllDownloads, zipPdfsJob } from "@/lib/jobs/zip-pdfs";
 import { disconnectGoogle } from "@/lib/google/account";
+import { LOCALES, setLocale, t, tx } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { applySecretChange, JOB_SOURCE_KEY } from "@/lib/secrets";
 
@@ -123,8 +124,8 @@ export const saveJobSource = action(
     const accepting = source === "ARBEITSAGENTUR" && accepted === true;
     if (source === "ARBEITSAGENTUR") {
       const { arbeitsagentur } = await loadJobSearchConfig();
-      if (!arbeitsagentur.offered) throw new ActionError("The Bundesagentur für Arbeit isn't offered on this server.");
-      if (!accepting && !arbeitsagentur.acceptedAt) throw new ActionError("Tick “I understand” under the note about the Bundesagentur für Arbeit first.");
+      if (!arbeitsagentur.offered) throw new ActionError(t("The Bundesagentur für Arbeit isn't offered on this server."));
+      if (!accepting && !arbeitsagentur.acceptedAt) throw new ActionError(t("Tick “I understand” under the note about the Bundesagentur für Arbeit first."));
     }
     await saveSettings({ jobSource: source, ...(accepting ? { arbeitsagenturAcceptedAt: new Date().toISOString() } : {}) });
     return loadView();
@@ -160,7 +161,7 @@ export const saveJobSourceKey = action(
 /** "Test connection": the smallest request the chosen source takes, timed. */
 export const testJobSource = action(z.object({}), async () => {
   const config = await loadJobSearchConfig();
-  if (!config.source) return { connected: false as const, message: "Choose a source first." };
+  if (!config.source) return { connected: false as const, message: t("Choose a source first.") };
   const started = performance.now();
   try {
     await testSource(config.source, credentialsFor(config, config.source), requestContext(config.source));
@@ -188,7 +189,7 @@ export const updateSettings = action(
     /** One of the built-in languages, or null for English. */
     resumeLanguage: z
       .string()
-      .refine((name) => DOCUMENT_LANGUAGES.some((language) => language.name === name), "Pick a language from the list.")
+      .refine((name) => DOCUMENT_LANGUAGES.some((language) => language.name === name), tx("Pick a language from the list."))
       .nullable()
       .optional(),
     fileNamePattern: z.string().max(200).optional(),
@@ -197,9 +198,12 @@ export const updateSettings = action(
     nightlyBackup: z.boolean().optional(),
     jobRetentionHours: z.number().refine(isJobRetention).optional(),
     updateCheck: z.boolean().optional(),
+    /** The language of the app's words (Settings → Language). */
+    locale: z.enum(LOCALES).optional(),
   }),
   async (changes) => {
     await saveSettings(changes);
+    if (changes.locale) setLocale(changes.locale);
     return null;
   },
 );
@@ -209,7 +213,7 @@ export const updateSettings = action(
  * documents in it. A name already in the list, in any case, is just picked.
  */
 export const addDocumentLanguage = action(
-  z.object({ name: z.string().trim().min(1, "Type a language first.").max(60) }),
+  z.object({ name: z.string().trim().min(1, tx("Type a language first.")).max(60) }),
   async ({ name }) => {
     const { customLanguages } = await loadSettings();
     const known = [...DOCUMENT_LANGUAGES.map((language) => language.name), ...customLanguages];
@@ -222,7 +226,7 @@ export const addDocumentLanguage = action(
 /** "Download all PDFs" (E10-5): zips every tailored document in the background. */
 export const startZippingPdfs = action(z.object({}), async () => {
   const documents = await countTailoredDocuments();
-  if (documents === 0) throw new ActionError("There are no tailored documents to download yet.");
+  if (documents === 0) throw new ActionError(t("There are no tailored documents to download yet."));
   return { jobId: await startJob(zipPdfsJob, {}), documents };
 });
 
@@ -293,8 +297,8 @@ export const setConnector = action(z.object({ on: z.boolean() }), async ({ on })
 
 /** "Disconnect Claude": the connector stays on, but Claude has to connect again. */
 export const disconnectClaude = action(z.object({}), async (_input, { toast }) => {
-  if (!(await loadSettings()).connectorEnabledAt) throw new ActionError("The Claude connector is off already.");
+  if (!(await loadSettings()).connectorEnabledAt) throw new ActionError(t("The Claude connector is off already."));
   await saveSettings({ connectorEnabledAt: new Date().toISOString() });
-  toast("Claude is disconnected. Connect it again from Claude to use Dossier there.");
+  toast(t("Claude is disconnected. Connect it again from Claude to use Dossier there."));
   return null;
 });

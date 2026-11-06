@@ -7,6 +7,7 @@ import type { ProfileData, ReferenceItem } from "@/lib/profile";
 import { createReference, removeReference, restoreReference, saveReference } from "./actions";
 import { EntryList } from "./entry-list";
 import { useTrackSave } from "@/components/save-tracker";
+import { t } from "@/lib/i18n";
 import type { UpdateProfile } from "./skills-section";
 
 function ReferenceForm({
@@ -26,33 +27,33 @@ function ReferenceForm({
     <div className="grid grid-cols-2 gap-[18px]" onBlur={flush}>
       <Input
         className="col-span-2"
-        label="Name"
-        placeholder="Jane Doe"
+        label={t("Name")}
+        placeholder={t("Jane Doe")}
         value={entry.name}
         onChange={(event) => set({ name: event.target.value })}
         autoFocus={autoFocus}
       />
       <Input
-        label="How you know them"
-        placeholder="Former manager"
+        label={t("How you know them")}
+        placeholder={t("Former manager")}
         value={entry.relation}
         onChange={(event) => set({ relation: event.target.value })}
       />
       <Input
-        label="Company"
-        placeholder="Acme Inc."
+        label={t("Company")}
+        placeholder={t("Acme Inc.")}
         value={entry.company}
         onChange={(event) => set({ company: event.target.value })}
       />
       <Input
-        label="Email"
+        label={t("Email")}
         type="email"
         placeholder="jane.doe@example.com"
         value={entry.email}
         onChange={(event) => set({ email: event.target.value })}
       />
       <Input
-        label="Phone"
+        label={t("Phone")}
         type="tel"
         placeholder="+1 555 010 0001"
         value={entry.phone}
@@ -71,7 +72,7 @@ export function ReferencesSection({ profile, update }: { profile: ProfileData; u
     <EntryList
       items={profile.references}
       setItems={(change) => update((current) => ({ ...current, references: change(current.references) }))}
-      addLabel="Add a reference"
+      addLabel={t("Add a reference")}
       summary={(entry) => ({
         title: entry.name.trim() || "New reference",
         subtitle: [entry.relation, entry.company].filter((part) => part.trim()).join(" · "),

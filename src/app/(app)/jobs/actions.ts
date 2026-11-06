@@ -5,6 +5,7 @@ import { z } from "zod";
 import { action, ActionError } from "@/lib/action";
 import { isAiConfigured, isAiUsable } from "@/lib/ai/config";
 import { handOffFoundPosting, handsOffToClaude } from "@/lib/connector/handoff";
+import { t } from "@/lib/i18n";
 import { loadJobSearchConfig } from "@/lib/job-search/config";
 import { fullText } from "@/lib/job-search/find";
 import { foundPostingSchema, JOB_SOURCES, searchQuerySchema } from "@/lib/job-search/search";
@@ -24,7 +25,7 @@ const searchId = z.string().min(1).max(100);
 /** "I understand" under the Bundesagentur für Arbeit's note (#223), for a BA choice made before it, or by DOSSIER_JOBS_SOURCE. */
 export const acceptArbeitsagenturNote = action(z.object({}), async () => {
   const { arbeitsagentur } = await loadJobSearchConfig();
-  if (!arbeitsagentur.offered) throw new ActionError("The Bundesagentur für Arbeit isn't offered on this server.");
+  if (!arbeitsagentur.offered) throw new ActionError(t("The Bundesagentur für Arbeit isn't offered on this server."));
   await saveSettings({ arbeitsagenturAcceptedAt: new Date().toISOString() });
   return null;
 });
@@ -38,7 +39,7 @@ export const showMorePostings = action(z.object({ searchId }), ({ searchId }) =>
 /** Removes a kept search and what it found; saved postings stay. */
 export const removeJobSearch = action(z.object({ id: searchId }), async ({ id }, { toast }) => {
   await removeSearch(id);
-  toast("Search removed. Saved postings from it stay in Saved.");
+  toast(t("Search removed. Saved postings from it stay in Saved."));
   return null;
 });
 
@@ -47,13 +48,13 @@ export const loadFullText = action(z.object({ posting: foundPostingSchema }), as
 
 export const savePostingForLater = action(z.object({ posting: foundPostingSchema }), async ({ posting }, { toast }) => {
   const saved = await savePosting(posting);
-  toast("Saved for later.");
+  toast(t("Saved for later."));
   return { postingId: saved.id };
 });
 
 export const unsavePosting = action(postingRef, async (ref, { toast }) => {
   await unmarkPosting(ref, "saved");
-  toast("Removed from Saved.");
+  toast(t("Removed from Saved."));
   return null;
 });
 
@@ -83,7 +84,7 @@ export const restorePosting = action(postingRef.extend({ saved: z.boolean() }), 
  */
 export const startScoringPosting = action(z.object({ posting: foundPostingSchema }), async ({ posting }): Promise<{ jobId: string } | { handoff: string }> => {
   if (await handsOffToClaude(await isAiUsable())) return { handoff: await handOffFoundPosting(posting, "score") };
-  if (!(await isAiConfigured())) throw new ActionError("Choose an AI provider in Settings → AI provider first.");
+  if (!(await isAiConfigured())) throw new ActionError(t("Choose an AI provider in Settings → AI provider first."));
   const key = scoreJobKey(posting);
   const [unfinished] = await findUnfinishedJobs(key);
   return { jobId: unfinished?.id ?? (await startJob(scorePostingJob, { posting }, { key })) };

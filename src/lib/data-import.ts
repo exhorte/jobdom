@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { encryptApiKey } from "@/lib/ai/api-key";
 import { EXPORT_FORMAT, EXPORT_SCHEMA_VERSION, EXPORT_SCHEMA_VERSIONS, exportSchema, INSTALL_SETTINGS, SECRET_SETTINGS, type DossierExport } from "@/lib/data-export";
+import { t } from "@/lib/i18n";
 import { encryptSecret, JOB_SOURCE_KEY } from "@/lib/secrets";
 
 // Restoring from an export file (E10-6, SET-10): everything is replaced in
@@ -17,23 +18,23 @@ export function parseExport(text: string): { ok: true; data: DossierExport } | {
   try {
     json = JSON.parse(text);
   } catch {
-    return { ok: false, error: "That file isn't a Dossier export: it isn't JSON." };
+    return { ok: false, error: t("That file isn't a Dossier export: it isn't JSON.") };
   }
   const header = json as { format?: unknown; schemaVersion?: unknown };
   if (typeof json !== "object" || json === null || header.format !== EXPORT_FORMAT) {
-    return { ok: false, error: "That file isn't a Dossier export." };
+    return { ok: false, error: t("That file isn't a Dossier export.") };
   }
-  if (typeof header.schemaVersion !== "number") return { ok: false, error: "That export has no schema version, so it can't be read." };
+  if (typeof header.schemaVersion !== "number") return { ok: false, error: t("That export has no schema version, so it can't be read.") };
   if (header.schemaVersion > EXPORT_SCHEMA_VERSION) {
-    return { ok: false, error: `That export comes from a newer version of Dossier (schema ${header.schemaVersion}). Update this server first.` };
+    return { ok: false, error: t("That export comes from a newer version of Dossier (schema {schemaVersion}). Update this server first.", { schemaVersion: header.schemaVersion }) };
   }
   if (!EXPORT_SCHEMA_VERSIONS.includes(header.schemaVersion)) {
-    return { ok: false, error: `That export's schema version (${header.schemaVersion}) isn't one this version of Dossier can read.` };
+    return { ok: false, error: t("That export's schema version ({schemaVersion}) isn't one this version of Dossier can read.", { schemaVersion: header.schemaVersion }) };
   }
   const parsed = exportSchema.safeParse(json);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return { ok: false, error: `That export is damaged or incomplete (${issue.path.join(".") || "the file"}: ${issue.message}).` };
+    return { ok: false, error: t("That export is damaged or incomplete ({issue}: {message}).", { issue: issue.path.join(".") || t("the file"), message: issue.message }) };
   }
   return { ok: true, data: parsed.data };
 }

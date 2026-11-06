@@ -1,3 +1,5 @@
+import { t } from "@/lib/i18n";
+
 // Free interview slots from the calendar's busy times and the working hours
 // in Settings → Google (E15-5). Pure, so it's tested without Google.
 
@@ -33,7 +35,7 @@ function wallClock(date: Date, timeZone: string) {
       .formatToParts(date)
       .map((part) => [part.type, part.value]),
   );
-  const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(parts.weekday) + 1;
+  const weekday = [t("Mon"), t("Tue"), t("Wed"), t("Thu"), t("Fri"), t("Sat"), t("Sun")].indexOf(parts.weekday) + 1;
   return { year: +parts.year, month: +parts.month, day: +parts.day, hour: +parts.hour, minute: +parts.minute, second: +parts.second, weekday };
 }
 

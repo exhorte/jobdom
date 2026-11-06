@@ -1,5 +1,6 @@
 import { Tone } from "@/generated/prisma/enums";
 import type { Match, Requirement } from "@/lib/application-data";
+import { t } from "@/lib/i18n";
 
 // The suggestion chips in the Refine with AI panel (E8-5), built from the
 // application's match, with the prototype's chips where the match has
@@ -47,20 +48,20 @@ export function refineSuggestions({
 
   return {
     resume: [
-      ...(hasSummary ? ["Make the summary shorter"] : []),
-      strongest ? `Emphasize ${strongest}` : "Emphasize leadership",
+      ...(hasSummary ? [t("Make the summary shorter")] : []),
+      strongest ? t("Emphasize {strongest}", { strongest }) : t("Emphasize leadership"),
       // Something the profile lacks shows how the AI declines to invent it (APP-9).
-      gap ? `Mention ${gap}` : "Mention accessibility",
+      gap ? t("Mention {gap}", { gap }) : t("Mention accessibility"),
     ],
     letter: [
-      tone === Tone.FORMAL ? "Make it warmer" : "Make it more formal",
-      "Shorter, under 200 words",
-      ...(gap ? [`Handle the ${gap} gap differently`] : []),
+      tone === Tone.FORMAL ? t("Make it warmer") : t("Make it more formal"),
+      t("Shorter, under 200 words"),
+      ...(gap ? [t("Handle the {gap} gap differently", { gap })] : []),
     ],
     email: [
-      "Shorter, under 100 words",
-      tone === Tone.FORMAL ? "Make it warmer" : "Make it more formal",
-      strongest ? `Lead with ${strongest}` : "Make the subject line stand out",
+      t("Shorter, under 100 words"),
+      tone === Tone.FORMAL ? t("Make it warmer") : t("Make it more formal"),
+      strongest ? t("Lead with {strongest}", { strongest }) : t("Make the subject line stand out"),
     ],
   };
 }

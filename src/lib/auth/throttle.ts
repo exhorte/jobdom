@@ -1,3 +1,5 @@
+import { t, tp } from "@/lib/i18n";
+
 // The backoff schedule for failed sign-ins (PRD AUTH-5), without the database.
 
 export type ThrottlePolicy = {
@@ -70,6 +72,6 @@ export function afterFailure(
 export function tooManyAttemptsMessage(ms: number): string {
   const seconds = Math.ceil(ms / SECOND);
   const wait =
-    seconds < 120 ? `${seconds} ${seconds === 1 ? "second" : "seconds"}` : `${Math.ceil(seconds / 60)} minutes`;
-  return `Too many attempts. Try again in ${wait}.`;
+    seconds < 120 ? tp(seconds, "{count} second", "{count} seconds") : t("{ceil} minutes", { ceil: Math.ceil(seconds / 60) });
+  return t("Too many attempts. Try again in {wait}.", { wait });
 }

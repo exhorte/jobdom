@@ -3,6 +3,8 @@ import "server-only";
 import OpenAI from "openai";
 import type { ReasoningEffort } from "openai/resources/shared";
 
+import { t } from "@/lib/i18n";
+
 import { AiError } from "../errors";
 import type { ChatAnswer, ChatCall } from "../provider";
 import { OpenAICompatibleProvider } from "./openai-compatible";
@@ -37,19 +39,19 @@ export class MistralProvider extends OpenAICompatibleProvider {
   }
 
   protected override async chat(call: ChatCall): Promise<ChatAnswer> {
-    if (!this.apiKey) throw AiError.config("Add your Mistral API key in Settings → AI provider first.");
+    if (!this.apiKey) throw AiError.config(t("Add your Mistral API key in Settings → AI provider first."));
     try {
       return await super.chat(call);
     } catch (error) {
       // A workspace without a plan has a limit of 0: waiting won't help.
       if (error instanceof OpenAI.RateLimitError && error.headers?.get("x-ratelimit-limit-req-minute") === "0") {
         throw AiError.config(
-          "Mistral lets this API key make 0 requests a minute, so nothing gets through. Check the plan and limits of its workspace in Mistral's console, then try again.",
+          t("Mistral lets this API key make 0 requests a minute, so nothing gets through. Check the plan and limits of its workspace in Mistral's console, then try again."),
         );
       }
       // The key is fine; the plan doesn't include the model.
       if (error instanceof OpenAI.PermissionDeniedError && /subscription|tier/i.test(error.message)) {
-        throw new AiError("model", `Your Mistral plan doesn't include “${call.model}”. Pick another model in Settings → AI provider.`, "PermissionDeniedError 403");
+        throw new AiError("model", t("Your Mistral plan doesn't include “{model}”. Pick another model in Settings → AI provider.", { model: call.model }), "PermissionDeniedError 403");
       }
       throw error;
     }

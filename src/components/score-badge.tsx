@@ -1,11 +1,12 @@
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 /** A fit score (#208, E16-2) in a ring, filled from 85 up. */
 export function ScoreBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" }) {
   return (
     <span
       role="img"
-      aria-label={`Score ${score} of 100`}
+      aria-label={t("Score {score} of 100", { score })}
       className={cn(
         "grid flex-none place-items-center rounded-full border font-mono tabular-nums",
         size === "md" ? "size-11 text-sm" : "h-6 min-w-6 px-1.5 text-xs",

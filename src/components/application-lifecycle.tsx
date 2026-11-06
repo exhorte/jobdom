@@ -6,6 +6,7 @@ import { deleteApplication, setArchived } from "@/lib/application-actions";
 
 import { toast, toastResult } from "./toast";
 import { ConfirmDialog } from "./ui/confirm-dialog";
+import { t } from "@/lib/i18n";
 
 /**
  * Archives an application or brings it back (E9-5), with Undo on the
@@ -18,11 +19,11 @@ export async function archiveApplication(id: string, archived: boolean): Promise
     return false;
   }
   if (archived) {
-    toast("Archived. It's off your board, and still counts on your dashboard.", {
-      action: { label: "Undo", onClick: () => void setArchived({ id, archived: false }).then(toastResult) },
+    toast(t("Archived. It's off your board, and still counts on your dashboard."), {
+      action: { label: t("Undo"), onClick: () => void setArchived({ id, archived: false }).then(toastResult) },
     });
   } else {
-    toast("Back on your board.");
+    toast(t("Back on your board."));
   }
   return true;
 }
@@ -46,9 +47,9 @@ export function DeleteApplicationDialog({
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Delete this application?"
-      description="Its tailored resume and cover letter, the chat, your notes, its history and its mail from Gmail go with it. This can't be undone. Archive it instead to keep it out of the way."
-      confirmLabel="Delete application"
+      title={t("Delete this application?")}
+      description={t("Its tailored resume and cover letter, the chat, your notes, its history and its mail from Gmail go with it. This can't be undone. Archive it instead to keep it out of the way.")}
+      confirmLabel={t("Delete application")}
       returnFocusTo={returnFocusTo}
       onConfirm={async () => {
         const result = await deleteApplication({ id });

@@ -8,6 +8,7 @@ import { loadTaskOptions } from "@/lib/ai/task-options";
 import { refineChat, type ChatTurn } from "@/lib/ai/tasks";
 import { extractedOf, unitsSchema, type Unit, type UnitEdit } from "@/lib/application-data";
 import { updateDocuments } from "@/lib/document-units";
+import { listOf, t } from "@/lib/i18n";
 import { withoutPrivateParts } from "@/lib/letter-frame";
 import { prisma } from "@/lib/prisma";
 import { loadFactTexts, loadProfile } from "@/lib/profile-data";
@@ -21,7 +22,6 @@ export const refineJobKey = (applicationId: string) => `refine:${applicationId}`
 const unitRef = z.object({ document: z.enum(DocumentKind), unitId: z.string().min(1) });
 
 /** "A, B and C" */
-const listOf = (names: string[]) => (names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
 
 /**
  * Answers a message in the Refine with AI panel (E8-5, APP-7, APP-9): the
@@ -48,7 +48,7 @@ export const refineJob = defineJob({
     edited: z.array(unitRef),
   }),
   async run({ applicationId, messageId, request, target, viewing }, { step, signal }) {
-    await step("Thinking");
+    await step(t("Thinking"));
     const application = await prisma.application.findUniqueOrThrow({
       where: { id: applicationId },
       include: { documents: true, messages: { orderBy: { createdAt: "asc" } } },
@@ -98,7 +98,7 @@ export const refineJob = defineJob({
         const unit = documents[edit.document]?.find((entry) => entry.id === edit.unitId);
         if (!unit) continue;
         if (unit.text !== edit.previousText) {
-          leftAlone.push(`the ${unitName(unit)}`);
+          leftAlone.push(t("the {name}", { name: unitName(unit) }));
           continue;
         }
         unit.text = edit.text;
@@ -110,7 +110,10 @@ export const refineJob = defineJob({
 
       const note =
         leftAlone.length > 0
-          ? ` I left ${listOf(leftAlone)} as ${leftAlone.length === 1 ? "it is: it" : "they are: they"} changed while I was working.`
+          ? " " +
+            (leftAlone.length === 1
+              ? t("I left {names} as it is: it changed while I was working.", { names: listOf(leftAlone) })
+              : t("I left {names} as they are: they changed while I was working.", { names: listOf(leftAlone) }))
           : "";
       const reply = await tx.chatMessage.create({
         data: {

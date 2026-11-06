@@ -1,5 +1,6 @@
 import "server-only";
 
+import { t, tp } from "@/lib/i18n";
 import { AGENT_RUNS_KEPT, type AgentRun } from "@/lib/settings";
 import { loadSettings, saveSettings } from "@/lib/settings-data";
 
@@ -22,12 +23,12 @@ export function runLimitProblem(runs: readonly AgentRun[], now: Date, { manual }
   const recent = runsInPastDay(runs, now);
   if (recent.length >= AGENT_MAX_RUNS_PER_DAY) {
     const free = new Date(Math.min(...recent.map((run) => Date.parse(run.at))) + DAY_MS);
-    return `The agent has run ${AGENT_MAX_RUNS_PER_DAY} times in the past 24 hours, as many as it may. ${waitText(free.getTime() - now.getTime())}`;
+    return t("The agent has run {AGENT_MAX_RUNS_PER_DAY} times in the past 24 hours, as many as it may. {waitText}", { AGENT_MAX_RUNS_PER_DAY, waitText: waitText(free.getTime() - now.getTime()) });
   }
   const last = runs[0];
   if (manual && last) {
     const wait = Date.parse(last.at) + AGENT_MANUAL_INTERVAL_MS - now.getTime();
-    if (wait > 0) return `The agent ran less than an hour ago. ${waitText(wait)}`;
+    if (wait > 0) return t("The agent ran less than an hour ago. {waitText}", { waitText: waitText(wait) });
   }
   return null;
 }
@@ -35,9 +36,9 @@ export function runLimitProblem(runs: readonly AgentRun[], now: Date, { manual }
 /** "Try again in 25 minutes." */
 function waitText(ms: number): string {
   const minutes = Math.max(1, Math.ceil(ms / 60_000));
-  if (minutes < 60) return `Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`;
+  if (minutes < 60) return tp(minutes, "Try again in {count} minute.", "Try again in {count} minutes.");
   const hours = Math.ceil(minutes / 60);
-  return `Try again in ${hours} ${hours === 1 ? "hour" : "hours"}.`;
+  return tp(hours, "Try again in {count} hour.", "Try again in {count} hours.");
 }
 
 /** Records a run as it starts, before it asks the source, so a crash and a retry can't spend the quota twice. */

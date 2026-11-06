@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getAiProvider } from "@/lib/ai";
 import { loadTaskOptions } from "@/lib/ai/task-options";
 import { scorePosting } from "@/lib/ai/tasks";
+import { t } from "@/lib/i18n";
 import { fullText } from "@/lib/job-search/find";
 import { foundPostingSchema, postingKey, postingText, type FoundPosting } from "@/lib/job-search/search";
 import { saveScore } from "@/lib/posting-scores";
@@ -27,10 +28,10 @@ export const scorePostingJob = defineJob({
   async run({ posting }, { step, signal }) {
     let description = posting.description;
     if (!posting.complete) {
-      await step("Getting the whole posting");
+      await step(t("Getting the whole posting"));
       description = (await fullText(posting)) ?? posting.description;
     }
-    await step("Scoring it against your profile");
+    await step(t("Scoring it against your profile"));
     const [provider, options, profile] = await Promise.all([getAiProvider(), loadTaskOptions(), loadProfile()]);
     const { data, promptVersion } = await scorePosting(
       provider,

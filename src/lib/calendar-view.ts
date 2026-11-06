@@ -1,4 +1,5 @@
 import { zonedTime } from "@/lib/google/slots";
+import { intlLocale } from "@/lib/i18n";
 
 // The dashboard calendar's dates (E15-6): which days a month shows, and what
 // the agenda lists from the day picked, in the user's time zone. Days are
@@ -20,7 +21,7 @@ const parts = (day: Day) => {
   return { year: +year, month: +month, date: +date };
 };
 const toDay = (utc: Date): Day => utc.toISOString().slice(0, 10);
-const format = (day: Day, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", ...options }).format(new Date(`${day}T00:00:00Z`));
+const format = (day: Day, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlLocale("en-GB"), { timeZone: "UTC", ...options }).format(new Date(`${day}T00:00:00Z`));
 
 /** The day a moment falls on in a time zone. */
 export function dayOf(moment: Date, timeZone: string): Day {

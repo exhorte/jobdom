@@ -7,6 +7,7 @@ import { action, ActionError } from "@/lib/action";
 import { createApplicationFromDocuments } from "@/lib/application-create";
 import { matchSchema } from "@/lib/application-data";
 import { handOffPastedPosting } from "@/lib/connector/handoff";
+import { t, tx } from "@/lib/i18n";
 import { readPostingJob } from "@/lib/jobs/read-posting";
 import { startJob } from "@/lib/jobs/runner";
 import { writeDocumentsJob } from "@/lib/jobs/write-documents";
@@ -15,7 +16,7 @@ import { prisma } from "@/lib/prisma";
 
 /** "Read the posting →": starts reading it in the background and returns the job's id (E7-2). */
 export const startReadingPosting = action(
-  z.object({ posting: z.string().trim().min(1, "Paste a job posting first.").max(100_000) }),
+  z.object({ posting: z.string().trim().min(1, tx("Paste a job posting first.")).max(100_000) }),
   ({ posting }) => startJob(readPostingJob, { posting }),
 );
 
@@ -27,7 +28,7 @@ export const startReadingPosting = action(
  */
 export const handOffToClaude = action(
   z.object({
-    posting: z.string().trim().min(1, "Paste a job posting first.").max(100_000),
+    posting: z.string().trim().min(1, tx("Paste a job posting first.")).max(100_000),
     postingUrl: z.string().trim().max(2000),
   }),
   async ({ posting, postingUrl }) => ({ url: await handOffPastedPosting({ text: posting, url: /^https?:\/\//i.test(postingUrl) ? postingUrl : "" }) }),
@@ -43,12 +44,12 @@ const detailsSchema = z.object({
   deadline: z.union([z.literal(""), z.iso.date()]),
 });
 
-const STALE = "That reading of the posting is no longer available. Read the posting again.";
+const STALE = tx("That reading of the posting is no longer available. Read the posting again.");
 
 /** The finished job that read the posting, with its input and result. */
 async function finishedReading(id: string) {
   const job = await prisma.job.findUnique({ where: { id } });
-  if (!job || job.type !== readPostingJob.type || job.status !== JobStatus.DONE) throw new ActionError(STALE);
+  if (!job || job.type !== readPostingJob.type || job.status !== JobStatus.DONE) throw new ActionError(t(STALE));
   return { input: readPostingJob.input.parse(job.input), result: readPostingJob.result.parse(job.result) };
 }
 
@@ -87,7 +88,7 @@ export const startWritingDocuments = action(
  */
 export const fetchPostingText = action(z.object({ link: z.string().max(2000) }), async ({ link }) => {
   const url = postingLink(link);
-  if (!url) throw new ActionError("Enter the link to the posting first.");
+  if (!url) throw new ActionError(t("Enter the link to the posting first."));
   const fetched = await fetchPosting(url);
   if (!fetched.ok) throw new ActionError(fetched.error);
   return { text: fetched.text, url: fetched.url };
@@ -104,7 +105,7 @@ function postingLink(value: string): string {
   } catch {
     // Not a link.
   }
-  throw new ActionError("The link to the posting doesn't look like a web address. Fix it or leave it empty.");
+  throw new ActionError(t("The link to the posting doesn't look like a web address. Fix it or leave it empty."));
 }
 
 /** A write-documents job's key once an application was made from it: "application:<id>". */
@@ -129,7 +130,7 @@ export const createApplication = action(
   async ({ writeJobId, details, postingUrl, postingId, startupId }) => {
     const job = await prisma.job.findUnique({ where: { id: writeJobId } });
     if (!job || job.type !== writeDocumentsJob.type || job.status !== JobStatus.DONE) {
-      throw new ActionError("Those documents aren't ready. Try creating the application again.");
+      throw new ActionError(t("Those documents aren't ready. Try creating the application again."));
     }
     if (job.key?.startsWith(CLAIMED)) return job.key.slice(CLAIMED.length);
 

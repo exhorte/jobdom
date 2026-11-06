@@ -4,6 +4,8 @@ import { CircleArrowUp } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { toast } from "@/components/toast";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import { UPGRADE_GUIDE_URL, type Release } from "@/lib/releases";
 import { dismissUpdate } from "@/lib/update-actions";
 
@@ -44,7 +46,7 @@ export function UpdateNotice({ release, currentVersion }: { release: Release; cu
   if (hidden) return null;
 
   if (collapsed) {
-    const label = `Dossier ${release.version} is out`;
+    const label = t("Dossier {version} is out", { version: release.version });
     return (
       <button
         type="button"
@@ -52,8 +54,8 @@ export function UpdateNotice({ release, currentVersion }: { release: Release; cu
           opened.current = true;
           expand();
         }}
-        aria-label={label}
-        title={label}
+        aria-label={t(label)}
+        title={t(label)}
         className="relative grid min-h-[34px] w-full place-items-center rounded-control text-muted hover:bg-hover hover:text-ink motion-safe:transition-colors"
       >
         <CircleArrowUp size={16} aria-hidden="true" />
@@ -76,20 +78,18 @@ export function UpdateNotice({ release, currentVersion }: { release: Release; cu
   return (
     <section ref={notice} aria-labelledby={titleId} className="flex flex-col gap-1.5 rounded-control border border-line-card bg-card px-3 py-2.5">
       <h2 id={titleId} className="text-meta font-medium">
-        Dossier {release.version} is out
+        {t("Dossier {version} is out", { version: release.version })}
       </h2>
-      <p className="text-xs text-muted">You have {currentVersion}. Update to get its fixes and features.</p>
+      <p className="text-xs text-muted">{t("You have {currentVersion}. Update to get its fixes and features.", { currentVersion })}</p>
       <div className="flex flex-wrap gap-x-3 text-xs">
         <a href={release.url} target="_blank" rel="noopener noreferrer" className={LINK}>
-          What&apos;s new{" "}
-          <span className="sr-only">(opens in a new tab)</span>
+          {rich("What's new {span}", { span: <span className="sr-only">{t("(opens in a new tab)")}</span> })}
         </a>
         <a href={UPGRADE_GUIDE_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
-          How to update{" "}
-          <span className="sr-only">(opens in a new tab)</span>
+          {rich("How to update {span}", { span: <span className="sr-only">{t("(opens in a new tab)")}</span> })}
         </a>
         <button type="button" onClick={() => void notNow()} className={`${TARGET} text-muted hover:text-ink`}>
-          Not now
+          {t("Not now")}
         </button>
       </div>
     </section>

@@ -9,6 +9,7 @@ import { loadTaskOptions } from "@/lib/ai/task-options";
 import { classifyReply } from "@/lib/ai/tasks";
 import { unitsSchema } from "@/lib/application-data";
 import { emailParts } from "@/lib/application-email";
+import { t } from "@/lib/i18n";
 import { logServerError } from "@/lib/log";
 import { prisma } from "@/lib/prisma";
 import { loadSettings } from "@/lib/settings-data";
@@ -72,14 +73,14 @@ export type SyncResult = { fetched: number; kept: number; read: number };
  */
 export async function syncInbox({ signal }: { signal?: AbortSignal } = {}): Promise<SyncResult> {
   const [account, settings] = await Promise.all([loadGoogleAccount(), loadSettings()]);
-  if (!account) throw new GoogleError("not-connected", "Connect your Google account in Settings → Google first.");
+  if (!account) throw new GoogleError("not-connected", t("Connect your Google account in Settings → Google first."));
   try {
     const result = await runSync(account.historyId, account.email, settings.gmailScope, signal);
     await prisma.googleAccount.update({ where: { id: account.id }, data: { lastSyncAt: new Date(), syncProblem: null, historyId: result.historyId } });
     return result.counts;
   } catch (error) {
     logServerError("inbox check", error instanceof GoogleError && error.detail ? new GoogleError(error.problem, `${error.message} (${error.detail})`) : error);
-    const message = error instanceof GoogleError ? error.message : "The inbox check failed. It tries again on its own.";
+    const message = error instanceof GoogleError ? error.message : t("The inbox check failed. It tries again on its own.");
     await prisma.googleAccount.updateMany({ where: { id: account.id }, data: { syncProblem: message } }).catch(() => {});
     throw error;
   }

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { t } from "@/lib/i18n";
+
 import { credentialsFor, loadJobSearchConfig, requestContext } from "./config";
 import { JobSearchError } from "./errors";
 import { postingDetails, searchPostings } from "./index";
@@ -19,8 +21,8 @@ export async function askSource(
 ): Promise<({ ok: true; source: JobSource } & SearchPage) | SearchProblem> {
   const config = await loadJobSearchConfig();
   const from = source ?? config.source;
-  if (!from) return { ok: false, problem: "off", message: "Choose where to search in Settings → Job search first." };
-  if (!query.country) return { ok: false, problem: "no-country", message: "Choose a country to search in." };
+  if (!from) return { ok: false, problem: "off", message: t("Choose where to search in Settings → Job search first.") };
+  if (!query.country) return { ok: false, problem: "no-country", message: t("Choose a country to search in.") };
   try {
     const page = await searchPostings(from, credentialsFor(config, from), query, next, requestContext(from));
     return { ok: true, source: from, ...page };

@@ -4,6 +4,8 @@ import { useRef, type CSSProperties } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import { resolveTheme, THEME_FONTS, type ThemeData } from "@/lib/themes";
 
 type ThemePickerProps = {
@@ -23,7 +25,7 @@ type ThemePickerProps = {
 };
 
 const accessibleName = (theme: ThemeData, active: boolean) =>
-  `${theme.name} theme${active ? ", in use" : ""}`;
+  `${theme.name} theme${active ? t(", in use") : ""}`;
 
 /** The Themes tab: built-in thumbnails, your own themes, and a way to make one (RES-2, RES-4). */
 export function ThemePicker({ themes, activeId, userName, onSelect, onCustomize, actions }: ThemePickerProps) {
@@ -34,7 +36,7 @@ export function ThemePicker({ themes, activeId, userName, onSelect, onCustomize,
 
   return (
     <div className="flex flex-col gap-3.5">
-      <h2 className="text-label text-muted">Built-in</h2>
+      <h2 className="text-label text-muted">{t("Built-in")}</h2>
       <div className="grid grid-cols-2 gap-3.5">
         {builtIn.map((theme) => (
           <ThemeThumbnail
@@ -47,7 +49,7 @@ export function ThemePicker({ themes, activeId, userName, onSelect, onCustomize,
         ))}
       </div>
 
-      <h2 className="mt-2.5 text-label text-muted">Your themes</h2>
+      <h2 className="mt-2.5 text-label text-muted">{t("Your themes")}</h2>
       {custom.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {custom.map((theme) => {
@@ -68,7 +70,7 @@ export function ThemePicker({ themes, activeId, userName, onSelect, onCustomize,
                 <span className="flex-1 truncate text-sm" style={{ fontFamily: THEME_FONTS[theme.headFont].family }}>
                   {theme.name}
                 </span>
-                {active && <span className="text-xs text-muted">In use</span>}
+                {active && <span className="text-xs text-muted">{t("In use")}</span>}
               </button>
             );
           })}
@@ -79,30 +81,30 @@ export function ThemePicker({ themes, activeId, userName, onSelect, onCustomize,
         onClick={onCustomize}
         className="flex flex-col gap-[3px] rounded-[10px] border border-dashed border-line-strong p-3.5 text-left text-control hover:border-line-strong"
       >
-        <span className="font-medium">+ Make your own theme</span>
-        <span className="text-meta text-muted">Start from the current one and change fonts, color and layout.</span>
+        <span className="font-medium">{t("+ Make your own theme")}</span>
+        <span className="text-meta text-muted">{t("Start from the current one and change fonts, color and layout.")}</span>
       </button>
 
       {actions && active && (
         <div className="mt-2 flex flex-col gap-2 border-t border-line pt-4">
           <p className="text-meta text-muted">
-            In use: <span className="text-ink">{active.name}</span>
+            {rich("In use: {span}", { span: <span className="text-ink">{active.name}</span> })}
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            <Button variant="text" size="sm" aria-label={`Duplicate ${active.name}`} onClick={actions.duplicate}>
-              Duplicate
+            <Button variant="text" size="sm" aria-label={t("Duplicate {name}", { name: active.name })} onClick={actions.duplicate}>
+              {t("Duplicate")}
             </Button>
-            <Button variant="text" size="sm" aria-label={`Export ${active.name}`} onClick={actions.exportFile}>
-              Export
+            <Button variant="text" size="sm" aria-label={t("Export {name}", { name: active.name })} onClick={actions.exportFile}>
+              {t("Export")}
             </Button>
             {!active.builtIn && (
-              <Button variant="danger-text" size="sm" aria-label={`Delete ${active.name}…`} onClick={actions.remove}>
-                Delete…
+              <Button variant="danger-text" size="sm" aria-label={t("Delete {name}…", { name: active.name })} onClick={actions.remove}>
+                {t("Delete…")}
               </Button>
             )}
           </div>
           <Button variant="text" size="sm" className="self-start" onClick={() => fileInput.current?.click()}>
-            Import a theme…
+            {t("Import a theme…")}
           </Button>
           <input
             ref={fileInput}
@@ -203,7 +205,7 @@ function ThemeThumbnail({
       </span>
       <span aria-hidden className="flex items-baseline justify-between text-control">
         <span className={active ? "font-semibold" : undefined}>{theme.name}</span>
-        {active && <span className="text-xs text-muted">In use</span>}
+        {active && <span className="text-xs text-muted">{t("In use")}</span>}
       </span>
     </button>
   );

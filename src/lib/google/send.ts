@@ -4,6 +4,7 @@ import { ApplicationStatus, DocumentKind, EmailDirection } from "@/generated/pri
 import { unitsSchema } from "@/lib/application-data";
 import { emailAddresses, emailParts } from "@/lib/application-email";
 import { resolveFileName } from "@/lib/file-name";
+import { t } from "@/lib/i18n";
 import { renderPdf } from "@/lib/pdf/render";
 import { prisma } from "@/lib/prisma";
 import { loadProfileName } from "@/lib/profile-data";
@@ -39,15 +40,15 @@ export type SentApplication = { threadId: string; eventId: string | null; attach
  */
 export async function sendApplicationEmail(applicationId: string): Promise<SentApplication> {
   const account = await loadGoogleAccount();
-  if (!account) throw new GoogleError("not-connected", "Connect your Google account in Settings → Google first.");
+  if (!account) throw new GoogleError("not-connected", t("Connect your Google account in Settings → Google first."));
   const application = await prisma.application.findUnique({ where: { id: applicationId }, include: { documents: { select: { kind: true, units: true } } } });
-  if (!application) throw new GoogleError("unavailable", "That application no longer exists.");
+  if (!application) throw new GoogleError("unavailable", t("That application no longer exists."));
 
   const units = unitsSchema.safeParse(application.documents.find((document) => document.kind === DocumentKind.EMAIL)?.units);
-  if (!units.success) throw new GoogleError("unavailable", "Write the email first.");
+  if (!units.success) throw new GoogleError("unavailable", t("Write the email first."));
   const { to, subject, body } = emailParts(units.data);
-  if (emailAddresses(to).length === 0) throw new GoogleError("unavailable", "Add who it's to first: the posting doesn't give an address.");
-  if (!subject.trim() || !body.trim()) throw new GoogleError("unavailable", "The email needs a subject and a message.");
+  if (emailAddresses(to).length === 0) throw new GoogleError("unavailable", t("Add who it's to first: the posting doesn't give an address."));
+  if (!subject.trim() || !body.trim()) throw new GoogleError("unavailable", t("The email needs a subject and a message."));
 
   const [name, settings] = await Promise.all([loadProfileName(), loadSettings()]);
   const attachments: Attachment[] = [];
@@ -97,11 +98,11 @@ export const replySubject = (subject: string) => (/^\s*(re|aw|sv|antw)\s*:/i.tes
 /** Sends the answer to an employer's mail in its thread, and marks the mail as answered. */
 export async function sendReply(emailId: string, body: string): Promise<{ applicationId: string | null }> {
   const account = await loadGoogleAccount();
-  if (!account) throw new GoogleError("not-connected", "Connect your Google account in Settings → Google first.");
+  if (!account) throw new GoogleError("not-connected", t("Connect your Google account in Settings → Google first."));
   const email = await prisma.emailMessage.findUnique({ where: { id: emailId } });
-  if (!email) throw new GoogleError("unavailable", "That email is no longer in Dossier.");
-  if (!body.trim()) throw new GoogleError("unavailable", "Write the answer first.");
-  if (/\[…\]|\[\.\.\.\]/.test(body)) throw new GoogleError("unavailable", "Fill in the parts marked […] first.");
+  if (!email) throw new GoogleError("unavailable", t("That email is no longer in Dossier."));
+  if (!body.trim()) throw new GoogleError("unavailable", t("Write the answer first."));
+  if (/\[…\]|\[\.\.\.\]/.test(body)) throw new GoogleError("unavailable", t("Fill in the parts marked […] first."));
 
   const to = email.fromName ? `${email.fromName.replace(/[<>"]/g, "")} <${email.fromAddress}>` : email.fromAddress;
   const subject = replySubject(email.subject);

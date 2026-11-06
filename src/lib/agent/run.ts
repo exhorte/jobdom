@@ -9,6 +9,7 @@ import { isAiConfigured } from "@/lib/ai/config";
 import { AiError } from "@/lib/ai/errors";
 import { loadTaskOptions } from "@/lib/ai/task-options";
 import { scorePosting } from "@/lib/ai/tasks";
+import { t, tp } from "@/lib/i18n";
 import { searchPostings } from "@/lib/job-search";
 import { credentialsFor, loadJobSearchConfig, requestContext } from "@/lib/job-search/config";
 import { JobSearchError } from "@/lib/job-search/errors";
@@ -50,13 +51,13 @@ export const agentQueryReady = (query: SearchQuery) => Boolean(query.keywords.tr
 
 /** Why the agent can't run at all, in words, or null when it's set up. */
 export async function agentSetupProblem(query: SearchQuery): Promise<string | null> {
-  if (!query.keywords.trim()) return "Add what to look for in Settings → Job agent first.";
-  if (!query.country) return "Choose a country for the search in Settings → Job agent first.";
-  if (!(await isAiConfigured())) return "Choose an AI provider in Settings → AI provider first.";
+  if (!query.keywords.trim()) return t("Add what to look for in Settings → Job agent first.");
+  if (!query.country) return t("Choose a country for the search in Settings → Job agent first.");
+  if (!(await isAiConfigured())) return t("Choose an AI provider in Settings → AI provider first.");
   const config = await loadJobSearchConfig();
-  if (!config.source) return "Choose a job source in Settings → Job search first.";
+  if (!config.source) return t("Choose a job source in Settings → Job search first.");
   // It searches on its own, which the BA's terms forbid most clearly (#223).
-  if (config.source === "ARBEITSAGENTUR") return "The job agent doesn't search the Bundesagentur für Arbeit. Choose JSearch or Adzuna in Settings → Job search for it.";
+  if (config.source === "ARBEITSAGENTUR") return t("The job agent doesn't search the Bundesagentur für Arbeit. Choose JSearch or Adzuna in Settings → Job search for it.");
   try {
     credentialsFor(config, config.source);
   } catch (error) {
@@ -99,7 +100,7 @@ const newestFirst = (a: FoundPosting, b: FoundPosting) => (b.postedAt ? Date.par
  */
 export async function runAgentScan({ manual }: { manual: boolean }, context: JobContext, now = new Date()): Promise<AgentScanResult> {
   const settings = await loadSettings();
-  if (!settings.agentEnabled && !manual) return stopped("The job agent is off.");
+  if (!settings.agentEnabled && !manual) return stopped(t("The job agent is off."));
   const setup = await agentSetupProblem(settings.agentQuery);
   if (setup) return stopped(setup);
   const limit = runLimitProblem(settings.agentRuns, now, { manual: false });
@@ -111,7 +112,7 @@ export async function runAgentScan({ manual }: { manual: boolean }, context: Job
     return result;
   };
 
-  await context.step("Searching for new postings");
+  await context.step(t("Searching for new postings"));
   const config = await loadJobSearchConfig();
   const source = config.source!;
   let postings: FoundPosting[];
@@ -125,10 +126,10 @@ export async function runAgentScan({ manual }: { manual: boolean }, context: Job
 
   const fresh = await newPostings(postings);
   const counts = { found: postings.length, fresh: fresh.length, skipped: postings.length - fresh.length, drafted: 0 };
-  if (fresh.length === 0) return finish({ ...counts, scored: 0, message: postings.length === 0 ? "The search found no postings this time." : "No new postings this time." });
+  if (fresh.length === 0) return finish({ ...counts, scored: 0, message: postings.length === 0 ? t("The search found no postings this time.") : t("No new postings this time.") });
 
   const toScore = fresh.toSorted(newestFirst).slice(0, settings.agentMaxScores);
-  await context.step(`Scoring ${toScore.length} ${toScore.length === 1 ? "posting" : "postings"}`);
+  await context.step(tp(toScore.length, "Scoring {count} posting", "Scoring {count} postings"));
   const [provider, options, profile] = await Promise.all([getAiProvider(), loadTaskOptions(), loadProfile()]);
   let scored = 0;
   let queued = 0;
@@ -170,14 +171,14 @@ export async function runAgentScan({ manual }: { manual: boolean }, context: Job
     drafted = best.length;
   }
 
-  const waiting = `${queued} new ${queued === 1 ? "posting is" : "postings are"} waiting for a look.`;
+  const waiting = tp(queued, "{count} new posting is waiting for a look.", "{count} new postings are waiting for a look.");
   const message =
     scored === 0
-      ? (problem ?? "No postings could be scored this time.")
+      ? (problem ?? t("No postings could be scored this time."))
       : queued === 0
-        ? `Scored ${scored} new ${scored === 1 ? "posting" : "postings"}; none reached your minimum score of ${settings.agentMinScore}.`
+        ? tp(scored, "Scored {count} new posting; none reached your minimum score of {minimum}.", "Scored {count} new postings; none reached your minimum score of {minimum}.", { minimum: settings.agentMinScore })
         : drafted > 0
-          ? `${waiting} Preparing ${drafted === 1 ? "a draft for the best one" : `drafts for the best ${drafted}`}.`
+          ? `${waiting} ${drafted === 1 ? t("Preparing a draft for the best one.") : t("Preparing drafts for the best {count}.", { count: drafted })}`
           : waiting;
   return finish({ ...counts, scored, drafted, message });
 }

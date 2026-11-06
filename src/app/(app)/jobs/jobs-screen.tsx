@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { toast, toastResult } from "@/components/toast";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 import type { Country } from "@/lib/job-search/countries";
 import {
   searchHref,
@@ -80,8 +81,8 @@ export function JobsScreen({
   const header = (
     <>
       <PageHeader
-        title="Find jobs"
-        description={`Search ${source ? SOURCE_INFO[source].name : "job postings"} for postings near you, then start an application from the one you like.`}
+        title={t("Find jobs")}
+        description={t("Search {source} for postings near you, then start an application from the one you like.", { source: source ? SOURCE_INFO[source].name : t("job postings") })}
       />
       <ViewTabs view={view} counts={counts} />
     </>
@@ -140,7 +141,7 @@ export function JobsScreen({
       <SearchForm source={source} countries={countries} query={query} pending={pending} onSearch={run} />
       {/* Announces each new set of results; the list itself is replaced. */}
       <p role="status" className="sr-only">
-        {pending ? "Searching…" : failed ? failed.problem.message : search ? `${search.postings.length} postings found.` : ""}
+        {pending ? t("Searching…") : failed ? failed.problem.message : search ? t("{length} postings found.", { length: search.postings.length }) : ""}
       </p>
       <div className={cn("flex flex-1 flex-col motion-safe:transition-opacity", pending && "opacity-60")} aria-busy={pending || undefined}>
         {failed ? (
@@ -158,8 +159,8 @@ export function JobsScreen({
         ) : (
           <p className="px-10 pb-16 text-sm text-muted">
             {missingSearch
-              ? "That search is no longer kept. Search again, or open one from Past searches."
-              : "Search for a role, a skill or a company. Every search is kept with what it found, so you can come back to it without spending another search."}
+              ? t("That search is no longer kept. Search again, or open one from Past searches.")
+              : t("Search for a role, a skill or a company. Every search is kept with what it found, so you can come back to it without spending another search.")}
           </p>
         )}
       </div>
@@ -197,8 +198,8 @@ function SearchForm({
     event.preventDefault();
     if (pending) return;
     const problems = {
-      keywords: form.keywords.trim() ? undefined : "Type what you're looking for.",
-      country: form.country ? uncovered : "Choose a country.",
+      keywords: form.keywords.trim() ? undefined : t("Type what you're looking for."),
+      country: form.country ? uncovered : t("Choose a country."),
     };
     setErrors(problems);
     if (problems.keywords || problems.country) return;
@@ -208,7 +209,7 @@ function SearchForm({
   return (
     <form
       role="search"
-      aria-label="Search postings"
+      aria-label={t("Search postings")}
       noValidate
       onSubmit={submit}
       className="mx-10 mb-7 grid grid-cols-1 items-start gap-x-4 gap-y-4 rounded-panel border border-line-card bg-card p-6 sm:grid-cols-2 lg:grid-cols-[2fr_1.5fr_1.3fr_1fr_1fr]"
@@ -217,7 +218,7 @@ function SearchForm({
       <div className="flex flex-wrap items-center justify-between gap-4 sm:col-span-2 lg:col-span-5">
         <RemoteOnlyField value={form} onChange={set} source={source} />
         <Button type="submit" aria-disabled={pending || undefined}>
-          {pending ? "Searching…" : "Search"}
+          {pending ? t("Searching…") : t("Search")}
         </Button>
       </div>
     </form>
@@ -228,13 +229,13 @@ function SearchForm({
 function ViewTabs({ view, counts }: { view: JobsView; counts: { searches: number; saved: number; dismissed: number } }) {
   const tabs = [
     // The latest search, as it was kept.
-    { view: "search", label: "Search", href: "/jobs", count: null },
-    { view: "history", label: "Past searches", href: viewHref("history"), count: counts.searches },
-    { view: "saved", label: "Saved", href: viewHref("saved"), count: counts.saved },
-    { view: "dismissed", label: "Dismissed", href: viewHref("dismissed"), count: counts.dismissed },
+    { view: "search", label: t("Search"), href: "/jobs", count: null },
+    { view: "history", label: t("Past searches"), href: viewHref("history"), count: counts.searches },
+    { view: "saved", label: t("Saved"), href: viewHref("saved"), count: counts.saved },
+    { view: "dismissed", label: t("Dismissed"), href: viewHref("dismissed"), count: counts.dismissed },
   ] as const;
   return (
-    <nav aria-label="Find jobs views" className="flex flex-wrap gap-1.5 px-10 pb-[18px]">
+    <nav aria-label={t("Find jobs views")} className="flex flex-wrap gap-1.5 px-10 pb-[18px]">
       {tabs.map((tab) => (
         <Link
           key={tab.view}
@@ -245,7 +246,7 @@ function ViewTabs({ view, counts }: { view: JobsView; counts: { searches: number
             tab.view === view ? "border-primary bg-selected font-medium text-primary-text hover:text-primary-text" : "border-line-field bg-card text-ink hover:border-line-strong hover:bg-hover hover:text-ink",
           )}
         >
-          {tab.label}
+          {t(tab.label)}
           {tab.count !== null && <span className="text-xs opacity-65">{tab.count}</span>}
         </Link>
       ))}
@@ -257,13 +258,12 @@ function ViewTabs({ view, counts }: { view: JobsView; counts: { searches: number
 function NoSource() {
   return (
     <div className="mx-10 mb-16 flex max-w-[640px] flex-col items-start gap-3 rounded-panel border border-line-card bg-card px-7 py-7">
-      <h2 className="font-serif text-section">Choose where to search</h2>
+      <h2 className="font-serif text-section">{t("Choose where to search")}</h2>
       <p className="text-sm text-muted">
-        Find jobs searches one job source for you, such as JSearch (LinkedIn, Indeed and more) or Adzuna. Pick one in Settings. Until then,
-        nothing is sent anywhere.
+        {t("Find jobs searches one job source for you, such as JSearch (LinkedIn, Indeed and more) or Adzuna. Pick one in Settings. Until then, nothing is sent anywhere.")}
       </p>
       <Link href={SETTINGS_HREF} className={buttonClassName("primary", "md", "mt-1 hover:text-on-primary")}>
-        Set up job search
+        {t("Set up job search")}
       </Link>
     </div>
   );
@@ -277,11 +277,11 @@ function SearchProblem({ problem, message, onRetry }: { problem: Problem["proble
       <p className="text-sm">{message}</p>
       {toSettings ? (
         <Link href={SETTINGS_HREF} className={buttonClassName("secondary", "sm")}>
-          Open Settings → Job search
+          {t("Open Settings → Job search")}
         </Link>
       ) : problem === "unavailable" ? (
         <Button variant="secondary" size="sm" onClick={onRetry}>
-          Try again
+          {t("Try again")}
         </Button>
       ) : null}
     </div>

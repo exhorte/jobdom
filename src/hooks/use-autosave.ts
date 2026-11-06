@@ -3,11 +3,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { toast } from "@/components/toast";
+import { tx } from "@/lib/i18n";
 
 export type AutosaveStatus = "idle" | "saving" | "saved" | "error";
 
 const COULD_NOT_SAVE =
-  "Couldn't save your changes. They're still on this page, and saving will try again when you edit or leave the field.";
+  tx("Couldn't save your changes. They're still on this page, and saving will try again when you edit or leave the field.");
 
 type AutosaverOptions<T> = {
   /** Persists a value. A Server Action's `{ ok: false, error }` counts as a failure. */

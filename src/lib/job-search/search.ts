@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PostingSource } from "@/generated/prisma/enums";
 import { daysBetween, formatShortCalendarDate } from "@/lib/dates";
 import type { PostingFit } from "@/lib/fit";
+import { t, tx } from "@/lib/i18n";
 
 import { countryCodeFor } from "./countries";
 
@@ -26,11 +27,11 @@ export const DEFAULT_RADIUS_KM: RadiusKm = 25;
 
 /** How recent the postings must be, with the days each choice allows. */
 export const POSTED_WITHIN = [
-  { value: "any", label: "Any time", days: null },
-  { value: "day", label: "Past day", days: 1 },
-  { value: "3days", label: "Past 3 days", days: 3 },
-  { value: "week", label: "Past week", days: 7 },
-  { value: "month", label: "Past month", days: 30 },
+  { value: "any", label: tx("Any time"), days: null },
+  { value: "day", label: tx("Past day"), days: 1 },
+  { value: "3days", label: tx("Past 3 days"), days: 3 },
+  { value: "week", label: tx("Past week"), days: 7 },
+  { value: "month", label: tx("Past month"), days: 30 },
 ] as const;
 export type PostedWithin = (typeof POSTED_WITHIN)[number]["value"];
 const POSTED_VALUES = POSTED_WITHIN.map((option) => option.value) as [PostedWithin, ...PostedWithin[]];
@@ -78,7 +79,7 @@ export const foundPostingSchema = z.object({
   url: z
     .string()
     .max(2000)
-    .refine((url) => url === "" || safeLink(url) !== "", "Not a web address."),
+    .refine((url) => url === "" || safeLink(url) !== "", tx("Not a web address.")),
   /** Where the source found it, e.g. "LinkedIn"; empty when it's the source's own. */
   via: z.string().max(100),
   /** Plain text. */
@@ -134,7 +135,7 @@ export type PastSearchDay = {
 export function describeSearch(query: SearchQuery, countryName: string): string {
   const where = query.place ? `${query.place}, ${query.radiusKm} km` : countryName;
   const posted = POSTED_WITHIN.find((option) => option.value === query.postedWithin);
-  return [query.keywords, where, query.remoteOnly ? "Remote only" : "", posted && posted.value !== "any" ? posted.label : ""].filter(Boolean).join(" · ");
+  return [query.keywords, where, query.remoteOnly ? t("Remote only") : "", posted && posted.value !== "any" ? posted.label : ""].filter(Boolean).join(" · ");
 }
 
 /** Identifies a posting across searches. */
@@ -245,10 +246,10 @@ export function postedAgo(postedAt: string | null, now: Date): string {
   if (!postedAt) return "";
   const posted = new Date(postedAt);
   const days = daysBetween(posted, now, "UTC");
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 31) return days < 14 ? "1 week ago" : `${Math.floor(days / 7)} weeks ago`;
+  if (days <= 0) return t("Today");
+  if (days === 1) return t("Yesterday");
+  if (days < 7) return t("{days} days ago", { days });
+  if (days < 31) return days < 14 ? t("1 week ago") : t("{floor} weeks ago", { floor: Math.floor(days / 7) });
   return formatShortCalendarDate(posted, now);
 }
 
@@ -260,7 +261,7 @@ export function postedAgo(postedAt: string | null, now: Date): string {
  * (src/lib/posting-fetch.ts).
  */
 export function postingText(posting: Pick<FoundPosting, "title" | "company" | "place" | "remote" | "salary" | "description">): string {
-  const facts = [posting.place, posting.remote ? "Remote" : "", posting.salary].filter(Boolean);
+  const facts = [posting.place, posting.remote ? t("Remote") : "", posting.salary].filter(Boolean);
   return [[posting.company, posting.title].filter(Boolean).join(": "), facts.join(" · "), posting.description.trim()]
     .filter(Boolean)
     .join("\n\n");

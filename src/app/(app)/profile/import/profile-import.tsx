@@ -16,6 +16,8 @@ import { retry } from "@/lib/jobs/actions";
 import type { ImportProfileResult } from "@/lib/jobs/import-profile";
 import { messages } from "@/lib/messages";
 import { citationText } from "@/lib/citation";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import { BASICS_FIELDS, formatDateRange, languageLevelLabel, type BasicsField } from "@/lib/profile";
 import { IMPORT_PROFILE_STEPS, importCounts, type ImportedProfile, type ImportMode } from "@/lib/profile-import";
 
@@ -23,17 +25,17 @@ import { JobProgress, jobStep } from "../../new/job-progress";
 import { applyProfileImport, discardProfileImport } from "../actions";
 
 const BASICS_LABELS: Record<BasicsField, string> = {
-  name: "Full name",
-  headline: "Headline",
-  email: "Email",
-  phone: "Phone",
-  dob: "Date of birth",
-  website: "Website",
-  address: "Street address",
-  city: "City",
-  country: "Country",
+  name: tx("Full name"),
+  headline: tx("Headline"),
+  email: tx("Email"),
+  phone: tx("Phone"),
+  dob: tx("Date of birth"),
+  website: tx("Website"),
+  address: tx("Street address"),
+  city: tx("City"),
+  country: tx("Country"),
   linkedin: "LinkedIn",
-  summary: "About you",
+  summary: tx("About you"),
 };
 
 /**
@@ -87,7 +89,7 @@ export function ProfileImport({
   };
 
   async function read() {
-    if (!file) return toast("Choose your resume file first.");
+    if (!file) return toast(t("Choose your resume file first."));
     setUploading(true);
     try {
       const response = await fetch("/api/profile/import", {
@@ -116,11 +118,11 @@ export function ProfileImport({
   return (
     <>
       <PageHeader
-        title="Import from a resume"
-        description={`Start your profile from a resume you already have. Nothing goes into your profile until you've seen what was found. The file's text is deleted once you've chosen, or after ${keptFor} if you don't.`}
+        title={t("Import from a resume")}
+        description={t("Start your profile from a resume you already have. Nothing goes into your profile until you've seen what was found. The file's text is deleted once you've chosen, or after {keptFor} if you don't.", { keptFor })}
         actions={
           <Link href="/profile" className={buttonClassName("secondary")}>
-            Back to your profile
+            {t("Back to your profile")}
           </Link>
         }
       />
@@ -129,21 +131,19 @@ export function ProfileImport({
           <Card className="flex flex-col items-start gap-5">
             {!aiReady && (
               <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-                No AI provider is set up yet, so nothing can read the resume.{" "}
-                <Link href="/settings?section=ai" className="font-medium text-warning underline underline-offset-2">
-                  Choose one in Settings → AI provider
-                </Link>
+                {rich("No AI provider is set up yet, so nothing can read the resume. {link}", { link: <Link href="/settings?section=ai" className="font-medium text-warning underline underline-offset-2">
+                  {t("Choose one in Settings → AI provider")}
+                </Link> })}
               </p>
             )}
             {aiReady && !providerOption(provider).local && (
               <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-                The resume&apos;s text, contact details included, is sent to {providerOption(provider).vendor ?? "your AI server"} to sort
-                it into your profile.
+                {t("The resume's text, contact details included, is sent to {providerOption} to sort it into your profile.", { providerOption: providerOption(provider).vendor ?? t("your AI server") })}
               </p>
             )}
             <div className="flex flex-col gap-2">
               <label htmlFor={fileId} className="text-label text-muted">
-                Your resume, as PDF, Word (.docx) or Markdown (.md)
+                {t("Your resume, as PDF, Word (.docx) or Markdown (.md)")}
               </label>
               <input
                 id={fileId}
@@ -154,20 +154,20 @@ export function ProfileImport({
               />
             </div>
             <Button aria-disabled={!aiReady || !file || uploading || undefined} onClick={() => void (aiReady && !uploading ? read() : undefined)}>
-              {uploading ? "Sending…" : "Read my resume →"}
+              {uploading ? t("Sending…") : t("Read my resume →")}
             </Button>
           </Card>
         )}
 
         {phase === "reading" && (
           <JobProgress
-            title="Reading your resume…"
+            title={t("Reading your resume…")}
             steps={IMPORT_PROFILE_STEPS}
             current={jobStep(IMPORT_PROFILE_STEPS, job)}
-            error={job?.status === "FAILED" ? job.error : null}
+            error={job?.status === "FAILED" ? t(job.error) : null}
             onRetry={() => void retry({ id: jobId! }).then((result) => toastResult(result).ok && setRevision((count) => count + 1))}
             onBack={startOver}
-            backLabel="← Choose another file"
+            backLabel={t("← Choose another file")}
           />
         )}
 
@@ -176,28 +176,26 @@ export function ProfileImport({
             <Preview profile={job.result.profile} />
             <Card className="flex flex-col gap-4">
               <p className="text-sm text-muted">
-                <strong className="font-medium text-ink">Merge</strong> adds all this to your profile; where your profile already has the same
-                detail, role, degree or reference, what the resume says wins. <strong className="font-medium text-ink">Replace</strong> clears your
-                profile first.
+                {rich("{strong} adds all this to your profile; where your profile already has the same detail, role, degree or reference, what the resume says wins. {strong2} clears your profile first.", { strong: <strong className="font-medium text-ink">{t("Merge")}</strong>, strong2: <strong className="font-medium text-ink">{t("Replace")}</strong> })}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button aria-disabled={applying || undefined} onClick={() => void (applying ? undefined : apply("merge"))}>
-                  Merge into my profile
+                  {t("Merge into my profile")}
                 </Button>
                 <Button variant="secondary" aria-disabled={applying || undefined} onClick={() => setConfirmReplace(true)}>
-                  Replace my profile…
+                  {t("Replace my profile…")}
                 </Button>
                 <Button variant="text" onClick={startOver}>
-                  Choose another file
+                  {t("Choose another file")}
                 </Button>
               </div>
             </Card>
             <ConfirmDialog
               open={confirmReplace}
               onOpenChange={setConfirmReplace}
-              title="Replace your profile?"
-              description="Your basics, skills, languages, roles, projects, education, publications and references are removed first; then your profile holds exactly what was read from the resume. Your applications and their documents stay as they are."
-              confirmLabel="Replace my profile"
+              title={t("Replace your profile?")}
+              description={t("Your basics, skills, languages, roles, projects, education, publications and references are removed first; then your profile holds exactly what was read from the resume. Your applications and their documents stay as they are.")}
+              confirmLabel={t("Replace my profile")}
               onConfirm={() => void apply("replace")}
             />
           </>
@@ -216,13 +214,13 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       <div className="flex flex-col gap-1">
         {/* Takes focus when the preview appears (E11-3). */}
         <h2 tabIndex={-1} className="font-serif text-section">
-          Here&apos;s what your resume says
+          {t("Here's what your resume says")}
         </h2>
-        <p className="text-meta text-muted">{importCounts(profile)}. Anything marked “check” isn&apos;t in the file word for word.</p>
+        <p className="text-meta text-muted">{t("{importCounts}. Anything marked “check” isn't in the file word for word.", { importCounts: importCounts(profile) })}</p>
       </div>
 
       {basics.length > 0 && (
-        <Section title="Basics">
+        <Section title={t("Basics")}>
           <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-sm">
             {basics.map(([field, value]) => (
               <div key={field} className="contents">
@@ -235,7 +233,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       )}
 
       {profile.skills.length > 0 && (
-        <Section title="Skills">
+        <Section title={t("Skills")}>
           <ul className="flex flex-wrap gap-2 text-sm">
             {profile.skills.map((skill) => (
               <li key={skill.name} className="rounded-full border border-line-field bg-input px-3 py-1">
@@ -243,7 +241,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
                 {!skill.found && (
                   <>
                     {" "}
-                    <Check>not in the file</Check>
+                    <Check>{t("not in the file")}</Check>
                   </>
                 )}
               </li>
@@ -253,12 +251,12 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       )}
 
       {profile.languages.length > 0 && (
-        <Section title="Languages">
+        <Section title={t("Languages")}>
           <ul className="flex flex-col gap-1 text-sm">
             {profile.languages.map((language) => (
               <li key={language.name}>
                 {language.name}: {languageLevelLabel(language.level)}
-                {!language.levelGiven && <span className="text-muted"> (no level given; change it any time)</span>}
+                {!language.levelGiven && <span className="text-muted"> {t("(no level given; change it any time)")}</span>}
               </li>
             ))}
           </ul>
@@ -266,7 +264,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       )}
 
       {profile.experience.length > 0 && (
-        <Section title="Experience">
+        <Section title={t("Experience")}>
           {profile.experience.map((entry, index) => (
             <Entry
               key={index}
@@ -281,14 +279,14 @@ function Preview({ profile }: { profile: ImportedProfile }) {
                   ))}
                 </ul>
               )}
-              {entry.skills.length > 0 && <p className="text-muted">Skills: {entry.skills.join(" · ")}</p>}
+              {entry.skills.length > 0 && <p className="text-muted">{t("Skills: {entry}", { entry: entry.skills.join(" · ") })}</p>}
             </Entry>
           ))}
         </Section>
       )}
 
       {profile.projects.length > 0 && (
-        <Section title="Projects">
+        <Section title={t("Projects")}>
           {profile.projects.map((entry, index) => (
             <Entry
               key={index}
@@ -303,14 +301,14 @@ function Preview({ profile }: { profile: ImportedProfile }) {
                   ))}
                 </ul>
               )}
-              {entry.skills.length > 0 && <p className="text-muted">Skills: {entry.skills.join(" · ")}</p>}
+              {entry.skills.length > 0 && <p className="text-muted">{t("Skills: {entry}", { entry: entry.skills.join(" · ") })}</p>}
             </Entry>
           ))}
         </Section>
       )}
 
       {profile.education.length > 0 && (
-        <Section title="Education">
+        <Section title={t("Education")}>
           {profile.education.map((entry, index) => (
             <Entry
               key={index}
@@ -325,7 +323,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       )}
 
       {profile.publications.length > 0 && (
-        <Section title="Publications">
+        <Section title={t("Publications")}>
           {profile.publications.map((entry, index) => (
             <Entry key={index} title={citationText(entry.citation)} meta={entry.link} unverified={entry.unverified} />
           ))}
@@ -333,7 +331,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
       )}
 
       {profile.references.length > 0 && (
-        <Section title="References">
+        <Section title={t("References")}>
           {profile.references.map((entry, index) => (
             <Entry
               key={index}
@@ -351,7 +349,7 @@ function Preview({ profile }: { profile: ImportedProfile }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3 border-t border-line pt-5">
-      <h3 className="text-[15px] font-medium">{title}</h3>
+      <h3 className="text-[15px] font-medium">{t(title)}</h3>
       {children}
     </section>
   );
@@ -361,11 +359,11 @@ function Entry({ title, meta, unverified, children }: { title: string; meta: str
   return (
     <div className="flex flex-col gap-1.5 text-sm">
       <p className="font-medium">
-        {title}
+        {t(title)}
         {unverified.length > 0 && (
           <>
             {" "}
-            <Check>{unverified.map((word) => `“${word}”`).join(" and ")} not in the file</Check>
+            <Check>{t("{unverified} not in the file", { unverified: unverified.map((word) => `“${word}”`).join(" and ") })}</Check>
           </>
         )}
       </p>
@@ -379,7 +377,7 @@ function Entry({ title, meta, unverified, children }: { title: string; meta: str
 function Check({ children }: { children: ReactNode }) {
   return (
     <span className="ml-2 rounded-full bg-warning-surface px-2 py-0.5 text-xs font-normal text-warning">
-      check<span className="sr-only">: {children}</span>
+      {rich("check{span}", { span: <span className="sr-only">: {children}</span> })}
     </span>
   );
 }

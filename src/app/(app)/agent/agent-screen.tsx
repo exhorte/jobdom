@@ -13,6 +13,8 @@ import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useJob } from "@/hooks/use-job";
 import type { AgentCandidateView, AgentView } from "@/lib/agent/view";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 import { approveAgentDraft, dismissAgentCandidate, prepareAgentDraft, restoreAgentCandidate, runAgentNow } from "./actions";
 
@@ -20,9 +22,9 @@ type ScanResult = { message: string };
 type DraftResult = { applicationId: string };
 
 const SETTINGS: Record<NonNullable<AgentView["setupSection"]>, { href: string; label: string }> = {
-  agent: { href: "/settings?section=agent", label: "Settings → Job agent" },
-  ai: { href: "/settings?section=ai", label: "Settings → AI provider" },
-  jobs: { href: "/settings?section=jobs", label: "Settings → Job search" },
+  agent: { href: "/settings?section=agent", label: tx("Settings → Job agent") },
+  ai: { href: "/settings?section=ai", label: tx("Settings → AI provider") },
+  jobs: { href: "/settings?section=jobs", label: tx("Settings → Job search") },
 };
 
 /**
@@ -41,7 +43,7 @@ export function AgentScreen({ view }: { view: AgentView }) {
   const run = useJob<ScanResult>(runJobId, 0, (job) => {
     if (job.status !== "DONE" && job.status !== "FAILED") return;
     setRunJobId(null);
-    toast(job.status === "DONE" ? (job.result?.message ?? "The run is done.") : (job.error ?? "The run didn't finish."));
+    toast(job.status === "DONE" ? (job.result?.message ?? t("The run is done.")) : (job.error ?? t("The run didn't finish.")));
     router.refresh();
   });
   const running = Boolean(runJobId) && (!run || run.status === "QUEUED" || run.status === "RUNNING");
@@ -69,10 +71,10 @@ export function AgentScreen({ view }: { view: AgentView }) {
         return toast(result.error);
       }
       const undo = result.data.undo;
-      if (!undo) return toast("Dismissed, with its draft. It won't come back.");
-      toast("Dismissed. It won't come back.", {
+      if (!undo) return toast(t("Dismissed, with its draft. It won't come back."));
+      toast(t("Dismissed. It won't come back."), {
         action: {
-          label: "Undo",
+          label: t("Undo"),
           onClick: () =>
             void restoreAgentCandidate({ ...undo, reasons: stringList(undo.reasons), redFlags: stringList(undo.redFlags) }).then((restored) => {
               if (!toastResult(restored).ok) return;
@@ -92,11 +94,11 @@ export function AgentScreen({ view }: { view: AgentView }) {
   return (
     <>
       <PageHeader
-        title="Job agent"
-        description="Once a day it searches for new postings, scores them against your profile, and keeps the best here for you. Drafts wait for your review, and nothing is ever sent."
+        title={t("Job agent")}
+        description={t("Once a day it searches for new postings, scores them against your profile, and keeps the best here for you. Drafts wait for your review, and nothing is ever sent.")}
         actions={
           <Button aria-disabled={running || pending || undefined} onClick={() => !running && !pending && runNow()}>
-            {running ? "Running…" : "Run now"}
+            {running ? t("Running…") : t("Run now")}
           </Button>
         }
       />
@@ -105,32 +107,32 @@ export function AgentScreen({ view }: { view: AgentView }) {
 
         <Card padding="none" className="px-7 py-2">
           <dl>
-            <Fact label="Searches for">{view.search ?? "Nothing yet"}</Fact>
-            <Fact label="Last run">
+            <Fact label={t("Searches for")}>{view.search ?? t("Nothing yet")}</Fact>
+            <Fact label={t("Last run")}>
               {view.lastRun ? (
                 <>
                   {view.lastRun.at}
                   {view.lastRun.message && <span className="block text-muted">{view.lastRun.message}</span>}
                 </>
               ) : (
-                "Not yet"
+                t("Not yet")
               )}
             </Fact>
-            <Fact label="Next run">{view.nextRun ?? "Off"}</Fact>
+            <Fact label={t("Next run")}>{view.nextRun ?? t("Off")}</Fact>
           </dl>
           {running && (
             <p role="status" className="border-t border-line py-3.5 text-sm text-muted">
-              {run?.step ?? "Starting the run…"}
+              {run?.step ?? t("Starting the run…")}
             </p>
           )}
         </Card>
 
-        <Section title="Drafts to review" count={drafts.length}>
+        <Section title={t("Drafts to review")} count={drafts.length}>
           {drafts.length === 0 ? (
             <Empty>
               {view.autoDraft
-                ? "No drafts yet. After a run, the best new postings get a draft here."
-                : "No drafts yet. Prepare one from a scored posting, or let the agent prepare them in Settings → Job agent."}
+                ? t("No drafts yet. After a run, the best new postings get a draft here.")
+                : t("No drafts yet. Prepare one from a scored posting, or let the agent prepare them in Settings → Job agent.")}
             </Empty>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -138,7 +140,7 @@ export function AgentScreen({ view }: { view: AgentView }) {
                 <li key={candidate.id}>
                   <CandidateCard candidate={candidate}>
                     <Link href={`/applications/${candidate.applicationId}`} className={buttonClassName("primary", "sm", "hover:text-on-primary")}>
-                      Review draft
+                      {t("Review draft")}
                     </Link>
                     <Button
                       variant="secondary"
@@ -149,11 +151,11 @@ export function AgentScreen({ view }: { view: AgentView }) {
                         })
                       }
                     >
-                      Approve
+                      {t("Approve")}
                     </Button>
                     <OpenPosting url={candidate.url} />
                     <Button variant="danger-text" size="sm" className="ml-auto" onClick={() => setConfirming(candidate)}>
-                      Dismiss
+                      {t("Dismiss")}
                     </Button>
                   </CandidateCard>
                 </li>
@@ -162,9 +164,9 @@ export function AgentScreen({ view }: { view: AgentView }) {
           )}
         </Section>
 
-        <Section title="Scored postings" count={scored.length}>
+        <Section title={t("Scored postings")} count={scored.length}>
           {scored.length === 0 ? (
-            <Empty>{empty ? "Nothing waiting yet. A run puts the postings that fit you best here." : "No postings waiting for a draft."}</Empty>
+            <Empty>{empty ? t("Nothing waiting yet. A run puts the postings that fit you best here.") : t("No postings waiting for a draft.")}</Empty>
           ) : (
             <ul className="flex flex-col gap-3">
               {scored.map((candidate) => (
@@ -177,7 +179,7 @@ export function AgentScreen({ view }: { view: AgentView }) {
           {below.length > 0 && (
             <div className="flex flex-col gap-3">
               <button type="button" aria-expanded={showBelow} onClick={() => setShowBelow(!showBelow)} className="w-fit text-meta text-muted underline underline-offset-2 hover:text-ink">
-                {below.length} below your minimum score of {view.minScore} · {showBelow ? "Hide" : "Show"}
+                {t("{length} below your minimum score of {minScore} · {showBelow}", { length: below.length, minScore: view.minScore, showBelow: showBelow ? t("Hide") : t("Show") })}
               </button>
               {showBelow && (
                 <ul className="flex flex-col gap-3">
@@ -196,9 +198,9 @@ export function AgentScreen({ view }: { view: AgentView }) {
       <ConfirmDialog
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
-        title="Dismiss this draft?"
-        description="Its resume, cover letter and chat are deleted, and the posting won't come back."
-        confirmLabel="Dismiss draft"
+        title={t("Dismiss this draft?")}
+        description={t("Its resume, cover letter and chat are deleted, and the posting won't come back.")}
+        confirmLabel={t("Dismiss draft")}
         onConfirm={() => {
           if (confirming) dismiss(confirming);
           setConfirming(null);
@@ -220,11 +222,9 @@ function Notices({ view }: { view: AgentView }) {
   if (!view.enabled) {
     return note(
       <>
-        The job agent is off.{" "}
-        <Link href={SETTINGS.agent.href} className="font-medium text-warning underline underline-offset-2">
-          Turn it on in Settings → Job agent
-        </Link>
-        {view.drafts.length + view.scored.length > 0 && ". What it found before is still here."}
+        {rich("The job agent is off. {link}{view}", { link: <Link href={SETTINGS.agent.href} className="font-medium text-warning underline underline-offset-2">
+          {t("Turn it on in Settings → Job agent")}
+        </Link>, view: view.drafts.length + view.scored.length > 0 && ". What it found before is still here." })}
       </>,
     );
   }
@@ -233,19 +233,19 @@ function Notices({ view }: { view: AgentView }) {
       <>
         {view.setupProblem.replace(/ in Settings → [^.]+ first\.$/, ".")}{" "}
         <Link href={SETTINGS[view.setupSection].href} className="font-medium text-warning underline underline-offset-2">
-          Go to {SETTINGS[view.setupSection].label}
+          {t("Go to {label}", { label: SETTINGS[view.setupSection].label })}
         </Link>
       </>,
     );
   }
-  if (view.limitReached) return note("The agent has run 3 times in the past 24 hours, as many as it may. It runs again once a day has passed since the first.");
+  if (view.limitReached) return note(t("The agent has run 3 times in the past 24 hours, as many as it may. It runs again once a day has passed since the first."));
   return null;
 }
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 border-t border-line py-3.5 text-sm first:border-t-0 sm:flex-row sm:justify-between sm:gap-4">
-      <dt className="text-muted">{label}</dt>
+      <dt className="text-muted">{t(label)}</dt>
       <dd className="sm:text-right">{children}</dd>
     </div>
   );
@@ -257,9 +257,9 @@ function Section({ title, count, children }: { title: string; count: number; chi
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
         <h2 id={id} className="font-serif text-section">
-          {title}
+          {t(title)}
         </h2>
-        <p className="text-meta text-muted">{count} waiting</p>
+        <p className="text-meta text-muted">{t("{count} waiting", { count })}</p>
       </div>
       {children}
     </section>
@@ -274,7 +274,7 @@ function OpenPosting({ url }: { url: string }) {
   if (!url) return null;
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className={buttonClassName("secondary", "sm")}>
-      Open posting <span className="sr-only">(opens in a new tab)</span>
+      {rich("Open posting {span}", { span: <span className="sr-only">{t("(opens in a new tab)")}</span> })}
     </a>
   );
 }
@@ -285,7 +285,7 @@ function CandidateCard({ candidate, children }: { candidate: AgentCandidateView;
     <Card padding="none" className="flex flex-col gap-3.5 px-6 py-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="font-serif text-[20px] leading-tight text-pretty">{candidate.title}</h3>
+          <h3 className="font-serif text-[20px] leading-tight text-pretty">{t(candidate.title)}</h3>
           {candidate.company && <p className="text-sm text-ink">{candidate.company}</p>}
           {candidate.facts && <p className="text-meta text-muted">{candidate.facts}</p>}
           {candidate.origin && <p className="text-xs text-muted">{candidate.origin}</p>}
@@ -295,7 +295,7 @@ function CandidateCard({ candidate, children }: { candidate: AgentCandidateView;
         <ScoreBadge score={candidate.score} />
       </div>
       {candidate.reasons.length > 0 && (
-        <ul aria-label="Why it fits" className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted">
+        <ul aria-label={t("Why it fits")} className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted">
           {candidate.reasons.map((reason, index) => (
             <li key={index}>{reason}</li>
           ))}
@@ -303,7 +303,7 @@ function CandidateCard({ candidate, children }: { candidate: AgentCandidateView;
       )}
       {candidate.redFlags.length > 0 && (
         <div className="rounded-card bg-warning-surface px-3.5 py-2.5 text-meta text-warning">
-          <p className="font-medium">Worth knowing</p>
+          <p className="font-medium">{t("Worth knowing")}</p>
           <ul className="mt-1 flex list-disc flex-col gap-0.5 pl-4">
             {candidate.redFlags.map((flag, index) => (
               <li key={index}>{flag}</li>
@@ -313,7 +313,7 @@ function CandidateCard({ candidate, children }: { candidate: AgentCandidateView;
       )}
       {candidate.error && (
         <p role="alert" className="text-meta text-error">
-          {candidate.error}
+          {t(candidate.error)}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2.5 border-t border-line pt-3.5">{children}</div>
@@ -329,11 +329,11 @@ function ScoredCard({ candidate, onDismiss }: { candidate: AgentCandidateView; o
   const job = useJob<DraftResult>(jobId, 0, (update) => {
     if (update.status === "DONE") {
       setJobId(null);
-      toast("The draft is ready for your review.");
+      toast(t("The draft is ready for your review."));
       router.refresh();
     } else if (update.status === "FAILED") {
       setJobId(null);
-      toast(update.error ?? "The draft couldn't be prepared.");
+      toast(update.error ?? t("The draft couldn't be prepared."));
       router.refresh();
     }
   });
@@ -350,7 +350,7 @@ function ScoredCard({ candidate, onDismiss }: { candidate: AgentCandidateView; o
   return (
     <CandidateCard candidate={candidate}>
       <Button size="sm" aria-disabled={preparing || undefined} onClick={() => !preparing && prepare()}>
-        {preparing ? "Preparing draft…" : "Prepare draft"}
+        {preparing ? t("Preparing draft…") : t("Prepare draft")}
       </Button>
       <OpenPosting url={candidate.url} />
       {preparing && job?.step && (
@@ -359,7 +359,7 @@ function ScoredCard({ candidate, onDismiss }: { candidate: AgentCandidateView; o
         </span>
       )}
       <Button variant="danger-text" size="sm" className="ml-auto" onClick={onDismiss}>
-        Dismiss
+        {t("Dismiss")}
       </Button>
     </CandidateCard>
   );

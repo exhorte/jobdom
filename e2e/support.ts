@@ -41,6 +41,8 @@ export function appEnv(): Record<string, string> {
     DATABASE_URL: e2eDatabaseUrl(),
     DOSSIER_PASSWORD: PASSWORD_HASH,
     DOSSIER_SECRET: "e2e-secret-e2e-secret-e2e-secret-e2e",
+    // The specs read the English; a DOSSIER_LOCALE in .env must not reach them.
+    DOSSIER_LOCALE: "en",
     DOSSIER_DATA_DIR: path.join(os.tmpdir(), "dossier-e2e"),
     DOSSIER_AI_PROVIDER: "openai",
     DOSSIER_AI_URL: `http://localhost:${FAKE_AI_PORT}/v1`,

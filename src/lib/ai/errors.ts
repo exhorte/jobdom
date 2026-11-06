@@ -1,3 +1,5 @@
+import { t, tx } from "@/lib/i18n";
+
 // What can go wrong when talking to an AI provider, in words people can act
 // on (E6-1). Provider messages never reach the UI or the logs as they are:
 // some of them echo parts of the request, such as a masked API key.
@@ -17,16 +19,16 @@ export type AiErrorKind =
   | "provider";
 
 const MESSAGES: Record<Exclude<AiErrorKind, "model" | "config">, string> = {
-  unreachable: "Couldn't reach the server. Check the address and that it's running.",
-  auth: "The server didn't accept the API key. Check it in Settings → AI provider.",
-  "rate-limited": "The AI provider is limiting requests right now. Wait a minute and try again.",
-  busy: "The AI provider is overloaded right now. Try again in a moment.",
-  timeout: "The model took too long to answer. Try again, or pick a faster model.",
-  "too-long": "That's more text than the model can take in at once. Try a shorter posting, or a model with a larger context.",
-  cancelled: "Cancelled.",
-  "invalid-output": "The model's answer didn't come back in the expected shape. Try again.",
-  "cut-off": "The model's answer was cut off before it was finished. Try again, or pick another model in Settings → AI provider.",
-  provider: "The AI provider ran into a problem. Try again in a moment.",
+  unreachable: tx("Couldn't reach the server. Check the address and that it's running."),
+  auth: tx("The server didn't accept the API key. Check it in Settings → AI provider."),
+  "rate-limited": tx("The AI provider is limiting requests right now. Wait a minute and try again."),
+  busy: tx("The AI provider is overloaded right now. Try again in a moment."),
+  timeout: tx("The model took too long to answer. Try again, or pick a faster model."),
+  "too-long": tx("That's more text than the model can take in at once. Try a shorter posting, or a model with a larger context."),
+  cancelled: tx("Cancelled."),
+  "invalid-output": tx("The model's answer didn't come back in the expected shape. Try again."),
+  "cut-off": tx("The model's answer was cut off before it was finished. Try again, or pick another model in Settings → AI provider."),
+  provider: tx("The AI provider ran into a problem. Try again in a moment."),
 };
 
 /** An AI failure with a message for people; `retryable` says whether Retry can help. */
@@ -51,7 +53,7 @@ export class AiError extends Error {
   }
 
   static unknownModel(model: string, detail?: string): AiError {
-    return new AiError("model", `The server doesn't have the model “${model}”. Pick another one in Settings → AI provider.`, detail);
+    return new AiError("model", t("The server doesn't have the model “{model}”. Pick another one in Settings → AI provider.", { model }), detail);
   }
 
   static config(message: string): AiError {
@@ -92,7 +94,7 @@ export function toAiError(
   if (timedOut) return AiError.of("timeout");
 
   const e = (error ?? {}) as HttpLike;
-  const name = typeof e.name === "string" ? e.name : "Error";
+  const name = typeof e.name === "string" ? e.name : t("Error");
   const message = typeof e.message === "string" ? e.message : "";
   const status = typeof e.status === "number" ? e.status : typeof e.status_code === "number" ? e.status_code : undefined;
   const detail = [name, status].filter(Boolean).join(" ");

@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 
 import type { AutosaveStatus } from "@/hooks/use-autosave";
 import { cn } from "@/lib/cn";
+import { getLocale, intlLocale, t } from "@/lib/i18n";
 
 /** "Saved just now", "Saved 2 min ago", or "Saved at 14:05" after an hour. */
 export function savedLabel(savedAt: Date, now: Date): string {
   const minutes = Math.floor((now.getTime() - savedAt.getTime()) / 60_000);
-  if (minutes < 1) return "Saved just now";
-  if (minutes < 60) return `Saved ${minutes} min ago`;
-  return `Saved at ${savedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  if (minutes < 1) return t("Saved just now");
+  if (minutes < 60) return t("Saved {minutes} min ago", { minutes });
+  const time = savedAt.toLocaleTimeString(getLocale() === "en" ? [] : intlLocale(), { hour: "numeric", minute: "2-digit" });
+  return t("Saved at {time}", { time });
 }
 
 /** The current time, updated every `interval` ms. */
@@ -39,17 +41,17 @@ export function SavedIndicator({
   const now = useNow(30_000);
   const visible =
     status === "saving"
-      ? "Saving…"
+      ? t("Saving…")
       : status === "error"
-        ? "Couldn't save"
+        ? t("Couldn't save")
         : savedAt
           ? savedLabel(savedAt, now > savedAt ? now : savedAt)
-          : "All changes saved";
+          : t("All changes saved");
   const announced =
     status === "saved"
-      ? "All changes saved."
+      ? t("All changes saved.")
       : status === "error"
-        ? "Couldn't save your changes."
+        ? t("Couldn't save your changes.")
         : "";
 
   return (

@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useTrackSave } from "@/components/save-tracker";
 import { useJob } from "@/hooks/use-job";
+import { intlLocale, listOf, t, tp } from "@/lib/i18n";
 import { IMPORT_MAX_BYTES, IMPORT_TOO_BIG } from "@/lib/import-limits";
 import type { JobView } from "@/lib/jobs/runner";
 import { downloadFrom } from "@/lib/save-file";
@@ -37,12 +38,15 @@ export type BackupStatus = {
 type Summary = { applications: number; roles: number; skills: number; themes: number; notes: number };
 type Preview = { file: File; incoming: Summary; current: Summary; exportedAt: string };
 
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 /** "8 applications, 3 roles, 12 skills and 1 custom theme" */
 function describe({ applications, roles, skills, themes }: Summary): string {
-  const parts = [count(applications, "application", "applications"), count(roles, "role", "roles"), count(skills, "skill", "skills")];
-  if (themes > 0) parts.push(count(themes, "custom theme", "custom themes"));
-  return `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`;
+  const parts = [
+    tp(applications, "{count} application", "{count} applications"),
+    tp(roles, "{count} role", "{count} roles"),
+    tp(skills, "{count} skill", "{count} skills"),
+  ];
+  if (themes > 0) parts.push(tp(themes, "{count} custom theme", "{count} custom themes"));
+  return listOf(parts);
 }
 
 /** An import request's answer: the JSON, or a plain error. */
@@ -54,11 +58,11 @@ async function send(file: File, preview: boolean): Promise<{ ok: true; data: Rec
       body: file,
     });
     const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-    if (response.status === 413) return { ok: false, error: typeof body?.error === "string" ? body.error : "That file is too big for this server to accept." };
-    if (!response.ok || !body) return { ok: false, error: typeof body?.error === "string" ? body.error : "The import didn't work. Try again." };
+    if (response.status === 413) return { ok: false, error: typeof body?.error === "string" ? body.error : t("That file is too big for this server to accept.") };
+    if (!response.ok || !body) return { ok: false, error: typeof body?.error === "string" ? body.error : t("The import didn't work. Try again.") };
     return { ok: true, data: body };
   } catch {
-    return { ok: false, error: "You seem to be offline. Try again when you're connected." };
+    return { ok: false, error: t("You seem to be offline. Try again when you're connected.") };
   }
 }
 
@@ -91,10 +95,10 @@ export function DataSection({
 
   // E10-5: follow the zip; when it's ready, offer it.
   const zip = useJob<ZipResult>(zipJob, 0, (job: JobView<ZipResult>) => {
-    if (job.status === "FAILED") toast(job.error ?? "The zip couldn't be made. Try again.");
+    if (job.status === "FAILED") toast(job.error ?? t("The zip couldn't be made. Try again."));
     if (job.status === "DONE" && job.result) {
-      toast(`${job.result.fileName} is ready.`, {
-        action: { label: "Download", onClick: () => downloadFrom(`/api/downloads/${job.id}`) },
+      toast(t("{fileName} is ready.", { fileName: job.result.fileName }), {
+        action: { label: t("Download"), onClick: () => downloadFrom(`/api/downloads/${job.id}`) },
       });
     }
   });
@@ -114,11 +118,11 @@ export function DataSection({
 
   const runImport = async (file: File) => {
     setImporting(true);
-    toast("Backing up your data, then importing…");
+    toast(t("Backing up your data, then importing…"));
     const result = await send(file, false);
     setImporting(false);
     if (!result.ok) return toast(result.error);
-    toast(`Imported. Your previous data is backed up as ${String(result.data.backup)}.`);
+    toast(t("Imported. Your previous data is backed up as {result}.", { result: String(result.data.backup) }));
     router.refresh();
   };
 
@@ -149,19 +153,18 @@ export function DataSection({
     setStarting(false);
     if (!result.ok) return toast(result.error);
     setZipJob(result.data.jobId);
-    toast(`Zipping ${result.data.documents} documents. This takes a moment.`);
+    toast(t("Zipping {documents} documents. This takes a moment.", { documents: result.data.documents }));
   };
 
   return (
     <>
-      <SettingsSectionIntro title="Your data">
-        Everything you enter lives in one database on your server, and nothing is sold: there&apos;s no one to sell it to. What leaves it goes to
-        the AI provider and job source you choose, Google if you connect Gmail, and the daily usage ping and update check (see About).
+      <SettingsSectionIntro title={t("Your data")}>
+        {t("Everything you enter lives in one database on your server, and nothing is sold: there's no one to sell it to. What leaves it goes to the AI provider and job source you choose, Google if you connect Gmail, and the daily usage ping and update check (see About).")}
       </SettingsSectionIntro>
       <Card padding="none" className="flex flex-col px-7 pt-1.5 pb-2.5">
         <DataRow
-          title="Export everything"
-          description="Profile, applications, documents and themes in one JSON file. Handy for backups or moving servers."
+          title={t("Export everything")}
+          description={t("Profile, applications, documents and themes in one JSON file. Handy for backups or moving servers.")}
           action={
             <DownloadPdfButton
               variant="secondary"
@@ -170,30 +173,30 @@ export function DataSection({
               held={false}
               progress={`Preparing ${exportName}…`}
             >
-              Export
+              {t("Export")}
             </DownloadPdfButton>
           }
         >
           {hasApiKey && (
             <Checkbox
               className="pt-1"
-              label="Include my API keys"
+              label={t("Include my API keys")}
               checked={includeKey}
               onChange={(event) => setIncludeKey(event.target.checked)}
               hint={
                 includeKey
-                  ? "Your API keys (AI provider and job search) go into the file in plain text, so anyone with the file can use them. Keep it somewhere safe."
-                  : "Left out by default: another server couldn't read the encrypted copy anyway."
+                  ? t("Your API keys (AI provider and job search) go into the file in plain text, so anyone with the file can use them. Keep it somewhere safe.")
+                  : t("Left out by default: another server couldn't read the encrypted copy anyway.")
               }
             />
           )}
         </DataRow>
         <DataRow
-          title="Download all PDFs"
-          description="Every tailored resume and cover letter, zipped and sorted by company."
+          title={t("Download all PDFs")}
+          description={t("Every tailored resume and cover letter, zipped and sorted by company.")}
           action={
             <Button variant="secondary" size="sm" aria-disabled={zipping || undefined} onClick={() => !zipping && void zipAll()}>
-              {zipping ? "Zipping…" : "Download"}
+              {zipping ? t("Zipping…") : t("Download")}
             </Button>
           }
         >
@@ -205,14 +208,14 @@ export function DataSection({
           {zip?.status === "DONE" && zip.result && (
             <p>
               <a href={`/api/downloads/${zip.id}`} download className={buttonClassName("text", "sm", "underline underline-offset-2")}>
-                Download {zip.result.fileName}
+                {t("Download {fileName}", { fileName: zip.result.fileName })}
               </a>
             </p>
           )}
         </DataRow>
         <DataRow
-          title="Import"
-          description="Restore from an export file. Your current data is backed up first."
+          title={t("Import")}
+          description={t("Restore from an export file. Your current data is backed up first.")}
           action={
             <>
               <input
@@ -225,23 +228,23 @@ export function DataSection({
                 onChange={(event) => void chooseFile(event.target.files?.[0])}
               />
               <Button variant="secondary" size="sm" aria-disabled={importing || undefined} onClick={() => !importing && fileInput.current?.click()}>
-                {importing ? "Importing…" : "Choose file"}
+                {importing ? t("Importing…") : t("Choose file")}
               </Button>
             </>
           }
         />
         <DataRow
-          title="Keep task data for"
-          description="What the AI was given and wrote for a task: a posting, your resume's text, drafts you didn't turn into an application. It's kept for reloads and Undo, then deleted. Applications keep their own documents until you delete them."
+          title={t("Keep task data for")}
+          description={t("What the AI was given and wrote for a task: a posting, your resume's text, drafts you didn't turn into an application. It's kept for reloads and Undo, then deleted. Applications keep their own documents until you delete them.")}
           action={
             <Select
-              aria-label="Keep task data for"
+              aria-label={t("Keep task data for")}
               value={retention}
               onChange={(event) => changeRetention(Number(event.target.value))}
             >
               {JOB_RETENTION_OPTIONS.map((option) => (
                 <option key={option.hours} value={option.hours}>
-                  {option.label}
+                  {t(option.label)}
                 </option>
               ))}
             </Select>
@@ -249,20 +252,18 @@ export function DataSection({
         />
         <div className="flex flex-col gap-2 border-t border-line py-4">
           <Toggle
-            label="Nightly backups"
+            label={t("Nightly backups")}
             description={
               nightly
-                ? `Kept for ${backups.retentionDays} days in ${backups.dir}. ${
-                    backups.lastRun ? `Last one ran ${backups.lastRun}.` : "The first one runs tonight at 03:00."
-                  }`
-                : "Off. You'll only have what you export yourself."
+                ? t("Kept for {retentionDays} days in {dir}. {backups}", { retentionDays: backups.retentionDays, dir: backups.dir, backups: backups.lastRun ? t("Last one ran {lastRun}.", { lastRun: backups.lastRun }) : t("The first one runs tonight at 03:00.") })
+                : t("Off. You'll only have what you export yourself.")
             }
             checked={nightly}
             onCheckedChange={switchBackups}
           />
           {nightly && backups.problem && (
             <p role="alert" className="rounded-control bg-danger-surface px-3 py-2 text-meta text-error">
-              The last backup failed: {backups.problem}
+              {t("The last backup failed: {problem}", { problem: backups.problem })}
             </p>
           )}
         </div>
@@ -272,15 +273,13 @@ export function DataSection({
         <ConfirmDialog
           open
           onOpenChange={(open) => !open && setPreview(null)}
-          title="Replace everything with this export?"
+          title={t("Replace everything with this export?")}
           description={
             <>
-              The file, exported {new Date(preview.exportedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, has{" "}
-              {describe(preview.incoming)}. It replaces your profile, settings and {describe(preview.current)}. Your current data is
-              backed up first.
+              {t("The file, exported {preview}, has {describe}. It replaces your profile, settings and {describe2}. Your current data is backed up first.", { preview: new Date(preview.exportedAt).toLocaleDateString(intlLocale("en-GB"), { day: "numeric", month: "long", year: "numeric" }), describe: describe(preview.incoming), describe2: describe(preview.current) })}
             </>
           }
-          confirmLabel="Import and replace"
+          confirmLabel={t("Import and replace")}
           onConfirm={() => void runImport(preview.file)}
         />
       )}
@@ -304,8 +303,8 @@ export function DataRow({
     <div className="flex flex-col gap-2 border-t border-line py-4 first:border-t-0">
       <div className="flex flex-wrap items-center gap-5">
         <div className="flex min-w-[220px] flex-1 flex-col gap-[3px]">
-          <h3 className="text-field">{title}</h3>
-          <p className="text-meta text-muted">{description}</p>
+          <h3 className="text-field">{t(title)}</h3>
+          <p className="text-meta text-muted">{t(description)}</p>
         </div>
         <div className="flex-none">{action}</div>
       </div>
@@ -324,7 +323,7 @@ function DangerZone() {
   const ready = typed === CONFIRMATION;
 
   const deleteAll = async () => {
-    if (!ready) return toast("Type DELETE in capitals to confirm.");
+    if (!ready) return toast(t("Type DELETE in capitals to confirm."));
     setDeleting(true);
     // On success the action takes you to the empty dashboard.
     const result = await deleteEverything({ confirm: CONFIRMATION });
@@ -339,18 +338,17 @@ function DangerZone() {
     >
       <div className="flex flex-col gap-1">
         <h3 id="danger-heading" className="text-[15px] font-medium text-error-strong">
-          Delete everything
+          {t("Delete everything")}
         </h3>
         <p className="text-control text-muted">
-          Removes your profile, all applications and documents, your settings and the backups from this server. This can&apos;t be
-          undone, so export first if you might want it back.
+          {t("Removes your profile, all applications and documents, your settings and the backups from this server. This can't be undone, so export first if you might want it back.")}
         </p>
       </div>
       {confirming ? (
         <div className="flex flex-wrap items-center gap-2">
           <input
-            aria-label="Type DELETE to confirm"
-            placeholder="Type DELETE to confirm"
+            aria-label={t("Type DELETE to confirm")}
+            placeholder={t("Type DELETE to confirm")}
             // Opened on request, so the box takes focus.
             autoFocus
             autoComplete="off"
@@ -370,7 +368,7 @@ function DangerZone() {
             onClick={() => !deleting && void deleteAll()}
             className={ready ? undefined : "bg-danger-disabled hover:bg-danger-disabled"}
           >
-            {deleting ? "Deleting…" : "Delete for good"}
+            {deleting ? t("Deleting…") : t("Delete for good")}
           </Button>
           <Button
             variant="text"
@@ -381,13 +379,13 @@ function DangerZone() {
               setTyped("");
             }}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       ) : (
         <div>
           <Button variant="danger-outline" size="sm" onClick={() => setConfirming(true)}>
-            Delete everything…
+            {t("Delete everything…")}
           </Button>
         </div>
       )}

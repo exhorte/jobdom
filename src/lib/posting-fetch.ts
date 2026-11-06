@@ -8,6 +8,7 @@ import zlib from "node:zlib";
 
 import { parse, type HTMLElement, type Node } from "node-html-parser";
 
+import { t, tx } from "@/lib/i18n";
 import { appVersion } from "@/lib/version";
 
 // "Fetch" on a new application (E7-8, NEW-9): the server downloads the
@@ -18,14 +19,14 @@ import { appVersion } from "@/lib/version";
 // server's own network (SSRF), and it's limited in size, time and redirects.
 
 export const FETCH_MESSAGES = {
-  notWeb: "That link doesn't look like a web address.",
-  privateAddress: "Dossier doesn't fetch addresses on your own network. Paste the posting instead.",
-  unreachable: "The job site couldn't be reached. Without internet access, or if the site blocks it, paste the posting instead.",
-  failed: (status: number) => `The job site answered with an error (${status}). Paste the posting instead.`,
-  tooBig: "That page is too big to be a job posting. Paste the posting instead.",
-  notPage: "That link isn't a web page. Paste the posting instead.",
+  notWeb: tx("That link doesn't look like a web address."),
+  privateAddress: tx("Dossier doesn't fetch addresses on your own network. Paste the posting instead."),
+  unreachable: tx("The job site couldn't be reached. Without internet access, or if the site blocks it, paste the posting instead."),
+  failed: (status: number) => t("The job site answered with an error ({status}). Paste the posting instead.", { status }),
+  tooBig: tx("That page is too big to be a job posting. Paste the posting instead."),
+  notPage: tx("That link isn't a web page. Paste the posting instead."),
   unreadable:
-    "There's no posting text on that page that Dossier can read: the site probably builds it in the browser. Paste the posting instead.",
+    tx("There's no posting text on that page that Dossier can read: the site probably builds it in the browser. Paste the posting instead."),
 };
 
 const TIMEOUT_MS = 10_000;
@@ -284,14 +285,14 @@ function jobPostingText(posting: JobPosting): string {
     const parts = address as Record<string, unknown>;
     return [[str(parts.addressLocality), str(parts.addressRegion), nameOf(parts.addressCountry)].filter(Boolean).join(", ")];
   });
-  const remote = str(posting.jobLocationType) === "TELECOMMUTE" ? "Remote" : "";
+  const remote = str(posting.jobLocationType) === "TELECOMMUTE" ? t("Remote") : "";
   const deadline = str(posting.validThrough).slice(0, 10);
   const facts = [
     [...new Set(locations.filter(Boolean))].join(" / "),
     remote,
     [posting.employmentType].flat().map(str).filter(Boolean).join(", ").toLowerCase().replaceAll("_", " "),
     salaryOf(posting.baseSalary),
-    deadline && `Apply by ${deadline}`,
+    deadline && t("Apply by {deadline}", { deadline }),
   ].filter(Boolean);
   const description = htmlText(str(posting.description));
   return [[company, title].filter(Boolean).join(": "), facts.join(" · "), description].filter(Boolean).join("\n\n");

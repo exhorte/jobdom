@@ -1,12 +1,14 @@
 # RECONSTRUCTION_STATUS — Dossier
 
-Dernière mise à jour : 2026-10-29 · **Phases 0 et 2 terminées, Phase 1 (référence) faite, base qualité établie.** Phases métier (5 à 11) : vérifiées **contre des simulations seulement** ; aucune clé réelle n'est disponible.
+Dernière mise à jour : 2026-10-31 (mesures du 2026-10-29, état Git et contrôle de secrets du 2026-10-31) · **Phases 0 et 2 terminées, Phase 1 (référence) faite, base qualité établie.** Phases métier (5 à 11) : vérifiées **contre des simulations seulement** ; aucune clé réelle n'est disponible.
+
+Le suivi détaillé (journal, décisions, risques, registre des vérifications, plan, backlog) est tenu **hors dépôt**, dans le vault : `jobdom/01_plan` et `jobdom/03_project_monitoring`.
 
 Légende : ✅ vérifié · 🟡 vérifié partiellement ou contre des simulations · ❌ non vérifié / en échec · ⏳ à faire
 
 ## 1. Architecture observée
 
-Racine : `C:\Ebrain_os\ebrain\20_PROJECTS\ACTIVE\jobdom\04_code`.
+Racine : le dossier `04_code` du projet `jobdom`.
 
 | Couche | Constat |
 | --- | --- |
@@ -23,7 +25,7 @@ Racine : `C:\Ebrain_os\ebrain\20_PROJECTS\ACTIVE\jobdom\04_code`.
 
 | Étape | Résultat |
 | --- | --- |
-| Git | ❌ aucun `.git` : branche, commit et modifications locales indéterminables ; pas de `git init` sans ton accord |
+| Git | ✅ dépôt initialisé par Exhorte le 2026-10-29 (après mon audit, qui n'en trouvait pas) : branche `main`, remote `origin` = `exhorte/jobdom` (**public**), 1 commit `f7faa02` « project construction » (13:53), 806 fichiers suivis, arbre propre à la date du contrôle. `.env` non suivi. **Aucun secret** (`DOSSIER_SECRET`, mot de passe de la base) dans les fichiers suivis ni dans l'historique (contrôlé le 2026-10-31). Les modifications de ce document et de `SETUP.md` faites ensuite ne sont pas commitées |
 | Dépendances | ✅ `yarn install --immutable`, 748 paquets, lockfile inchangé |
 | `.env` | ✅ secrets locaux générés ; `DOSSIER_PASSWORD` **vide, à remplir par toi** |
 | PostgreSQL | ✅ conteneur `dossier-db-1` sur `127.0.0.1:5433` (5432 pris par un autre PostgreSQL) |
@@ -83,18 +85,20 @@ Comparaison faite sur `/`, `/applications`, `/resume` et `/jobs` (état non conf
 
 ## 7. Ce que seul toi peux fournir
 
-Mot de passe (hash) · fournisseur IA (clé ou Ollama/LM Studio) · source d'offres (clé JSearch ou Adzuna) · client OAuth Google (optionnel). Sans eux, l'application fonctionne et affiche des états explicites, mais aucune génération ni recherche réelle n'est possible.
+Mot de passe (hash) · clé API Anthropic (fournisseur par défaut déjà configuré dans `.env`, `claude-sonnet-5-5`, voir `SETUP.md` §6 bis) ou autre fournisseur IA (Ollama/LM Studio) · source d'offres (clé JSearch ou Adzuna) · client OAuth Google (optionnel). Sans eux, l'application fonctionne et affiche des états explicites, mais aucune génération ni recherche réelle n'est possible.
+
+L'abonnement Claude **ne peut pas servir de fournisseur** à Dossier (conditions d'Anthropic) : il passe par le connecteur Claude, où c'est Claude qui appelle Dossier. Vérifié en e2e et sur serveur local ; jamais avec un vrai compte.
 
 ## 8. Prochaines étapes
 
-1. Définir `DOSSIER_PASSWORD` (`SETUP.md` §4) et choisir un fournisseur IA ; **modèle local (Ollama/LM Studio) = test gratuit**.
+1. Définir `DOSSIER_PASSWORD` (`SETUP.md` §4) et saisir la clé API Anthropic dans Réglages (`SETUP.md` §6 bis) ; ou, sans frais, un modèle local (Ollama/LM Studio). Pour l'abonnement Claude : activer le connecteur puis `claude mcp add` (§6 bis B).
 2. Tester en réel : connexion IA, New application, CV/PDF, garde-fou factuel ; puis une source d'offres, Find jobs, agent.
-3. Revue sécurité approfondie (secrets, contenus externes non fiables) ; décider du `git init` et des liens `.github` du README.
+3. Revue sécurité approfondie (secrets, contenus externes non fiables) ; décider si le dépôt reste public (il contient une copie du code AGPL-3.0 d'AienTech/dossier : conserver `LICENSE` et signaler l'origine) et corriger les liens `.github/images` du README.
 4. Fiabiliser les e2e sous Windows (focus clavier, hydratation, plantage du serveur) ou les exécuter en conteneur comme le prévoit le projet.
 
 ## 9. Risques
 
-- Aucun historique Git : les 6 fichiers modifiés ont une copie dans `_archive/`.
+- Dépôt **public** : ne jamais y mettre de secret ni de note privée (les clés restent dans `.env`, ignoré). Les 6 fichiers de test modifiés pour Windows ont aussi une copie hors dépôt dans `jobdom/_archive/originals-2026-10-29/`.
 - Les tests « live » dépensent des appels payants : jamais sans ton accord.
 - Une instance unique : l'agent et les sauvegardes dépendent d'un processus qui doit rester lancé.
 - L'intermittence du serveur sous charge (§4, passe B) n'est pas expliquée : à surveiller avant tout usage durable.

@@ -1,3 +1,4 @@
+import { tp } from "@/lib/i18n";
 // The tabs of an application's page, kept in the URL as ?tab=… (APP-3).
 
 export const TABS = ["resume", "letter", "email", "conversation", "posting", "notes"] as const;
@@ -12,5 +13,5 @@ export function tabFrom(value: string | string[] | undefined): Tab {
 export function aboutWords(paragraphs: string[]): string {
   const words = paragraphs.join(" ").split(/\s+/).filter(Boolean).length;
   const about = words < 20 ? words : Math.round(words / 10) * 10;
-  return `about ${about} ${about === 1 ? "word" : "words"}`;
+  return tp(about, "about {count} word", "about {count} words");
 }

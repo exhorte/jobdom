@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhotoPosition, ThemeFont } from "@/generated/prisma/enums";
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 import {
   ACCENTS,
   ALIGNMENTS,
@@ -30,7 +31,7 @@ export type ThemeDraft = Omit<ThemeData, "id" | "builtIn"> & { id: string | null
 
 /** Where the builder starts: a copy named "My theme" of a built-in, or the custom theme itself. */
 export function draftFrom({ builtIn, id, ...theme }: ThemeData): ThemeDraft {
-  return builtIn ? { ...theme, id: null, name: "My theme" } : { ...theme, id };
+  return builtIn ? { ...theme, id: null, name: t("My theme") } : { ...theme, id };
 }
 
 const options = <T extends string>(labels: Record<T, { label: string }>) =>
@@ -68,17 +69,17 @@ export function ThemeBuilder({ draft, onChange, onSave, onCancel, saving }: Them
       }}
     >
       <Input
-        label="Theme name"
+        label={t("Theme name")}
         value={draft.name}
         maxLength={60}
-        placeholder="My theme"
+        placeholder={t("My theme")}
         onChange={(event) => set("name")(event.target.value)}
       />
-      <Choices label="Heading font" value={draft.headFont} options={FONT_OPTIONS} onChange={set("headFont")} />
-      <Choices label="Body font" value={draft.bodyFont} options={FONT_OPTIONS} onChange={set("bodyFont")} />
+      <Choices label={t("Heading font")} value={draft.headFont} options={FONT_OPTIONS} onChange={set("headFont")} />
+      <Choices label={t("Body font")} value={draft.bodyFont} options={FONT_OPTIONS} onChange={set("bodyFont")} />
       <Group
-        label="Accent"
-        hint={readableOnWhite(draft.accent) ? undefined : "This color is light, so text in it is hard to read. A darker one works better."}
+        label={t("Accent")}
+        hint={readableOnWhite(draft.accent) ? undefined : t("This color is light, so text in it is hard to read. A darker one works better.")}
       >
         {(labelId) => (
           <>
@@ -104,40 +105,40 @@ export function ThemeBuilder({ draft, onChange, onSave, onCancel, saving }: Them
           </>
         )}
       </Group>
-      <Choices label="Layout" value={draft.layout} options={options(LAYOUTS)} onChange={set("layout")} />
-      {split && <Choices label="Sidebar" value={draft.sidebarStyle} options={options(SIDEBAR_STYLES)} onChange={set("sidebarStyle")} />}
+      <Choices label={t("Layout")} value={draft.layout} options={options(LAYOUTS)} onChange={set("layout")} />
+      {split && <Choices label={t("Sidebar")} value={draft.sidebarStyle} options={options(SIDEBAR_STYLES)} onChange={set("sidebarStyle")} />}
       <Choices
-        label="Header"
+        label={t("Header")}
         value={split ? "LEFT" : draft.align}
         options={options(ALIGNMENTS)}
         onChange={set("align")}
         disabled={split}
-        hint={split ? "Sidebar layouts always align the header left." : undefined}
+        hint={split ? t("Sidebar layouts always align the header left.") : undefined}
       />
-      <Choices label="Header style" value={draft.headerStyle} options={options(HEADER_STYLES)} onChange={set("headerStyle")} />
+      <Choices label={t("Header style")} value={draft.headerStyle} options={options(HEADER_STYLES)} onChange={set("headerStyle")} />
       <Choices
-        label="Photo"
+        label={t("Photo")}
         value={draft.photoShape}
         options={options(PHOTO_SHAPES)}
         onChange={set("photoShape")}
-        hint="Your photo from Profile → Basics, while it's shown on resumes."
+        hint={t("Your photo from Profile → Basics, while it's shown on resumes.")}
       />
       <Choices
-        label="Photo position"
+        label={t("Photo position")}
         // Only sidebar layouts have a sidebar to put it in; the others show it at the end of the header.
         value={!split && draft.photoPosition === PhotoPosition.SIDEBAR ? PhotoPosition.HEADER_END : draft.photoPosition}
         options={options(PHOTO_POSITIONS).filter((option) => split || option.value !== PhotoPosition.SIDEBAR)}
         onChange={set("photoPosition")}
       />
-      <Choices label="Section titles" value={draft.headingStyle} options={options(HEADING_STYLES)} onChange={set("headingStyle")} />
-      <Choices label="Dates" value={draft.dateStyle} options={options(DATE_STYLES)} onChange={set("dateStyle")} />
-      <Choices label="Spacing" value={draft.density} options={options(DENSITIES)} onChange={set("density")} />
+      <Choices label={t("Section titles")} value={draft.headingStyle} options={options(HEADING_STYLES)} onChange={set("headingStyle")} />
+      <Choices label={t("Dates")} value={draft.dateStyle} options={options(DATE_STYLES)} onChange={set("dateStyle")} />
+      <Choices label={t("Spacing")} value={draft.density} options={options(DENSITIES)} onChange={set("density")} />
       <div className="flex gap-2 pt-1.5">
         <Button type="submit" className="flex-1" disabled={saving}>
-          {saving ? "Saving…" : "Save theme"}
+          {saving ? t("Saving…") : t("Save theme")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
     </form>
@@ -157,14 +158,14 @@ function CustomColor({ value, onChange }: { value: string; onChange: (accent: st
     <div className="flex items-center gap-2">
       <input
         type="color"
-        aria-label="Custom color"
-        title="Custom color"
+        aria-label={t("Custom color")}
+        title={t("Custom color")}
         value={value}
         onChange={(event) => onChange(event.target.value.toLowerCase())}
         className="size-[34px] flex-none cursor-pointer rounded-control border border-line-field bg-card p-[3px] hover:border-line-strong"
       />
       <Input
-        aria-label="Hex color"
+        aria-label={t("Hex color")}
         value={typing ?? value}
         maxLength={7}
         spellCheck={false}
@@ -189,10 +190,10 @@ function Group({ label, hint, children }: { label: string; hint?: string; childr
   return (
     <div className="flex flex-col gap-[9px]">
       <span id={labelId} className="text-label text-muted">
-        {label}
+        {t(label)}
       </span>
       {children(labelId)}
-      {hint && <p className="text-label text-muted">{hint}</p>}
+      {hint && <p className="text-label text-muted">{t(hint)}</p>}
     </div>
   );
 }
@@ -214,7 +215,7 @@ function Choices<T extends string>({
   hint?: string;
 }) {
   return (
-    <Group label={label} hint={hint}>
+    <Group label={t(label)} hint={t(hint)}>
       {(labelId) => (
         <RadioGroup.Root
           aria-labelledby={labelId}
@@ -235,7 +236,7 @@ function Choices<T extends string>({
               )}
               style={option.font ? { fontFamily: option.font } : undefined}
             >
-              {option.label}
+              {t(option.label)}
             </RadioGroup.Item>
           ))}
         </RadioGroup.Root>

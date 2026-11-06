@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 export type StepperProps = {
   steps: readonly string[];
@@ -12,7 +13,7 @@ export type StepperProps = {
 export function Stepper({
   steps,
   current,
-  "aria-label": ariaLabel = "Progress",
+  "aria-label": ariaLabel = t("Progress"),
   className,
 }: StepperProps) {
   return (
@@ -39,8 +40,8 @@ export function Stepper({
             >
               {state === "done" ? "✓" : index + 1}
             </span>
-            {label}
-            {state === "done" && <span className="sr-only"> (done)</span>}
+            {t(label)}
+            {state === "done" && <span className="sr-only"> {t("(done)")}</span>}
           </li>
         );
       })}

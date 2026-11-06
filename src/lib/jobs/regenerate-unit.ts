@@ -8,6 +8,7 @@ import { loadTaskOptions } from "@/lib/ai/task-options";
 import { regenerateUnit } from "@/lib/ai/tasks";
 import { extractedOf, unitSchema, unitsSchema } from "@/lib/application-data";
 import { updateDocuments } from "@/lib/document-units";
+import { t } from "@/lib/i18n";
 import { withoutPrivateParts } from "@/lib/letter-frame";
 import { prisma } from "@/lib/prisma";
 import { loadFactTexts, loadProfile } from "@/lib/profile-data";
@@ -38,7 +39,7 @@ export const regenerateUnitJob = defineJob({
     z.object({ outcome: z.literal("changed") }),
   ]),
   async run({ applicationId, document, unitId, from }, { step, signal }) {
-    await step("Rewriting");
+    await step(t("Rewriting"));
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: { documents: { where: { kind: document } } },

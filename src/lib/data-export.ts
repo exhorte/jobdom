@@ -68,6 +68,8 @@ export const INSTALL_SETTINGS: readonly string[] = [
   "googleClientId",
   "googleClientSecretEnc",
   "browserTimeZone",
+  // The language of the interface belongs to this install, not to the data.
+  "locale",
   // An import must never open the Claude connector's addresses on this server (#221).
   "connectorEnabledAt",
 ];

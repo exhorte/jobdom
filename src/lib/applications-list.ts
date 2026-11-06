@@ -1,4 +1,5 @@
 import { ApplicationStatus } from "@/generated/prisma/enums";
+import { t, tp, tx } from "@/lib/i18n";
 import { STATUSES, statusInfo } from "@/lib/status";
 
 // The Applications screen (E9): its views, filters and sorting, kept in the
@@ -9,9 +10,9 @@ export const VIEWS = ["board", "table"] as const;
 export type View = (typeof VIEWS)[number];
 
 export const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "In progress" },
-  { value: "closed", label: "Closed" },
+  { value: "all", label: tx("All") },
+  { value: "active", label: tx("In progress") },
+  { value: "closed", label: tx("Closed") },
 ] as const;
 export type Filter = (typeof FILTERS)[number]["value"];
 
@@ -138,22 +139,22 @@ export function sortRows<T extends Sortable>(rows: readonly T[], { key, reversed
  * Interview and Offer.
  */
 export function listSummary(statuses: readonly ApplicationStatus[]): string {
-  if (statuses.length === 0) return "No applications yet. Paste a job posting and I'll tailor your resume and cover letter to it.";
+  if (statuses.length === 0) return t("No applications yet. Paste a job posting and I'll tailor your resume and cover letter to it.");
   const count = (...wanted: ApplicationStatus[]) => statuses.filter((status) => wanted.includes(status)).length;
   const waiting = count(ApplicationStatus.SENT, ApplicationStatus.SCREENING);
   const talking = count(ApplicationStatus.INTERVIEW, ApplicationStatus.OFFER);
-  const total = `${statuses.length} ${statuses.length === 1 ? "application" : "applications"}`;
-  return `${total}: ${waiting} waiting to hear back, ${talking} in conversation.${talking > 0 ? " Nice momentum." : ""}`;
+  const total = tp(statuses.length, "{count} application", "{count} applications");
+  return t("{total}: {waiting} waiting to hear back, {talking} in conversation.{talking2}", { total, waiting, talking, talking2: talking > 0 ? t(" Nice momentum.") : "" });
 }
 
 /** "Today", "Yesterday", "3 days ago", "2 weeks ago", counting calendar days in the server's time zone. */
 export function updatedAgo(date: Date, now = new Date()): string {
   const day = (value: Date) => Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
   const days = Math.max(0, Math.round((day(now) - day(date)) / 86_400_000));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 14) return `${days} days ago`;
-  return `${Math.round(days / 7)} weeks ago`;
+  if (days === 0) return t("Today");
+  if (days === 1) return t("Yesterday");
+  if (days < 14) return t("{days} days ago", { days });
+  return t("{round} weeks ago", { round: Math.round(days / 7) });
 }
 
 export const statusLabel = (status: ApplicationStatus) => statusInfo(status).label;

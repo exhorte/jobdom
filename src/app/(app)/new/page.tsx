@@ -3,14 +3,19 @@ import type { Metadata } from "next";
 import { isAiConfigured, isAiUsable } from "@/lib/ai/config";
 import { handsOffToClaude } from "@/lib/connector/handoff";
 import { DEMO_POSTING } from "@/lib/demo-profile";
+import { t } from "@/lib/i18n";
 import { postingText } from "@/lib/job-search/search";
 import { prisma } from "@/lib/prisma";
 import { loadSettings } from "@/lib/settings-data";
 import { getStartup, startupPostingText } from "@/lib/startups/store";
 
 import { NewApplication } from "./new-application";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "New application" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("New application") };
+}
 
 /** Posting → details and match → tailored documents (PRD §6.4). Nothing is created until the last step. */
 export default async function NewApplicationPage({ searchParams }: PageProps<"/new">) {

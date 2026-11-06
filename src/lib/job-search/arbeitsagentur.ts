@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { intlLocale } from "@/lib/i18n";
 import { fetchPosting } from "@/lib/posting-fetch";
 
 import type { JobSourceAdapter, RequestContext } from "./adapter";
@@ -67,7 +68,7 @@ function placeOf(offer: Offer): string {
 function salaryOf(offer: Offer): string {
   const { gehaltsspanneVon: from, gehaltsspanneBis: to } = offer;
   if (!from && !to) return "";
-  const amount = (value: number) => Math.round(value).toLocaleString("en-US");
+  const amount = (value: number) => Math.round(value).toLocaleString(intlLocale());
   return `EUR ${from && to && from !== to ? `${amount(from)}–${amount(to)}` : amount((from || to)!)}`;
 }
 

@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 import { useField } from "./field";
+import { t } from "@/lib/i18n";
 
 export type CheckboxProps = Omit<ComponentProps<"input">, "type"> & {
   label: ReactNode;
@@ -25,11 +26,11 @@ export function Checkbox({ label, hint, error, id, className, ...props }: Checkb
           className="m-0 size-4 shrink-0 cursor-[inherit] accent-primary"
           {...props}
         />
-        {label}
+        {t(label)}
       </label>
       {hint && (
         <p id={field.hintId} className="pl-[26px] text-label text-muted">
-          {hint}
+          {t(hint)}
         </p>
       )}
       {error && (

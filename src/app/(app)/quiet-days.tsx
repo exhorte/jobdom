@@ -7,6 +7,7 @@ import { toastResult } from "@/components/toast";
 import { controlBaseClassName } from "@/components/ui/field";
 import { QUIET_DAYS_CHOICES } from "@/lib/dashboard";
 import { cn } from "@/lib/cn";
+import { t, tp } from "@/lib/i18n";
 
 import { rememberQuietDays } from "./actions";
 
@@ -22,7 +23,7 @@ export function QuietDays({ days }: { days: number }) {
 
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-3.5 pb-1.5 text-meta text-muted">
-      <label htmlFor="quiet-days">Suggest a follow-up after</label>
+      <label htmlFor="quiet-days">{t("Suggest a follow-up after")}</label>
       <select
         id="quiet-days"
         value={shown}
@@ -37,11 +38,11 @@ export function QuietDays({ days }: { days: number }) {
       >
         {choices.map((choice) => (
           <option key={choice} value={choice}>
-            {choice} {choice === 1 ? "day" : "days"}
+            {tp(choice, "{count} day", "{count} days")}
           </option>
         ))}
       </select>
-      <span>without news</span>
+      <span>{t("without news")}</span>
     </p>
   );
 }

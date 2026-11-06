@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { AiProvider, Creativity, DateFormat, PaperSize, Tone } from "@/generated/prisma/enums";
+import { LOCALES, t, tx } from "@/lib/i18n";
 import { EMPTY_QUERY, JOB_SOURCES, JSEARCH_HOSTS, searchQuerySchema } from "@/lib/job-search/search";
 import { startupsRefreshSchema } from "@/lib/startups/types";
 
@@ -32,16 +33,16 @@ export function formatDocumentDate(date: Date, format: DateFormat, locale = "en-
  * a resume's text, drafts not yet in an application.
  */
 export const JOB_RETENTION_OPTIONS: readonly { hours: number; label: string }[] = [
-  { hours: 1, label: "1 hour" },
-  { hours: 24, label: "24 hours" },
-  { hours: 24 * 7, label: "7 days" },
-  { hours: 24 * 30, label: "30 days" },
+  { hours: 1, label: tx("1 hour") },
+  { hours: 24, label: tx("24 hours") },
+  { hours: 24 * 7, label: tx("7 days") },
+  { hours: 24 * 30, label: tx("30 days") },
 ];
 export const DEFAULT_JOB_RETENTION_HOURS = 24;
 export const isJobRetention = (hours: number) => JOB_RETENTION_OPTIONS.some((option) => option.hours === hours);
 /** "24 hours" */
 export const jobRetentionLabel = (hours: number) =>
-  JOB_RETENTION_OPTIONS.find((option) => option.hours === hours)?.label ?? `${hours} hours`;
+  JOB_RETENTION_OPTIONS.find((option) => option.hours === hours)?.label ?? t("{hours} hours", { hours });
 
 const pageLimit = z.enum(["1", "2", "none"]);
 export type PageLimit = z.infer<typeof pageLimit>;
@@ -51,14 +52,14 @@ export type PageLimit = z.infer<typeof pageLimit>;
  * that runs over is trimmed when its application is created (E10-10).
  */
 export const PAGE_LIMITS: readonly { value: PageLimit; label: string; pages: number | null }[] = [
-  { value: "1", label: "One page", pages: 1 },
-  { value: "2", label: "Up to two pages", pages: 2 },
-  { value: "none", label: "No limit", pages: null },
+  { value: "1", label: tx("One page"), pages: 1 },
+  { value: "2", label: tx("Up to two pages"), pages: 2 },
+  { value: "none", label: tx("No limit"), pages: null },
 ];
 /** The most pages a resume may have, or null for no limit. */
 export const maxPages = (limit: PageLimit): number | null => PAGE_LIMITS.find((option) => option.value === limit)?.pages ?? null;
 /** "one page", "two pages" */
-export const pagesInWords = (pages: number) => (pages === 1 ? "one page" : pages === 2 ? "two pages" : `${pages} pages`);
+export const pagesInWords = (pages: number) => (pages === 1 ? t("one page") : pages === 2 ? t("two pages") : t("{pages} pages", { pages }));
 
 // ─── Stored settings ─────────────────────────────────────────────────────────
 // Settings are stored in the Setting table, one text row per key: enums by
@@ -229,6 +230,10 @@ export const settingsSchema = z.object({
   // Every connector token carries it, so a new value signs Claude out. It
   // belongs to the install, so exports leave it out (INSTALL_SETTINGS).
   connectorEnabledAt: z.iso.datetime().nullable().catch(null),
+  // The language of the app's words (Settings → Language); null means the
+  // server's own, DOSSIER_LOCALE. It belongs to the install, so exports leave
+  // it out (INSTALL_SETTINGS).
+  locale: z.enum(LOCALES).nullable().catch(null),
   // The browser's time zone as it last told the server, for work done
   // without a request, such as the inbox check (time-zone.ts). It belongs
   // to the install, not its data, so exports leave it out (INSTALL_SETTINGS).

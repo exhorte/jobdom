@@ -12,6 +12,8 @@ import { buttonClassName } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PaperSize } from "@/generated/prisma/enums";
+import { t, tp } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 import type { ProfileData } from "@/lib/profile";
 import { saveFile } from "@/lib/save-file";
 import { pagesInWords } from "@/lib/settings";
@@ -113,12 +115,12 @@ export function ResumeWorkspace({ profile, themes: initialThemes, usage, baseThe
     saveFile(new Blob([JSON.stringify(themeFile(base), null, 2)], { type: "application/json" }), themeFileName(base));
 
   const importFile = async (file: File) => {
-    if (file.size > 100_000) return toast("That file is too big to be a Dossier theme.");
+    if (file.size > 100_000) return toast(t("That file is too big to be a Dossier theme."));
     let json: unknown;
     try {
       json = JSON.parse(await file.text());
     } catch {
-      return toast("That file isn't a Dossier theme.");
+      return toast(t("That file isn't a Dossier theme."));
     }
     // Checked here for a quick answer, and again on the server.
     const read = parseThemeFile(json);
@@ -157,38 +159,36 @@ export function ResumeWorkspace({ profile, themes: initialThemes, usage, baseThe
   return (
     <>
       <PageHeader
-        title="Base resume"
-        description="Built straight from your profile. Every new application starts from this one, then gets tailored to the job."
+        title={t("Base resume")}
+        description={t("Built straight from your profile. Every new application starts from this one, then gets tailored to the job.")}
         actions={
           <>
             <Link href="/profile" className={buttonClassName("secondary")}>
-              Edit profile
+              {t("Edit profile")}
             </Link>
-            <DownloadPdfButton href="/api/pdf?doc=base">Download PDF</DownloadPdfButton>
+            <DownloadPdfButton href="/api/pdf?doc=base">{t("Download PDF")}</DownloadPdfButton>
           </>
         }
       />
       <div className="@container flex flex-1 flex-wrap border-t border-line">
         <DocumentPreview
           label={theme.name}
-          meta={(pages) => `${PAPER_SIZES[paper].label} · ${pages} ${pages === 1 ? "page" : "pages"}`}
+          meta={(pages) => `${PAPER_SIZES[paper].label} · ${tp(pages, "{count} page", "{count} pages")}`}
           notice={(pages) =>
             empty ? (
               // E11-4: an empty page needs a way forward.
               <p role="note" className="rounded-card bg-card px-4 py-2.5 text-meta text-muted">
-                Your resume fills in from your profile. Add your name and a role or two, and it takes shape here.{" "}
-                <Link href="/profile" className="text-ink underline underline-offset-2">
-                  Go to your profile
-                </Link>
+                {rich("Your resume fills in from your profile. Add your name and a role or two, and it takes shape here. {link}", { link: <Link href="/profile" className="text-ink underline underline-offset-2">
+                  {t("Go to your profile")}
+                </Link> })}
               </p>
             ) : (
               maxPages !== null &&
               pages > maxPages && (
                 <p role="note" className="rounded-card bg-warning-surface px-4 py-2.5 text-meta text-warning">
-                  Your base resume runs over {pagesInWords(maxPages)}. Tailored resumes are trimmed to fit, oldest roles first.{" "}
-                  <Link href="/settings?section=documents" className="font-medium text-warning underline underline-offset-2">
-                    Change the resume length
-                  </Link>
+                  {rich("Your base resume runs over {pagesInWords}. Tailored resumes are trimmed to fit, oldest roles first. {link}", { pagesInWords: pagesInWords(maxPages), link: <Link href="/settings?section=documents" className="font-medium text-warning underline underline-offset-2">
+                    {t("Change the resume length")}
+                  </Link> })}
                 </p>
               )
             )
@@ -198,13 +198,13 @@ export function ResumeWorkspace({ profile, themes: initialThemes, usage, baseThe
         </DocumentPreview>
         <aside
           ref={panelArea}
-          aria-label="Theme"
+          aria-label={t("Theme")}
           className="flex flex-[1_0_300px] flex-col border-t border-line bg-paper px-7 pt-7 pb-12 @min-[780px]:border-t-0 @min-[780px]:border-l"
         >
           <Tabs value={panel} onValueChange={(value) => openPanel(value as Panel)} className="flex flex-col gap-6">
             <TabsList variant="segmented">
-              <TabsTrigger value="themes">Themes</TabsTrigger>
-              <TabsTrigger value="customize">Customize</TabsTrigger>
+              <TabsTrigger value="themes">{t("Themes")}</TabsTrigger>
+              <TabsTrigger value="customize">{t("Customize")}</TabsTrigger>
             </TabsList>
             <TabsContent value="themes">
               <ThemePicker
@@ -238,9 +238,9 @@ export function ResumeWorkspace({ profile, themes: initialThemes, usage, baseThe
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete “${deleting?.name ?? ""}”?`}
+        title={t("Delete “{deleting}”?", { deleting: deleting?.name ?? "" })}
         description={deleteDescription(deleting ? (usage[deleting.id] ?? 0) : 0)}
-        confirmLabel="Delete theme"
+        confirmLabel={t("Delete theme")}
         onConfirm={() => deleting && void remove(deleting)}
       />
     </>
@@ -251,8 +251,10 @@ export function ResumeWorkspace({ profile, themes: initialThemes, usage, baseThe
 function deleteDescription(applications: number): string {
   const used =
     applications === 0
-      ? "No application uses it."
-      : `${applications === 1 ? "One application uses" : `${applications} applications use`} it; their documents will use your base theme instead.`;
-  return `${used} Editorial becomes your base theme. This can't be undone, but you can export the theme first.`;
+      ? t("No application uses it.")
+      : applications === 1
+        ? t("One application uses it; their documents will use your base theme instead.")
+        : t("{count} applications use it; their documents will use your base theme instead.", { count: applications });
+  return t("{used} Editorial becomes your base theme. This can't be undone, but you can export the theme first.", { used });
 }
 

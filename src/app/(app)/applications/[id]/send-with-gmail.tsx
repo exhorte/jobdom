@@ -9,6 +9,7 @@ import { toast } from "@/components/toast";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { emailAddresses } from "@/lib/application-email";
 import { sendWithGmail } from "@/lib/google/actions";
+import { t } from "@/lib/i18n";
 
 /** Whether Gmail can send, for the Email tab: the account it sends from, or why not. */
 export type GmailSender = { from: string } | { from: null; reason: "not-configured" | "not-connected" | "no-permission" };
@@ -41,7 +42,7 @@ export function SendWithGmail({
     if (sender.reason === "not-configured") return null;
     return (
       <a href={sender.reason === "no-permission" ? "/api/google/connect?scopes=send" : "/settings?section=google"} className={buttonClassName("secondary", "md")}>
-        {sender.reason === "no-permission" ? "Allow sending with Gmail" : "Connect Gmail to send"}
+        {sender.reason === "no-permission" ? t("Allow sending with Gmail") : t("Connect Gmail to send")}
       </a>
     );
   }
@@ -66,34 +67,33 @@ export function SendWithGmail({
           setOpen(true);
         }}
       >
-        {sending ? "Sending…" : sentBefore ? "Send again with Gmail" : "Send with Gmail"}
+        {sending ? t("Sending…") : sentBefore ? t("Send again with Gmail") : t("Send with Gmail")}
       </Button>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 flex w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-dialog border border-line-popover bg-card p-6 shadow-menu">
-          <AlertDialog.Title className="font-serif text-[22px] leading-tight">Send this application?</AlertDialog.Title>
+          <AlertDialog.Title className="font-serif text-[22px] leading-tight">{t("Send this application?")}</AlertDialog.Title>
           <AlertDialog.Description asChild>
             <div className="flex flex-col gap-3 text-sm text-muted">
               <dl className="grid grid-cols-[64px_1fr] gap-x-3 gap-y-1.5">
-                <dt>From</dt>
+                <dt>{t("From")}</dt>
                 <dd className="text-ink [overflow-wrap:anywhere]">{sender.from}</dd>
-                <dt>To</dt>
+                <dt>{t("To")}</dt>
                 <dd className="text-ink [overflow-wrap:anywhere]">{to}</dd>
-                <dt>Subject</dt>
+                <dt>{t("Subject")}</dt>
                 <dd className="text-ink [overflow-wrap:anywhere]">{subject}</dd>
-                <dt>Attached</dt>
-                <dd className="text-ink [overflow-wrap:anywhere]">{attachments.length > 0 ? attachments.join(", ") : "Nothing"}</dd>
+                <dt>{t("Attached")}</dt>
+                <dd className="text-ink [overflow-wrap:anywhere]">{attachments.length > 0 ? attachments.join(", ") : t("Nothing")}</dd>
               </dl>
               <p>
-                {sentBefore ? "It's already gone out once; this sends it again. " : "It moves to Sent, and "}
-                I&apos;ll watch the thread for replies. This can&apos;t be unsent.
+                {t("{sentBefore}I'll watch the thread for replies. This can't be unsent.", { sentBefore: sentBefore ? t("It's already gone out once; this sends it again. ") : t("It moves to Sent, and ") })}
               </p>
             </div>
           </AlertDialog.Description>
           <div className="mt-2 flex justify-end gap-2">
-            <AlertDialog.Cancel className={buttonClassName("secondary", "sm")}>Cancel</AlertDialog.Cancel>
+            <AlertDialog.Cancel className={buttonClassName("secondary", "sm")}>{t("Cancel")}</AlertDialog.Cancel>
             <AlertDialog.Action className={buttonClassName("primary", "sm", "hover:text-on-primary")} onClick={send}>
-              Send now
+              {t("Send now")}
             </AlertDialog.Action>
           </div>
         </AlertDialog.Content>

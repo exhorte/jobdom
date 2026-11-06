@@ -10,6 +10,7 @@ import { useAutosave } from "@/hooks/use-autosave";
 import { cn } from "@/lib/cn";
 import { createFact, removeFact, restoreFact, saveFact } from "@/lib/fact-actions";
 import type { FactItem } from "@/lib/profile";
+import { t } from "@/lib/i18n";
 
 /**
  * Facts the user tells the AI (PRO-14, APP-15), one text box each: "Add a
@@ -60,9 +61,9 @@ export function FactList({
     }
     // A blank one is gone without a word.
     if (!fact.text.trim()) return;
-    toast("Removed a fact.", {
+    toast(t("Removed a fact."), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: async () => {
           const restored = await track(restoreFact({ id: fact.id, applicationId, text: fact.text, sort: result.data.sort }));
           if (!restored.ok) return toast(restored.error);
@@ -75,13 +76,13 @@ export function FactList({
   return (
     <div className="flex flex-col gap-3">
       {facts.length > 0 && (
-        <ol aria-label="Facts" className="flex flex-col gap-2.5">
+        <ol aria-label={t("Facts")} className="flex flex-col gap-2.5">
           {facts.map((fact, index) => (
             <FactRow
               key={fact.id}
               fact={fact}
               number={index + 1}
-              placeholder={placeholder}
+              placeholder={t(placeholder)}
               autoFocus={fact.id === createdId}
               onChange={(text) => setFacts((current) => current.map((entry) => (entry.id === fact.id ? { ...entry, text } : entry)))}
               onRemove={() => void remove(fact)}
@@ -91,7 +92,7 @@ export function FactList({
       )}
       <div>
         <Button variant="secondary" size="sm" onClick={() => void add()} disabled={adding}>
-          + Add a fact
+          {t("+ Add a fact")}
         </Button>
       </div>
     </div>
@@ -118,19 +119,19 @@ function FactRow({
   return (
     <li className="flex items-start gap-3">
       <textarea
-        aria-label={`Fact ${number}`}
+        aria-label={t("Fact {number}", { number })}
         // Only a fact that was just added takes focus.
         autoFocus={autoFocus}
         rows={1}
         maxLength={1000}
         value={fact.text}
-        placeholder={placeholder}
+        placeholder={t(placeholder)}
         onChange={(event) => onChange(event.target.value)}
         onBlur={flush}
         className={cn(controlClassName, "min-h-[42px] resize-none px-3 py-[9px] leading-[1.5] [field-sizing:content] placeholder:text-muted")}
       />
-      <Button variant="danger-text" size="sm" className="mt-1.5" aria-label={`Remove fact ${number}`} onClick={onRemove}>
-        Remove
+      <Button variant="danger-text" size="sm" className="mt-1.5" aria-label={t("Remove fact {number}", { number })} onClick={onRemove}>
+        {t("Remove")}
       </Button>
     </li>
   );

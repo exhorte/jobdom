@@ -12,12 +12,20 @@ const CODES = (
   "um us uy uz va vc ve vg vi vn vu wf ws xk ye yt za zm zw"
 ).split(" ");
 
-const englishNames = new Intl.DisplayNames(["en"], { type: "region", fallback: "code" });
+import { getLocale } from "@/lib/i18n";
+
+const regionNames = new Map<string, Intl.DisplayNames>();
+/** Region names in the app's language ("Germany", "Allemagne"). */
+function regionNamesFor(language: string): Intl.DisplayNames {
+  let names = regionNames.get(language);
+  if (!names) regionNames.set(language, (names = new Intl.DisplayNames([language], { type: "region", fallback: "code" })));
+  return names;
+}
 
 /** "Germany" for "de"; the code itself when it isn't one. */
 export function countryName(code: string): string {
   if (!/^[a-z]{2}$/i.test(code)) return code;
-  return englishNames.of(code.toUpperCase()) ?? code.toUpperCase();
+  return regionNamesFor(getLocale()).of(code.toUpperCase()) ?? code.toUpperCase();
 }
 
 export type Country = { code: string; name: string };
@@ -27,7 +35,7 @@ export type Country = { code: string; name: string };
  * server and pass it down: a browser's ICU data can name a few differently.
  */
 export const COUNTRIES: readonly Country[] = CODES.map((code) => ({ code, name: countryName(code) })).sort((a, b) =>
-  a.name.localeCompare(b.name, "en"),
+  a.name.localeCompare(b.name, getLocale()),
 );
 
 // Names people write that the locales below don't give.

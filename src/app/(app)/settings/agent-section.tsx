@@ -15,6 +15,8 @@ import { searchHref, type JobSource, type SearchQuery } from "@/lib/job-search/s
 import { saveAgentSettings } from "../agent/actions";
 import { RemoteOnlyField, SearchFields, type SearchFieldErrors } from "../jobs/search-fields";
 import { SettingsSectionIntro } from "./settings-screen";
+import { tp, t } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 export type AgentSettings = {
   enabled: boolean;
@@ -31,7 +33,6 @@ const MIN_SCORES = [50, 55, 60, 65, 70, 75, 80, 85, 90];
 const SCORE_COUNTS = Array.from({ length: 30 }, (_, index) => index + 1);
 const DRAFT_COUNTS = Array.from({ length: 11 }, (_, index) => index);
 const clock = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 /**
  * Settings → Job agent (E16-7): whether it runs, the one search it runs,
@@ -73,8 +74,8 @@ export function AgentSection({
   const turnOn = (on: boolean) => {
     if (on) {
       const problems = {
-        keywords: settings.query.keywords.trim() ? undefined : "Type what the agent should look for.",
-        country: settings.query.country ? undefined : "Choose a country.",
+        keywords: settings.query.keywords.trim() ? undefined : t("Type what the agent should look for."),
+        country: settings.query.country ? undefined : t("Choose a country."),
       };
       setErrors(problems);
       if (problems.keywords || problems.country) return;
@@ -86,36 +87,34 @@ export function AgentSection({
 
   return (
     <>
-      <SettingsSectionIntro title="Job agent">
-        Once a day it runs one search, scores the new postings against your profile, and keeps the best on the Agent screen. It never sends or applies.
+      <SettingsSectionIntro title={t("Job agent")}>
+        {t("Once a day it runs one search, scores the new postings against your profile, and keeps the best on the Agent screen. It never sends or applies.")}
       </SettingsSectionIntro>
 
       {source === "ARBEITSAGENTUR" ? (
         // It searches on its own, which the BA's terms forbid most clearly (#223).
         <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-          The agent doesn&apos;t search the Bundesagentur für Arbeit. Choose JSearch or Adzuna in{" "}
-          <Link href="/settings?section=jobs" className="font-medium text-warning underline underline-offset-2">
-            Settings → Job search
-          </Link>{" "}
-          for it.
+          {rich("The agent doesn't search the Bundesagentur für Arbeit. Choose JSearch or Adzuna in {link} for it.", { link: <Link href="/settings?section=jobs" className="font-medium text-warning underline underline-offset-2">
+            {t("Settings → Job search")}
+          </Link> })}
         </p>
       ) : (!source || !aiReady) && (
         <p role="note" className="rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-          {!source ? "The agent searches the source you choose in " : "The agent scores postings with the AI provider in "}
+          {!source ? t("The agent searches the source you choose in ") : t("The agent scores postings with the AI provider in ")}
           <Link href={!source ? "/settings?section=jobs" : "/settings?section=ai"} className="font-medium text-warning underline underline-offset-2">
-            {!source ? "Settings → Job search" : "Settings → AI provider"}
+            {!source ? t("Settings → Job search") : t("Settings → AI provider")}
           </Link>
-          {!source ? ", which is off. Choose one first." : ", which isn't set up yet. Choose one first."}
+          {!source ? t(", which is off. Choose one first.") : t(", which isn't set up yet. Choose one first.")}
         </p>
       )}
 
       <Card padding="none" className="px-7 py-4">
         <Toggle
-          label="Run the job agent"
+          label={t("Run the job agent")}
           description={
             settings.enabled
-              ? `On. It runs once a day after ${clock(settings.hour)} your time (${timeZone}), and you can run it now and then on the Agent screen.`
-              : "Off. Nothing is searched or scored until it's on."
+              ? t("On. It runs once a day after {clock} your time ({timeZone}), and you can run it now and then on the Agent screen.", { clock: clock(settings.hour), timeZone })
+              : t("Off. Nothing is searched or scored until it's on.")
           }
           checked={settings.enabled}
           onCheckedChange={turnOn}
@@ -124,13 +123,11 @@ export function AgentSection({
 
       <Card padding="none" className="flex flex-col gap-4 px-7 py-[26px]">
         <div className="flex flex-col gap-1">
-          <h3 className="text-field font-medium">What it looks for</h3>
+          <h3 className="text-field font-medium">{t("What it looks for")}</h3>
           <p className="text-meta text-muted">
-            The same search as in{" "}
-            <Link href={searchHref(settings.query)} className="font-medium text-ink underline underline-offset-2">
-              Find jobs
-            </Link>
-            , through the source in Settings → Job search. Postings you saved, dismissed or applied for there are left out.
+            {rich("The same search as in {link}, through the source in Settings → Job search. Postings you saved, dismissed or applied for there are left out.", { link: <Link href={searchHref(settings.query)} className="font-medium text-ink underline underline-offset-2">
+              {t("Find jobs")}
+            </Link> })}
           </p>
         </div>
         <div className="grid grid-cols-1 items-start gap-x-4 gap-y-4 sm:grid-cols-2" onBlur={flush}>
@@ -142,7 +139,7 @@ export function AgentSection({
       </Card>
 
       <Card padding="none" className="grid gap-x-[18px] gap-y-5 px-7 py-[26px] sm:grid-cols-2">
-        <Select label="Runs after" hint={`Your time (${timeZone})`} value={String(settings.hour)} onChange={(event) => change({ hour: Number(event.target.value) })}>
+        <Select label={t("Runs after")} hint={t("Your time ({timeZone})", { timeZone })} value={String(settings.hour)} onChange={(event) => change({ hour: Number(event.target.value) })}>
           {HOURS.map((hour) => (
             <option key={hour} value={hour}>
               {clock(hour)}
@@ -150,18 +147,18 @@ export function AgentSection({
           ))}
         </Select>
         <Select
-          label="Minimum score"
-          hint="Postings scored lower stay out of the queue."
+          label={t("Minimum score")}
+          hint={t("Postings scored lower stay out of the queue.")}
           value={String(settings.minScore)}
           onChange={(event) => change({ minScore: Number(event.target.value) })}
         >
           {[...new Set([...MIN_SCORES, settings.minScore])].sort((a, b) => a - b).map((score) => (
             <option key={score} value={score}>
-              {score} of 100
+              {t("{score} of 100", { score })}
             </option>
           ))}
         </Select>
-        <Select label="Postings scored per run" value={String(settings.maxScores)} onChange={(event) => change({ maxScores: Number(event.target.value) })}>
+        <Select label={t("Postings scored per run")} value={String(settings.maxScores)} onChange={(event) => change({ maxScores: Number(event.target.value) })}>
           {SCORE_COUNTS.map((count) => (
             <option key={count} value={count}>
               {count}
@@ -169,10 +166,10 @@ export function AgentSection({
           ))}
         </Select>
         <Select
-          label="Drafts per run, at most"
+          label={t("Drafts per run, at most")}
           value={String(settings.maxDrafts)}
           disabled={!settings.autoDraft}
-          hint={settings.autoDraft ? undefined : "Turn on Prepare drafts on its own first"}
+          hint={settings.autoDraft ? undefined : t("Turn on Prepare drafts on its own first")}
           onChange={(event) => change({ maxDrafts: Number(event.target.value) })}
         >
           {DRAFT_COUNTS.map((count) => (
@@ -183,11 +180,11 @@ export function AgentSection({
         </Select>
         <Toggle
           className="sm:col-span-2"
-          label="Prepare drafts on its own"
+          label={t("Prepare drafts on its own")}
           description={
             settings.autoDraft
-              ? `For the best new postings of each run, up to ${plural(settings.maxDrafts, "draft", "drafts")}: a tailored resume and cover letter, waiting for your review.`
-              : "Off. You choose which postings get a draft with Prepare draft."
+              ? t("For the best new postings of each run, up to {settings}: a tailored resume and cover letter, waiting for your review.", { settings: tp(settings.maxDrafts, "{count} draft", "{count} drafts") })
+              : t("Off. You choose which postings get a draft with Prepare draft.")
           }
           checked={settings.autoDraft}
           onCheckedChange={(autoDraft) => change({ autoDraft })}
@@ -195,8 +192,7 @@ export function AgentSection({
       </Card>
 
       <p className="text-meta text-muted">
-        One search a day, and at most three in any 24 hours. Each run scores up to {plural(settings.maxScores, "posting", "postings")}
-        {settings.autoDraft ? ` and prepares up to ${plural(settings.maxDrafts, "draft", "drafts")}` : ""}. Scoring and drafts go to your AI provider with your profile, as a new application does; the job source only gets the search.
+        {t("One search a day, and at most three in any 24 hours. Each run scores up to {settings}{settings2}. Scoring and drafts go to your AI provider with your profile, as a new application does; the job source only gets the search.", { settings: tp(settings.maxScores, "{count} posting", "{count} postings"), settings2: settings.autoDraft ? t(" and prepares up to {settings}", { settings: tp(settings.maxDrafts, "{count} draft", "{count} drafts") }) : "" })}
       </p>
     </>
   );

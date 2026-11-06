@@ -1,3 +1,4 @@
+
 // The text of a tailored document's unit, as saved.
 
 /** Bullet characters a model may add even when asked not to, and people type out of habit. */

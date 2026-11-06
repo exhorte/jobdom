@@ -4,10 +4,14 @@ import { useId, useState } from "react";
 
 import { controlBaseClassName } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { intlLocale, t } from "@/lib/i18n";
 
-const MONTHS = Array.from({ length: 12 }, (_, index) =>
-  new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "UTC" }).format(Date.UTC(2000, index, 1)),
-);
+/** January… December, in the app's language (called while rendering: the language isn't known at load). */
+const monthNames = (): string[] =>
+  Array.from({ length: 12 }, (_, index) => {
+    const name = new Intl.DateTimeFormat(intlLocale(), { month: "long", timeZone: "UTC" }).format(Date.UTC(2000, index, 1));
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  });
 const MIN_YEAR = 1900;
 const MAX_YEAR = 2100;
 
@@ -46,29 +50,29 @@ export function MonthYearField({
 
   return (
     <fieldset className={cn("flex min-w-0 flex-col gap-[7px]", className)} disabled={disabled}>
-      <legend className="mb-[7px] text-label text-muted">{label}</legend>
+      <legend className="mb-[7px] text-label text-muted">{t(label)}</legend>
       <div className="flex gap-2">
         <select
-          aria-label={`${label} month`}
+          aria-label={t("{label} month", { label })}
           value={value.month ?? ""}
           onChange={(event) =>
             onChange({ ...value, month: event.target.value ? Number(event.target.value) : null })
           }
           className={cn(controlBaseClassName, "min-w-0 flex-1 cursor-pointer px-2.5 py-2.5")}
         >
-          <option value="">Month</option>
-          {MONTHS.map((name, index) => (
+          <option value="">{t("Month")}</option>
+          {monthNames().map((name, index) => (
             <option key={name} value={index + 1}>
               {name}
             </option>
           ))}
         </select>
         <input
-          aria-label={`${label} year`}
+          aria-label={t("{label} year", { label })}
           inputMode="numeric"
           autoComplete="off"
           maxLength={4}
-          placeholder="Year"
+          placeholder={t("Year")}
           value={yearText}
           onChange={(event) => {
             setYearText(event.target.value);
@@ -82,7 +86,7 @@ export function MonthYearField({
       </div>
       {invalid && (
         <p id={errorId} role="alert" className="text-label text-error">
-          Enter a four-digit year, like 2021.
+          {t("Enter a four-digit year, like 2021.")}
         </p>
       )}
     </fieldset>

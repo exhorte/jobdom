@@ -1,5 +1,7 @@
 import type { JobSource, JSearchHost } from "./search";
 
+import { tx } from "@/lib/i18n";
+
 /** What Settings → Job search may know about a source's key: never the key itself. "env" means it comes from the environment. */
 export type JobKeyState = "none" | "set" | "unreadable" | "env";
 
@@ -12,7 +14,7 @@ export type JobSearchSettingsView = {
   arbeitsagentur: { offered: boolean; acceptedAt: string | null };
 };
 
-export const JOB_KEY_UNREADABLE = "Your saved key can't be read. Please enter it again.";
+export const JOB_KEY_UNREADABLE = tx("Your saved key can't be read. Please enter it again.");
 
 /** Where to get a JSearch key, by where it's from. */
 export const JSEARCH_KEY_URLS: Record<JSearchHost, string> = {
@@ -46,32 +48,32 @@ export type SourceInfo = {
 export const SOURCE_INFO: Record<JobSource, SourceInfo> = {
   JSEARCH: {
     name: "JSearch",
-    description: "Postings from LinkedIn, Indeed, Glassdoor and company sites, through Google for Jobs.",
-    tag: "Most countries · free key with 200 searches a month",
+    description: tx("Postings from LinkedIn, Indeed, Glassdoor and company sites, through Google for Jobs."),
+    tag: tx("Most countries · free key with 200 searches a month"),
     keyUrl: "https://www.openwebninja.com/api/jsearch",
-    quotaPeriod: "this month",
+    quotaPeriod: tx("this month"),
     attribution: null,
     attributionLink: null,
     countries: null,
   },
   ADZUNA: {
     name: "Adzuna",
-    description: "Adzuna's own job index in 19 countries. It only shares the start of each posting.",
-    tag: "19 countries · free key, about 250 searches a day",
+    description: tx("Adzuna's own job index in 19 countries. It only shares the start of each posting."),
+    tag: tx("19 countries · free key, about 250 searches a day"),
     keyUrl: "https://developer.adzuna.com/signup",
     quotaPeriod: "today",
-    attribution: "Jobs by Adzuna",
+    attribution: tx("Jobs by Adzuna"),
     // Its terms: "Adzuna" on each displayed advert, at least 116 × 23 px, linked to adzuna.co.uk or the local site.
     attributionLink: { home: "https://www.adzuna.co.uk", local: /^www\.adzuna\.(?:[a-z]{2,3}|co\.[a-z]{2}|com\.[a-z]{2})$/ },
     countries: ["at", "au", "be", "br", "ca", "ch", "de", "es", "fr", "gb", "in", "it", "mx", "nl", "nz", "pl", "sg", "us", "za"],
   },
   ARBEITSAGENTUR: {
-    name: "Bundesagentur für Arbeit",
-    description: "Germany's federal job board, with full postings. Unofficial: you choose it on your own responsibility.",
-    tag: "Germany only · free, no key · unofficial",
+    name: tx("Bundesagentur für Arbeit"),
+    description: tx("Germany's federal job board, with full postings. Unofficial: you choose it on your own responsibility."),
+    tag: tx("Germany only · free, no key · unofficial"),
     keyUrl: null,
     quotaPeriod: null,
-    attribution: "Source: Bundesagentur für Arbeit",
+    attribution: tx("Source: Bundesagentur für Arbeit"),
     attributionLink: null,
     countries: ["de"],
   },
@@ -92,9 +94,12 @@ export function sourceCovers(source: JobSource, country: string): boolean {
 export const ARBEITSAGENTUR_TERMS_URL = "https://www.arbeitsagentur.de/datei/nutzungsbedingungen_ba036575.pdf";
 
 /** What "I understand" agrees to, in Settings, in Find jobs and in the server log. */
-export const ARBEITSAGENTUR_NOTE =
-  "The Bundesagentur für Arbeit has no official API. Dossier searches it through the access its own job search uses, without its permission, " +
-  "and the BA's terms of use don't allow automated access. You choose this source on your own responsibility, and it can stop working at any time.";
+export const ARBEITSAGENTUR_NOTE_PARTS = [
+  tx("The Bundesagentur für Arbeit has no official API. Dossier searches it through the access its own job search uses, without its permission, "),
+  tx("and the BA's terms of use don't allow automated access. You choose this source on your own responsibility, and it can stop working at any time."),
+] as const;
+/** In English, for the log. The screens show `ARBEITSAGENTUR_NOTE_PARTS` through `t`. */
+export const ARBEITSAGENTUR_NOTE: string = ARBEITSAGENTUR_NOTE_PARTS.join("");
 
 /** A BA posting's own page on arbeitsagentur.de, which its results always link to, even when they have a link of their own. */
 export function arbeitsagenturPage(posting: { source: JobSource; externalId: string }): string | null {

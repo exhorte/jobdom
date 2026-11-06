@@ -69,6 +69,8 @@ import { aboutWords, type Tab } from "./tabs";
 import { UnitFrame } from "./unit-frame";
 import { VersionHistory, type ViewedVersion } from "./version-history";
 import type { EmailView } from "@/lib/google/inbox-data";
+import { t, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 
 /** A unit on the page: its document and id, e.g. "RESUME summary". */
@@ -92,7 +94,7 @@ type Target = { document: DocumentKind; unitId: string; label: string; name: str
 
 const NO_MESSAGES: ChatEntry[] = [];
 
-const NO_AI = "That needs an AI provider. Choose one in Settings → AI provider.";
+const NO_AI = tx("That needs an AI provider. Choose one in Settings → AI provider.");
 
 const NOTHING_SAVING: Readonly<Record<string, string>> = {};
 
@@ -282,7 +284,7 @@ export function ApplicationView({
   };
 
   const needsAi = () => {
-    toast(NO_AI, { action: { label: "Open Settings", onClick: () => router.push("/settings?section=ai") } });
+    toast(t(NO_AI), { action: { label: t("Open Settings"), onClick: () => router.push("/settings?section=ai") } });
   };
 
   const stopRewriting = (key: string) =>
@@ -310,9 +312,9 @@ export function ApplicationView({
       // Nothing was changed, so the unit is as it was.
       stopRewriting(key);
       const { jobId, revision } = rewrites[key] ?? { jobId: job.id, revision: 0 };
-      toast(job.error ?? "That didn't work. Try again.", {
+      toast(job.error ?? t("That didn't work. Try again."), {
         action: {
-          label: "Retry",
+          label: t("Retry"),
           onClick: () =>
             void retry({ id: jobId }).then((retried) => {
               if (retried.ok) setRewrites((current) => ({ ...current, [key]: { jobId, revision: revision + 1 } }));
@@ -326,14 +328,14 @@ export function ApplicationView({
     stopRewriting(key);
     const result = job.result;
     if (result.outcome === "changed") {
-      toast(`The ${name} changed while I was rewriting it, so I left your version.`);
+      toast(t("The {name} changed while I was rewriting it, so I left your version.", { name }));
       return;
     }
     startTransition(() => router.refresh());
     flashing.start([key]);
-    toast(`Rewrote the ${name}.`, {
+    toast(t("Rewrote the {name}.", { name }), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: () =>
           startTransition(async () => {
             const undone = await restoreUnit({
@@ -346,7 +348,7 @@ export function ApplicationView({
             });
             if (!undone.ok) return toast(undone.error);
             flashing.start([key]);
-            toast(`Put the ${name} back.`);
+            toast(t("Put the {name} back.", { name }));
           }),
       },
     });
@@ -387,9 +389,9 @@ export function ApplicationView({
   const replyChanged = (job: JobView<RefineResult>) => {
     if (job.status === "FAILED") {
       setReply(null);
-      toast(job.error ?? "That didn't work. Try again.", {
+      toast(job.error ?? t("That didn't work. Try again."), {
         action: {
-          label: "Retry",
+          label: t("Retry"),
           onClick: () =>
             void retry({ id: job.id }).then((retried) => {
               if (retried.ok) setReply((current) => ({ jobId: job.id, revision: (current?.revision ?? 0) + 1 }));
@@ -425,9 +427,9 @@ export function ApplicationView({
   const emailChanged = (job: JobView<WriteEmailResult>) => {
     if (job.status === "FAILED") {
       setEmailJob(null);
-      toast(job.error ?? "That didn't work. Try again.", {
+      toast(job.error ?? t("That didn't work. Try again."), {
         action: {
-          label: "Retry",
+          label: t("Retry"),
           onClick: () =>
             void retry({ id: job.id }).then((retried) => {
               if (retried.ok) setEmailJob((current) => ({ jobId: job.id, revision: (current?.revision ?? 0) + 1 }));
@@ -444,15 +446,15 @@ export function ApplicationView({
     flashing.start(keys);
     // The first email just appears; a rewrite can be undone.
     if (!job.result.previous) return;
-    toast("Rewrote the email.", {
+    toast(t("Rewrote the email."), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: () =>
           startTransition(async () => {
             const undone = await undoEmailRewrite({ id: application.id, jobId: job.id });
             if (!undone.ok) return toast(undone.error);
             flashing.start(keys);
-            toast("Put the email back.");
+            toast(t("Put the email back."));
           }),
       },
     });
@@ -463,7 +465,7 @@ export function ApplicationView({
     startTransition(async () => {
       const result = await addMatchSkill({ id: application.id, index });
       if (!result.ok) return toast(result.error);
-      toast(`Added “${result.data.name}” to your skills. Attach it to a role under Experience to make it count.`);
+      toast(t("Added “{name}” to your skills. Attach it to a role under Experience to make it count.", { name: result.data.name }));
     });
 
   /** "Put back" something left out, to fit the page limit (E10-10) or by hand (#217). */
@@ -471,7 +473,7 @@ export function ApplicationView({
     startTransition(async () => {
       const result = await putBackTrimmed({ id: application.id, index });
       if (!result.ok) return toast(result.error);
-      toast(pageLimit ? "Put back. The resume may run over its page limit now." : "Put back.");
+      toast(pageLimit ? t("Put back. The resume may run over its page limit now.") : t("Put back."));
     });
 
   /** "Leave out" on a part of the tailored resume (#217), with Undo on the toast. */
@@ -479,7 +481,7 @@ export function ApplicationView({
     startTransition(async () => {
       const result = await leaveOutUnit({ id: application.id, unitId: unit.id });
       if (!result.ok) return toast(result.error);
-      toast(`Left out: ${unit.label}.`, { action: { label: "Undo", onClick: () => putBack(result.data.index, false) } });
+      toast(t("Left out: {label}.", { label: unit.label }), { action: { label: t("Undo"), onClick: () => putBack(result.data.index, false) } });
     });
 
   /** "Undo" under a reply (E8-6): puts back what it changed. */
@@ -556,7 +558,7 @@ export function ApplicationView({
   const letterStored = new Set(letter?.units.map((unit) => unit.id));
   const emailUnits = email && shown(DocumentKind.EMAIL, email);
   const paragraphs = letterUnits?.filter(isParagraph).map((unit) => unit.text) ?? [];
-  const hint = "Hover a section to edit or regenerate it";
+  const hint = t("Hover a section to edit or regenerate it");
 
   const restore = async (version: ViewedVersion) => {
     setRestoring(true);
@@ -570,20 +572,20 @@ export function ApplicationView({
   /** "History" next to a document's label, and the banner over an earlier version. */
   const historyButton = (document: DocumentKind) => (
     <Button variant="text" size="sm" onClick={() => setHistoryOf(document)}>
-      History
+      {t("History")}
     </Button>
   );
   const versionBanner = (version: ViewedVersion) => (
     <div role="note" className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-warning-surface px-4 py-2.5 text-meta text-warning">
       <span>
-        You&apos;re looking at the version from {version.when}: {version.label}.
+        {t("You're looking at the version from {when}: {label}.", { when: version.when, label: version.label })}
       </span>
       <span className="flex items-center gap-3">
         <Button size="sm" aria-disabled={restoring || undefined} onClick={() => void (restoring ? undefined : restore(version))}>
-          Restore this version
+          {t("Restore this version")}
         </Button>
         <Button variant="secondary" size="sm" className="bg-input" onClick={() => setViewing(null)}>
-          Back to the current one
+          {t("Back to the current one")}
         </Button>
       </span>
     </div>
@@ -616,14 +618,14 @@ export function ApplicationView({
         <JobWatcher<WriteEmailResult> key={emailJob.jobId} id={emailJob.jobId} revision={emailJob.revision} onChange={emailChanged} />
       )}
       <ApplicationHeader
-        title={application.title}
+        title={t(application.title)}
         meta={meta}
         actions={
           <>
-            {application.archived && <span className="rounded-full bg-track px-3 py-1.5 text-meta text-muted">Archived</span>}
+            {application.archived && <span className="rounded-full bg-track px-3 py-1.5 text-meta text-muted">{t("Archived")}</span>}
             {application.awaitingReview && (
               <Link href="/agent" className="rounded-full bg-warning-surface px-3 py-1.5 text-meta text-warning hover:text-warning">
-                From the job agent · waiting for review
+                {t("From the job agent · waiting for review")}
               </Link>
             )}
             <StatusControl id={application.id} status={application.status} interviewAt={application.nextInterviewAt} timeZone={timeZone} />
@@ -634,7 +636,7 @@ export function ApplicationView({
                 href={`/api/pdf?doc=${tab === "letter" ? "letter" : "resume"}&application=${application.id}`}
                 progress={`Rendering your ${tab === "letter" ? "cover letter" : "tailored resume"} as a PDF…`}
               >
-                Download PDF
+                {t("Download PDF")}
               </DownloadPdfButton>
             )}
             <ApplicationMenu id={application.id} archived={application.archived} />
@@ -642,17 +644,17 @@ export function ApplicationView({
         }
       >
         {/* Its underline runs the header's full width, under the padding too. */}
-        <TabsList aria-label="Application" className="-mx-10 px-10">
-          <TabsTrigger value="resume">Resume</TabsTrigger>
-          <TabsTrigger value="letter">Cover letter</TabsTrigger>
-          <TabsTrigger value="email">Email</TabsTrigger>
+        <TabsList aria-label={t("Application")} className="-mx-10 px-10">
+          <TabsTrigger value="resume">{t("Resume")}</TabsTrigger>
+          <TabsTrigger value="letter">{t("Cover letter")}</TabsTrigger>
+          <TabsTrigger value="email">{t("Email")}</TabsTrigger>
           {gmail && (gmail.reading || gmail.emails.length > 0) && (
             <TabsTrigger value="conversation">
-              {waiting > 0 ? `Conversation · ${waiting} new` : gmail.emails.length > 0 ? `Conversation · ${gmail.emails.length}` : "Conversation"}
+              {waiting > 0 ? t("Conversation · {waiting} new", { waiting }) : gmail.emails.length > 0 ? t("Conversation · {length}", { length: gmail.emails.length }) : t("Conversation")}
             </TabsTrigger>
           )}
-          <TabsTrigger value="posting">{score ? `Job posting · ${score.hit}/${score.total} match` : "Job posting"}</TabsTrigger>
-          <TabsTrigger value="notes">{notes > 0 ? `Notes · ${notes}` : "Notes"}</TabsTrigger>
+          <TabsTrigger value="posting">{score ? t("Job posting · {hit}/{total} match", { hit: score.hit, total: score.total }) : t("Job posting")}</TabsTrigger>
+          <TabsTrigger value="notes">{notes > 0 ? t("Notes · {notes}", { notes }) : t("Notes")}</TabsTrigger>
         </TabsList>
       </ApplicationHeader>
 
@@ -670,11 +672,11 @@ export function ApplicationView({
               }
               label={
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className="flex items-center gap-1">Tailored resume · {themeMenu(resumeTheme)}</span>
+                  <span className="flex items-center gap-1">{rich("Tailored resume · {themeMenu}", { themeMenu: themeMenu(resumeTheme) })}</span>
                   {hasSidebar(resumeTheme.layout) && (
-                    <PreviewSwitch label="Sidebar layout" checked={followLayout} onCheckedChange={changeLayout} />
+                    <PreviewSwitch label={t("Sidebar layout")} checked={followLayout} onCheckedChange={changeLayout} />
                   )}
-                  {profile.photo && <PreviewSwitch label="Photo" checked={showPhoto} onCheckedChange={changePhoto} />}
+                  {profile.photo && <PreviewSwitch label={t("Photo")} checked={showPhoto} onCheckedChange={changePhoto} />}
                   {historyButton(DocumentKind.RESUME)}
                 </span>
               }
@@ -691,7 +693,7 @@ export function ApplicationView({
               />
             </DocumentPreview>
           ) : (
-            <MissingDocument>This application has no tailored resume.</MissingDocument>
+            <MissingDocument>{t("This application has no tailored resume.")}</MissingDocument>
           )}
         </TabsContent>
 
@@ -700,7 +702,7 @@ export function ApplicationView({
             <DocumentPreview
               label={
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>Cover letter · {aboutWords(paragraphs)}</span>
+                  <span>{t("Cover letter · {aboutWords}", { aboutWords: aboutWords(paragraphs) })}</span>
                   {themeMenu(letterTheme)}
                   {historyButton(DocumentKind.COVER_LETTER)}
                 </span>
@@ -722,7 +724,7 @@ export function ApplicationView({
               />
             </DocumentPreview>
           ) : (
-            <MissingDocument>This application has no cover letter.</MissingDocument>
+            <MissingDocument>{t("This application has no cover letter.")}</MissingDocument>
           )}
         </TabsContent>
 
@@ -732,7 +734,7 @@ export function ApplicationView({
             units={viewed(DocumentKind.EMAIL)?.units ?? emailUnits}
             renderUnit={viewed(DocumentKind.EMAIL) || !emailUnits ? plainUnit : unitsOf(DocumentKind.EMAIL, emailUnits)}
             history={historyButton(DocumentKind.EMAIL)}
-            hint={viewed(DocumentKind.EMAIL) ? undefined : "Hover a part to edit or regenerate it"}
+            hint={viewed(DocumentKind.EMAIL) ? undefined : t("Hover a part to edit or regenerate it")}
             notice={viewed(DocumentKind.EMAIL) ? versionBanner(viewed(DocumentKind.EMAIL)!) : undefined}
             writing={emailJob !== null}
             onWrite={() => void writeEmail()}
@@ -784,14 +786,14 @@ export function ApplicationView({
           {(message) =>
             message.canUndo &&
             (message.undone || undoing.includes(message.id) ? (
-              <span className="px-1 text-label text-muted">Undone</span>
+              <span className="px-1 text-label text-muted">{t("Undone")}</span>
             ) : (
               <button
                 type="button"
                 onClick={() => undo(message)}
                 className="px-1 text-label text-muted underline underline-offset-3 hover:text-ink"
               >
-                Undo
+                {t("Undo")}
               </button>
             ))
           }
@@ -846,7 +848,7 @@ function PreviewSwitch({ label, checked, onCheckedChange }: { label: string; che
         <Switch.Thumb className="block size-3 rounded-full bg-white shadow-knob data-[state=checked]:translate-x-3 motion-safe:transition-transform" />
       </Switch.Root>
       <label htmlFor={id} className="cursor-pointer">
-        {label}
+        {t(label)}
       </label>
     </span>
   );

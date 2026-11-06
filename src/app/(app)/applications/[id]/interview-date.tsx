@@ -7,6 +7,7 @@ import { toastResult } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDateTime } from "@/lib/dates";
+import { t } from "@/lib/i18n";
 
 import { setInterviewDate } from "./actions";
 
@@ -56,21 +57,21 @@ export function InterviewDate({
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange}>
       <Popover.Trigger
-        aria-label={shown ? `Next interview: ${formatDateTime(shown, zone)}. Change` : "Add the interview date"}
+        aria-label={shown ? t("Next interview: {formatDateTime}. Change", { formatDateTime: formatDateTime(shown, zone) }) : t("Add the interview date")}
         className="flex items-center gap-2 rounded-full border border-line-control bg-card px-3.5 py-[9px] text-sm hover:border-line-strong data-[state=open]:border-primary"
       >
         {shown ? (
           <>
-            <span className="text-muted">Interview</span>
+            <span className="text-muted">{t("Interview")}</span>
             <span className="font-medium">{formatDateTime(shown, zone)}</span>
           </>
         ) : (
-          <span className="font-medium">+ Interview date</span>
+          <span className="font-medium">{t("+ Interview date")}</span>
         )}
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          aria-label={asking ? "When's the interview?" : "Next interview"}
+          aria-label={asking ? t("When's the interview?") : t("Next interview")}
           align="end"
           sideOffset={8}
           collisionPadding={16}
@@ -105,21 +106,21 @@ function InterviewForm({
       }}
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-[15px] font-medium">{asking ? "When's the interview?" : "Next interview"}</h2>
-        <p className="text-meta text-muted">{asking ? "Optional. " : ""}It shows on your dashboard, flagged the day before.</p>
+        <h2 className="text-[15px] font-medium">{asking ? t("When's the interview?") : t("Next interview")}</h2>
+        <p className="text-meta text-muted">{t("{asking}It shows on your dashboard, flagged the day before.", { asking: asking ? t("Optional. ") : "" })}</p>
       </div>
-      <Input type="datetime-local" label="Date and time" value={value} onChange={(event) => setValue(event.target.value)} required />
+      <Input type="datetime-local" label={t("Date and time")} value={value} onChange={(event) => setValue(event.target.value)} required />
       <div className="flex items-center gap-2">
         {initial && (
           <Button variant="danger-text" size="sm" onClick={() => onSave(null)}>
-            Remove
+            {t("Remove")}
           </Button>
         )}
         <Button variant="secondary" size="sm" className="ml-auto" onClick={onCancel}>
-          {asking ? "Skip" : "Cancel"}
+          {asking ? t("Skip") : t("Cancel")}
         </Button>
         <Button type="submit" size="sm">
-          Save
+          {t("Save")}
         </Button>
       </div>
     </form>

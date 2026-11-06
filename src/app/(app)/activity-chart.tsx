@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { formatShortDate } from "@/lib/dates";
 import type { WeekActivity } from "@/lib/dashboard";
+import { t, tp, tx } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 // The weekly activity chart (E9-8): applications started and sent per week.
 // Sent is the series that matters, in the Sent status color; started is the
@@ -12,11 +14,10 @@ import type { WeekActivity } from "@/lib/dashboard";
 // hover, and the numbers as a table for everyone else.
 
 const SERIES = [
-  { key: "created", label: "Started", swatch: "bg-muted" },
-  { key: "sent", label: "Sent", swatch: "bg-status-sent" },
+  { key: "created", label: tx("Started"), swatch: "bg-muted" },
+  { key: "sent", label: tx("Sent"), swatch: "bg-status-sent" },
 ] as const;
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 export function ActivityChart({ weeks }: { weeks: WeekActivity[] }) {
   const [hovered, setHovered] = useState<number | null>(null);
@@ -31,18 +32,18 @@ export function ActivityChart({ weeks }: { weeks: WeekActivity[] }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h2 id="activity-heading" className="font-serif text-section">
-            Week by week
+            {t("Week by week")}
           </h2>
           <p className="text-control text-muted">
-            {weeks.length === 0 ? "Nothing to show yet." : `You started ${plural(started, "application", "applications")} and sent ${sent} in this period.`}
+            {weeks.length === 0 ? t("Nothing to show yet.") : t("You started {plural} and sent {sent} in this period.", { plural: tp(started, "{count} application", "{count} applications"), sent })}
           </p>
         </div>
         {weeks.length > 0 && (
-          <ul aria-label="Legend" className="flex gap-4 text-meta text-muted">
+          <ul aria-label={t("Legend")} className="flex gap-4 text-meta text-muted">
             {SERIES.map((series) => (
               <li key={series.key} className="flex items-center gap-1.5">
                 <span aria-hidden="true" className={`size-2.5 rounded-[2px] ${series.swatch}`} />
-                {series.label}
+                {t(series.label)}
               </li>
             ))}
           </ul>
@@ -81,10 +82,9 @@ export function ActivityChart({ weeks }: { weeks: WeekActivity[] }) {
                           index < 2 ? "left-0" : index > weeks.length - 3 ? "right-0" : "left-1/2 -translate-x-1/2"
                         }`}
                       >
-                        <span className="block text-muted">Week of {formatShortDate(week.start)}</span>
+                        <span className="block text-muted">{t("Week of {formatShortDate}", { formatShortDate: formatShortDate(week.start) })}</span>
                         <span className="block">
-                          <strong className="font-medium text-ink">{week.created}</strong> started ·{" "}
-                          <strong className="font-medium text-ink">{week.sent}</strong> sent
+                          {rich("{strong} started · {strong2} sent", { strong: <strong className="font-medium text-ink">{week.created}</strong>, strong2: <strong className="font-medium text-ink">{week.sent}</strong> })}
                         </span>
                       </span>
                     )}
@@ -102,19 +102,19 @@ export function ActivityChart({ weeks }: { weeks: WeekActivity[] }) {
           </div>
 
           <details className="text-meta text-muted">
-            <summary className="w-fit cursor-pointer hover:text-ink">Show the numbers</summary>
+            <summary className="w-fit cursor-pointer hover:text-ink">{t("Show the numbers")}</summary>
             <table className="mt-3 w-full max-w-[420px] text-left tabular-nums">
-              <caption className="sr-only">Applications started and sent per week</caption>
+              <caption className="sr-only">{t("Applications started and sent per week")}</caption>
               <thead>
                 <tr>
                   <th scope="col" className="py-1 font-medium text-ink">
-                    Week of
+                    {t("Week of")}
                   </th>
                   <th scope="col" className="py-1 text-right font-medium text-ink">
-                    Started
+                    {t("Started")}
                   </th>
                   <th scope="col" className="py-1 text-right font-medium text-ink">
-                    Sent
+                    {t("Sent")}
                   </th>
                 </tr>
               </thead>

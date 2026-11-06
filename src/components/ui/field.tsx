@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { t } from "@/lib/i18n";
 
 export type FieldProps = {
   /** Visible label. Without one, give the control an `aria-label`. */
@@ -51,13 +52,13 @@ export function FieldShell({
     <div className={cn("flex flex-col gap-[7px]", className)}>
       {label && (
         <label htmlFor={controlId} className="text-label font-medium text-ink">
-          {label}
+          {t(label)}
         </label>
       )}
       {children}
       {hint && (
         <p id={hintId} className="text-label text-muted">
-          {hint}
+          {t(hint)}
         </p>
       )}
       {/* An alert, so screen readers say it when it appears (E11-3). */}

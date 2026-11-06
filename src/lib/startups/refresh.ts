@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { t, tp } from "@/lib/i18n";
 import { defineJob, findUnfinishedJobs, startJob } from "@/lib/jobs/runner";
 import { logServerError } from "@/lib/log";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +39,7 @@ export async function refreshStartups(
     { source: "HN", fetch: () => fetchHnStartups(place, signal) },
   ];
 
-  await step("Asking Y Combinator and Hacker News");
+  await step(t("Asking Y Combinator and Hacker News"));
   const results = await Promise.allSettled(sources.map((entry) => entry.fetch()));
   signal.throwIfAborted();
   const outcomes = results.map((result, index) => {
@@ -50,13 +51,13 @@ export async function refreshStartups(
   });
   const found = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
 
-  await step(`Scoring ${found.length} ${found.length === 1 ? "startup" : "startups"} against your profile`);
+  await step(tp(found.length, "Scoring {count} startup against your profile", "Scoring {count} startups against your profile"));
   const added = await upsertStartups(found, now);
   // Ones this refresh didn't find again are scored against today's profile too.
   await rescoreStartups(now);
   await sweepStartups(now);
 
-  await step("Looking for application addresses on their own sites");
+  await step(t("Looking for application addresses on their own sites"));
   const toCheck = await prisma.startup.findMany({
     where: { status: { in: ["NEW", "SAVED"] }, emailsCheckedAt: null, website: { not: "" }, noApplicationsFrom: "" },
     orderBy: { score: "desc" },

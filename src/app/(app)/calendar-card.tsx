@@ -9,13 +9,15 @@ import { buttonClassName } from "@/components/ui/button";
 import { addDays, AGENDA_DAYS, agenda, dayLabel, itemsOnDay, monthDays, monthTitle, shortDayLabel, startOfMonth, type CalendarItem, type Day } from "@/lib/calendar-view";
 import { cn } from "@/lib/cn";
 import type { CalendarSource } from "@/lib/google/calendar-data";
+import { intlLocale, t, tp } from "@/lib/i18n";
 
 import { itemDot, ItemLink, itemTime } from "./calendar-item";
 
-const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+/** The week's day initials, Monday first, in the app's language (read while rendering). */
+const weekdayInitials = (): string[] =>
+  Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(intlLocale("en-GB"), { weekday: "narrow", timeZone: "UTC" }).format(Date.UTC(2024, 0, 1 + index)));
 /** The arrow keys move a day or a week through the month. */
 const STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 /**
  * The dashboard's calendar (E15-6): a month with marks on the days that have
@@ -75,7 +77,7 @@ export function CalendarCard({
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="calendar-heading" className="text-[15px] font-medium">
-          Calendar
+          {t("Calendar")}
         </h2>
         {picked !== today && (
           <Link
@@ -88,23 +90,23 @@ export function CalendarCard({
             }}
             className="text-meta text-muted underline underline-offset-3 hover:text-ink"
           >
-            Today
+            {t("Today")}
           </Link>
         )}
       </div>
 
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
-          <Link href={links.previous} onNavigate={onNavigate(links.previous)} aria-label="Previous month" title="Previous month" className={buttonClassName("text", "sm", "px-1.5!")}>
+          <Link href={links.previous} onNavigate={onNavigate(links.previous)} aria-label={t("Previous month")} title={t("Previous month")} className={buttonClassName("text", "sm", "px-1.5!")}>
             <ChevronLeft size={16} aria-hidden="true" />
           </Link>
           <p className="font-serif text-lg">{monthTitle(month)}</p>
-          <Link href={links.next} onNavigate={onNavigate(links.next)} aria-label="Next month" title="Next month" className={buttonClassName("text", "sm", "px-1.5!")}>
+          <Link href={links.next} onNavigate={onNavigate(links.next)} aria-label={t("Next month")} title={t("Next month")} className={buttonClassName("text", "sm", "px-1.5!")}>
             <ChevronRight size={16} aria-hidden="true" />
           </Link>
         </div>
         <div aria-hidden="true" className="grid grid-cols-7 text-center text-xs text-muted">
-          {WEEKDAYS.map((weekday, index) => (
+          {weekdayInitials().map((weekday, index) => (
             <span key={index} className="py-1">
               {weekday}
             </span>
@@ -125,7 +127,7 @@ export function CalendarCard({
                 tabIndex={day === (days.includes(picked) ? picked : startOfMonth(month)) ? 0 : -1}
                 aria-pressed={isPicked}
                 aria-current={day === today ? "date" : undefined}
-                aria-label={[dayLabel(day), interviews > 0 && plural(interviews, "interview", "interviews"), others > 0 && plural(others, "event", "events")].filter(Boolean).join(", ")}
+                aria-label={[dayLabel(day), interviews > 0 && tp(interviews, "{count} interview", "{count} interviews"), others > 0 && tp(others, "{count} event", "{count} events")].filter(Boolean).join(", ")}
                 onClick={() => pick(day)}
                 className="flex flex-col items-center gap-0.5 rounded-control py-1 hover:bg-hover"
               >
@@ -152,7 +154,7 @@ export function CalendarCard({
       <div className="flex flex-col gap-4 border-t border-line pt-4">
         {entries.length === 0 ? (
           <p className="text-sm text-muted">
-            {picked === today ? `Nothing in the next ${AGENDA_DAYS} days.` : `Nothing from ${shortDayLabel(picked)} to ${shortDayLabel(addDays(picked, AGENDA_DAYS - 1))}.`}
+            {picked === today ? t("Nothing in the next {AGENDA_DAYS} days.", { AGENDA_DAYS }) : t("Nothing from {shortDayLabel} to {shortDayLabel2}.", { shortDayLabel: shortDayLabel(picked), shortDayLabel2: shortDayLabel(addDays(picked, AGENDA_DAYS - 1)) })}
           </p>
         ) : (
           entries.map(({ day, items: onDay }) => (
@@ -164,7 +166,7 @@ export function CalendarCard({
                     <ItemLink item={item} className="flex items-start gap-3 px-2.5 py-1.5 text-control">
                       <span aria-hidden="true" className={cn("mt-[7px] size-1.5 shrink-0 rounded-full", itemDot(item))} />
                       <span className="w-[84px] shrink-0 text-muted tabular-nums">{itemTime(item, timeZone)}</span>{" "}
-                      <span className={cn("min-w-0 break-words", item.kind === "interview" && "font-medium")}>{item.title}</span>
+                      <span className={cn("min-w-0 break-words", item.kind === "interview" && "font-medium")}>{t(item.title)}</span>
                     </ItemLink>
                   </li>
                 ))}
@@ -176,7 +178,7 @@ export function CalendarCard({
 
       <div className="flex flex-col gap-2 border-t border-line pt-3 text-meta text-muted">
         <SourceNotice source={source} />
-        <p>In your time zone ({timeZone}).</p>
+        <p>{t("In your time zone ({timeZone}).", { timeZone })}</p>
       </div>
     </section>
   );
@@ -185,8 +187,8 @@ export function CalendarCard({
 /** "Today · Tue 20 Oct", "Tomorrow · Wed 21 Oct" or "Thu 22 Oct". */
 function agendaDay(day: Day, today: Day) {
   const label = shortDayLabel(day);
-  if (day === today) return `Today · ${label}`;
-  if (day === addDays(today, 1)) return `Tomorrow · ${label}`;
+  if (day === today) return t("Today · {label}", { label });
+  if (day === addDays(today, 1)) return t("Tomorrow · {label}", { label });
   return label;
 }
 
@@ -195,10 +197,10 @@ function SourceNotice({ source }: { source: CalendarSource }) {
   if (source.status === "google") return null;
   const text =
     source.status === "failed"
-      ? `Your Google Calendar didn't load: ${source.message}`
+      ? t("Your Google Calendar didn't load: {message}", { message: source.message })
       : source.status === "no-permission"
-        ? "Dossier may not use your calendar yet. Allow it in Settings → Google to see your other events here."
-        : "Connect Google Calendar in Settings → Google to see your other events here, and keep interviews in step with it.";
+        ? t("Dossier may not use your calendar yet. Allow it in Settings → Google to see your other events here.")
+        : t("Connect Google Calendar in Settings → Google to see your other events here, and keep interviews in step with it.");
   return (
     <p>
       {text}
@@ -206,7 +208,7 @@ function SourceNotice({ source }: { source: CalendarSource }) {
         <>
           {" "}
           <Link href="/settings?section=google" className="inline-flex min-h-6 items-center font-medium text-ink underline underline-offset-2">
-            Settings → Google
+            {t("Settings → Google")}
           </Link>
         </>
       )}

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { decodeSession, SESSION_COOKIE, sessionTokenOptions } from "@/lib/auth/session";
 import { contentSecurityPolicy, createNonce } from "@/lib/csp";
+import { t } from "@/lib/i18n";
 import { messages } from "@/lib/messages";
 import { PRINT_TOKEN_HEADER, verifyPrintToken } from "@/lib/pdf/print-token";
 
@@ -41,7 +42,7 @@ export async function proxy(request: NextRequest) {
     return pass(request);
   }
   if (pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: messages.signedOut }, { status: 401 });
+    return NextResponse.json({ error: t(messages.signedOut) }, { status: 401 });
   }
 
   const login = new URL("/login", request.url);

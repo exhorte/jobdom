@@ -16,6 +16,7 @@ import { DATE_FORMATS, PAGE_LIMITS, type PageLimit } from "@/lib/settings";
 import { PAPER_SIZES } from "@/lib/themes";
 import { TONES } from "@/lib/tones";
 import { useAutosave } from "@/hooks/use-autosave";
+import { t } from "@/lib/i18n";
 
 import { addDocumentLanguage, updateSettings } from "./actions";
 import { SettingsSectionIntro } from "./settings-screen";
@@ -89,7 +90,7 @@ export function DocumentsSection({
     }));
     setAddingLanguage(false);
     setNewLanguage("");
-    if (added) toast(`Added ${language}. Output quality depends on how well your model knows it.`);
+    if (added) toast(t("Added {language}. Output quality depends on how well your model knows it.", { language }));
   };
 
   const languages = [...DOCUMENT_LANGUAGES.map((language) => language.name), ...settings.customLanguages];
@@ -97,32 +98,32 @@ export function DocumentsSection({
 
   return (
     <>
-      <SettingsSectionIntro title="Documents">Defaults for every new application. You can still change them per job.</SettingsSectionIntro>
+      <SettingsSectionIntro title={t("Documents")}>{t("Defaults for every new application. You can still change them per job.")}</SettingsSectionIntro>
       <Card padding="none" className="grid gap-x-[18px] gap-y-5 px-7 py-[26px] sm:grid-cols-2">
-        <Select label="Paper size" value={settings.paper} onChange={(event) => change({ paper: event.target.value as PaperSize })}>
+        <Select label={t("Paper size")} value={settings.paper} onChange={(event) => change({ paper: event.target.value as PaperSize })}>
           {Object.entries(PAPER_SIZES).map(([value, size]) => (
             <option key={value} value={value}>
-              {size.label}
+              {t(size.label)}
             </option>
           ))}
         </Select>
-        <Select label="Date format" value={settings.dateFormat} onChange={(event) => change({ dateFormat: event.target.value as DateFormat })}>
+        <Select label={t("Date format")} value={settings.dateFormat} onChange={(event) => change({ dateFormat: event.target.value as DateFormat })}>
           {DATE_FORMATS.map((format) => (
             <option key={format.value} value={format.value}>
-              {format.label}
+              {t(format.label)}
             </option>
           ))}
         </Select>
-        <Select label="Cover letter tone" value={settings.defaultTone} onChange={(event) => change({ defaultTone: event.target.value as Tone })}>
+        <Select label={t("Cover letter tone")} value={settings.defaultTone} onChange={(event) => change({ defaultTone: event.target.value as Tone })}>
           {Object.entries(TONES).map(([value, tone]) => (
             <option key={value} value={value}>
-              {tone.label}
+              {t(tone.label)}
             </option>
           ))}
         </Select>
         <div className="flex flex-col gap-2">
           <Select
-            label="Write documents in"
+            label={t("Write documents in")}
             value={addingLanguage ? OTHER_LANGUAGE : (settings.docLanguage ?? POSTING_LANGUAGE)}
             onChange={(event) => {
               const value = event.target.value;
@@ -131,19 +132,19 @@ export function DocumentsSection({
               change({ docLanguage: value === POSTING_LANGUAGE ? null : value });
             }}
           >
-            <option value={POSTING_LANGUAGE}>The posting&apos;s language</option>
+            <option value={POSTING_LANGUAGE}>{t("The posting's language")}</option>
             {languages.map((language) => (
               <option key={language} value={language}>
                 {language}
               </option>
             ))}
-            <option value={OTHER_LANGUAGE}>Other language…</option>
+            <option value={OTHER_LANGUAGE}>{t("Other language…")}</option>
           </Select>
           {addingLanguage && (
             <div className="flex gap-1.5">
               <Input
-                aria-label="Other language"
-                placeholder="e.g. Persian"
+                aria-label={t("Other language")}
+                placeholder={t("e.g. Persian")}
                 // Picked on request, so the box takes focus.
                 autoFocus
                 className="min-w-0 flex-1"
@@ -158,14 +159,14 @@ export function DocumentsSection({
                 }}
               />
               <Button variant="secondary" size="sm" onClick={() => void addLanguage()}>
-                Add
+                {t("Add")}
               </Button>
             </div>
           )}
         </div>
         <Select
-          label="Base resume language"
-          hint="For its headings and dates. Tailored documents use their application's language."
+          label={t("Base resume language")}
+          hint={t("For its headings and dates. Tailored documents use their application's language.")}
           value={settings.resumeLanguage ?? "English"}
           onChange={(event) => change({ resumeLanguage: event.target.value === "English" ? null : event.target.value })}
         >
@@ -176,14 +177,14 @@ export function DocumentsSection({
           ))}
         </Select>
         <Select
-          label="Resume length"
-          hint="A tailored resume that runs longer is trimmed, oldest roles first, and I'll tell you what was cut."
+          label={t("Resume length")}
+          hint={t("A tailored resume that runs longer is trimmed, oldest roles first, and I'll tell you what was cut.")}
           value={settings.pageLimit}
           onChange={(event) => change({ pageLimit: event.target.value as PageLimit })}
         >
           {PAGE_LIMITS.map((limit) => (
             <option key={limit.value} value={limit.value}>
-              {limit.label}
+              {t(limit.label)}
             </option>
           ))}
         </Select>
@@ -191,7 +192,7 @@ export function DocumentsSection({
         <div className="flex flex-col gap-2.5 sm:col-span-2">
           <Input
             ref={pattern}
-            label="PDF file name"
+            label={t("PDF file name")}
             inputClassName="font-mono text-[13.5px]"
             spellCheck={false}
             value={settings.fileNamePattern}
@@ -199,24 +200,24 @@ export function DocumentsSection({
             onBlur={flush}
           />
           <span id="file-name-tokens" className="text-label text-muted">
-            Click to insert
+            {t("Click to insert")}
           </span>
           <div role="group" aria-labelledby="file-name-tokens" className="flex flex-wrap gap-1.5">
             {FILE_NAME_TOKENS.map(({ token, description }) => (
               <button
                 key={token}
                 type="button"
-                title={description}
+                title={t(description)}
                 onClick={() => insertToken(token)}
                 className="flex items-baseline gap-2 rounded-control border border-line-field bg-input px-2.5 py-1.5 hover:border-line-strong"
               >
                 <span className="font-mono text-label text-ink">{token}</span>{" "}
-                <span className="text-xs text-muted">{description}</span>
+                <span className="text-xs text-muted">{t(description)}</span>
               </button>
             ))}
           </div>
           <p className="flex flex-wrap items-baseline gap-2 text-meta text-muted">
-            <span>Preview</span>
+            <span>{t("Preview")}</span>
             <output className="font-mono text-label [overflow-wrap:anywhere] text-ink">{previewName}</output>
           </p>
         </div>
@@ -225,8 +226,8 @@ export function DocumentsSection({
       <Card padding="none" className="flex flex-col px-7 pt-1.5 pb-2.5">
         <Toggle
           className="py-4"
-          label="Include references"
-          description="Add your references to resumes when a posting asks for them. Otherwise they're left out."
+          label={t("Include references")}
+          description={t("Add your references to resumes when a posting asks for them. Otherwise they're left out.")}
           checked={settings.includeRefs}
           onCheckedChange={(includeRefs) => change({ includeRefs })}
         />

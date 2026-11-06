@@ -1,5 +1,6 @@
 import "server-only";
 
+
 import { jobSearchError } from "./errors";
 import type { JobSource } from "./search";
 

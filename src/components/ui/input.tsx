@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
 import { controlClassName, FieldShell, useField, type FieldProps } from "./field";
+import { t } from "@/lib/i18n";
 
 export type InputProps = ComponentProps<"input"> &
   FieldProps & {
@@ -23,7 +24,7 @@ export function Input({
 }: InputProps) {
   const field = useField({ id, hint, error });
   return (
-    <FieldShell {...field} label={label} hint={hint} error={error} className={className}>
+    <FieldShell {...field} label={t(label)} hint={t(hint)} error={error} className={className}>
       <input
         {...field.controlProps}
         className={cn(controlClassName, "h-10 px-3", inputClassName)}

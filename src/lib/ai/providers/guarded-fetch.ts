@@ -1,10 +1,12 @@
 import { AiError } from "../errors";
 
+import { tx } from "@/lib/i18n";
+
 /** Enough for a server that moves /v1 around; more is a loop. */
 const MAX_REDIRECTS = 3;
 
 export const REDIRECT_REFUSED =
-  "The AI server sent the request to another address. Dossier won't send your API key there: put that address in Settings → AI provider instead.";
+  tx("The AI server sent the request to another address. Dossier won't send your API key there: put that address in Settings → AI provider instead.");
 
 /**
  * A fetch for requests that carry an API key (E11-5): the AI server's address

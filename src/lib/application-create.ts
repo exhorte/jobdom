@@ -7,6 +7,7 @@ import { calendarDay } from "@/lib/application-documents";
 import type { Extracted, Match } from "@/lib/application-data";
 import { documentLabels } from "@/lib/document-labels";
 import { documentLanguage } from "@/lib/document-language";
+import { t } from "@/lib/i18n";
 import type { WriteDocumentsResult } from "@/lib/jobs/write-documents";
 import { newFrame, withFrame } from "@/lib/letter-frame";
 import { logServerError } from "@/lib/log";
@@ -107,7 +108,7 @@ export async function createApplicationFromDocuments({ reading, documents, match
       if (count === 0) {
         const claimed = await tx.job.findUniqueOrThrow({ where: { id: claim.writeJobId }, select: { key: true } });
         if (claimed.key?.startsWith(CLAIMED) && claimed.key !== `${CLAIMED}pending`) return { id: claimed.key.slice(CLAIMED.length), isNew: false };
-        throw new ActionError("This application is already being created.");
+        throw new ActionError(t("This application is already being created."));
       }
     } else if (claim.kind === "agent") {
       // The agent claimed the candidate before it wrote anything; only that claim may create its draft.
@@ -115,14 +116,14 @@ export async function createApplicationFromDocuments({ reading, documents, match
         where: { id: claim.candidateId, status: AgentCandidateStatus.DRAFTING },
         data: { status: AgentCandidateStatus.DRAFTED, error: null },
       });
-      if (count === 0) throw new ActionError("That posting is no longer waiting for a draft.");
+      if (count === 0) throw new ActionError(t("That posting is no longer waiting for a draft."));
     }
 
     const application = await tx.application.create({
       data: {
         // An agent draft stays on the Agent screen until it's approved (#195).
         ...(claim.kind === "agent" ? { origin: ApplicationOrigin.AGENT, agentScore: claim.score, awaitingReview: true } : {}),
-        title: details.title || [details.role, details.company].filter(Boolean).join(" · ") || "Untitled application",
+        title: details.title || [details.role, details.company].filter(Boolean).join(" · ") || t("Untitled application"),
         company: details.company,
         role: details.role,
         location: details.location,

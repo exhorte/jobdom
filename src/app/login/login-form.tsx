@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 
 import { signIn, signInWithForm } from "./actions";
 import { loginMessages } from "./messages";
+import { t } from "@/lib/i18n";
 
 /**
  * The password-only sign-in form (PRD AUTH-1, AUTH-4). With scripts, `submit`
@@ -35,7 +36,7 @@ export function LoginForm({ next }: { next?: string }) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (pending) return;
-    if (!password) return fail(loginMessages.empty);
+    if (!password) return fail(t(loginMessages.empty));
 
     startTransition(async () => {
       const result = await signIn({ password, remember, next });
@@ -54,21 +55,21 @@ export function LoginForm({ next }: { next?: string }) {
     >
       {next && <input type="hidden" name="next" value={next} />}
       <div className="flex flex-col gap-1.5">
-        <h1 className="font-serif text-[28px] leading-[1.15] tracking-[-0.01em]">Welcome back</h1>
-        <p className="text-sm text-muted">Sign in to pick up where you left off.</p>
+        <h1 className="font-serif text-[28px] leading-[1.15] tracking-[-0.01em]">{t("Welcome back")}</h1>
+        <p className="text-sm text-muted">{t("Sign in to pick up where you left off.")}</p>
       </div>
 
       <div className="flex flex-col gap-[7px]">
         <div className="flex justify-between text-label text-muted">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t("Password")}</label>
           <button
             type="button"
-            aria-label={visible ? "Hide password" : "Show password"}
+            aria-label={visible ? t("Hide password") : t("Show password")}
             aria-controls="password"
             onClick={() => setVisible((shown) => !shown)}
             className="underline underline-offset-3 hover:text-ink"
           >
-            {visible ? "Hide" : "Show"}
+            {visible ? t("Hide") : t("Show")}
           </button>
         </div>
         <input
@@ -95,14 +96,14 @@ export function LoginForm({ next }: { next?: string }) {
       </div>
 
       <Checkbox
-        label="Keep me signed in for 30 days"
+        label={t("Keep me signed in for 30 days")}
         name="remember"
         checked={remember}
         onChange={(event) => setRemember(event.target.checked)}
       />
 
       <Button type="submit" size="lg" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? t("Signing in…") : t("Sign in")}
       </Button>
     </form>
   );

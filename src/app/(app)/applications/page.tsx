@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 
 import { listSummary, resolveListParams, statusesIn } from "@/lib/applications-list";
 import { loadApplicationRows } from "@/lib/applications-data";
+import { t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { loadSettings } from "@/lib/settings-data";
 
 import { ApplicationsScreen } from "./applications-screen";
+import { applyLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Applications" };
+export async function generateMetadata(): Promise<Metadata> {
+  await applyLocale();
+  return { title: t("Applications") };
+}
 
 /** Every application, on a board or in a table, with search and filters (PRD §6.6). */
 export default async function ApplicationsPage({ searchParams }: PageProps<"/applications">) {

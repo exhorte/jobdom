@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { PageBar } from "@/components/page-header";
+import { t } from "@/lib/i18n";
 
 /**
  * The top of an application's page (APP-1): the page bar with the breadcrumb,
@@ -21,16 +22,16 @@ export function ApplicationHeader({
   /** The tab list, drawn on the header's bottom line. */
   children?: ReactNode;
 }) {
-  const name = title.trim() || "Untitled application";
+  const name = title.trim() || t("Untitled application");
   return (
     <>
       <PageBar>
         <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-2">
-          <nav aria-label="Breadcrumb">
+          <nav aria-label={t("Breadcrumb")}>
             <ol className="flex gap-1.5 text-meta text-muted">
               <li>
                 <Link href="/applications" className="text-muted hover:text-ink">
-                  Applications
+                  {t("Applications")}
                 </Link>
               </li>
               <li aria-hidden="true">/</li>

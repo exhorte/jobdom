@@ -17,6 +17,8 @@ import { arbeitsagenturPage, SOURCE_INFO } from "@/lib/job-search/sources";
 
 import { dismissFoundPosting, loadFullText, restorePosting, savePostingForLater, showMorePostings, startScoringPosting, unsavePosting } from "./actions";
 import { useStartApplication } from "./use-start-application";
+import { t, tp } from "@/lib/i18n";
+import { rich } from "@/lib/i18n/rich";
 
 /** Narrow windows show the posting above the list. */
 const NARROW = "(max-width: 1023px)";
@@ -37,7 +39,6 @@ export type PostingResultsProps = {
   | { mode: "saved" | "dismissed"; postings: ShownPosting[] }
 );
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 /**
  * Postings in a list, and the selected one's whole text beside it, or above
@@ -91,7 +92,7 @@ export function PostingResults(props: PostingResultsProps) {
     if (!result.ok) return void toast(result.error);
     change(posting, { saved: false });
     // In Saved, the posting leaves the list: Undo puts it back.
-    if (mode === "saved") toast("Removed from Saved.", { action: { label: "Undo", onClick: () => void save(posting) } });
+    if (mode === "saved") toast(t("Removed from Saved."), { action: { label: t("Undo"), onClick: () => void save(posting) } });
     else toastResult(result);
   };
 
@@ -99,16 +100,16 @@ export function PostingResults(props: PostingResultsProps) {
     const result = toastResult(await restorePosting({ source: posting.source, externalId: posting.externalId, saved }));
     if (!result.ok) return;
     change(posting, { dismissed: false, saved });
-    if (mode === "dismissed") toast("Brought back. It'll show in your searches again.");
+    if (mode === "dismissed") toast(t("Brought back. It'll show in your searches again."));
   };
 
   const dismiss = async (posting: ShownPosting) => {
     const result = await dismissFoundPosting({ posting: withoutState(posting) });
     if (!result.ok) return void toast(result.error);
     change(posting, { dismissed: true, saved: false });
-    toast("Dismissed. It won't show in your searches.", {
+    toast(t("Dismissed. It won't show in your searches."), {
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: () => {
           void restore(posting, result.data.wasSaved);
           setSelectedKey(postingKey(posting));
@@ -127,7 +128,7 @@ export function PostingResults(props: PostingResultsProps) {
     if (result.ok && "handoff" in result.data) {
       sendPendingTab(chat, result.data.handoff);
       setScoring((current) => without(current, key));
-      toast("Scoring it in Claude. Reload this page once Claude has saved the score.");
+      toast(t("Scoring it in Claude. Reload this page once Claude has saved the score."));
       return;
     }
     chat?.close();
@@ -138,7 +139,7 @@ export function PostingResults(props: PostingResultsProps) {
     if (job.status === "DONE" || job.status === "FAILED") {
       setScoring((current) => without(current, key));
       if (job.status === "DONE" && job.result) updateState(key, { score: job.result });
-      else toast(job.error ?? "The posting couldn't be scored. Try again.");
+      else toast(job.error ?? t("The posting couldn't be scored. Try again."));
       return;
     }
     setScoring((current) => (current[key] ? { ...current, [key]: { ...current[key], step: job.step } } : current));
@@ -159,12 +160,12 @@ export function PostingResults(props: PostingResultsProps) {
   const searched = props.mode === "search" ? props.search.query : null;
   const empty =
     mode === "saved"
-      ? "Nothing saved yet. Save a posting from your search results to keep it here."
+      ? t("Nothing saved yet. Save a posting from your search results to keep it here.")
       : mode === "dismissed"
-        ? "Nothing dismissed. Postings you dismiss stay out of your searches and wait here."
+        ? t("Nothing dismissed. Postings you dismiss stay out of your searches and wait here.")
         : postings.length > 0 || !searched
-          ? "You've dismissed every posting here."
-          : `No postings for “${searched.keywords}”${searched.place ? ` within ${searched.radiusKm} km of ${searched.place}` : ""}. Try a bigger radius or fewer words.`;
+          ? t("You've dismissed every posting here.")
+          : t("No postings for “{keywords}”{searched}. Try a bigger radius or fewer words.", { keywords: searched.keywords, searched: searched.place ? t(" within {radiusKm} km of {place}", { radiusKm: searched.radiusKm, place: searched.place }) : "" });
 
   return (
     <div className="flex flex-wrap items-start gap-6 px-10 pb-16">
@@ -175,10 +176,10 @@ export function PostingResults(props: PostingResultsProps) {
         <p className={cn("flex flex-wrap items-baseline gap-x-3 gap-y-1 text-meta text-muted", mode !== "search" && visible.length === 0 && "hidden")}>
           <span>
             {props.mode === "search"
-              ? `${plural(postings.length, "posting", "postings")} from ${SOURCE_INFO[props.search.source].name}${next ? ", more to come" : ""} · searched ${props.search.ranAt}`
+              ? t("{postings} from {name}{next} · searched {ranAt}", { postings: tp(postings.length, "{count} posting", "{count} postings"), name: SOURCE_INFO[props.search.source].name, next: next ? ", more to come" : "", ranAt: props.search.ranAt })
               : mode === "saved"
-                ? plural(visible.length, "saved posting", "saved postings")
-                : `${plural(visible.length, "dismissed posting", "dismissed postings")}, kept out of your searches`}
+                ? tp(visible.length, "{count} saved posting", "{count} saved postings")
+                : t("{visible}, kept out of your searches", { visible: tp(visible.length, "{count} dismissed posting", "{count} dismissed postings") })}
           </span>
           {props.mode === "search" && (
             <button
@@ -187,7 +188,7 @@ export function PostingResults(props: PostingResultsProps) {
               aria-disabled={props.searching || undefined}
               className="underline underline-offset-3 hover:text-ink aria-disabled:text-faint"
             >
-              Search again
+              {t("Search again")}
             </button>
           )}
           {hidden > 0 && (
@@ -197,7 +198,7 @@ export function PostingResults(props: PostingResultsProps) {
               onClick={() => setShowDismissed(!showDismissed)}
               className="underline-offset-3 hover:text-ink aria-pressed:text-ink aria-pressed:underline"
             >
-              {hidden === 1 ? "1 dismissed posting hidden" : `${hidden} dismissed postings hidden`} · {showDismissed ? "Hide" : "Show"}
+              {tp(hidden, "{count} dismissed posting hidden", "{count} dismissed postings hidden")} · {showDismissed ? t("Hide") : t("Show")}
             </button>
           )}
         </p>
@@ -217,7 +218,7 @@ export function PostingResults(props: PostingResultsProps) {
 
         {next && (
           <Button variant="secondary" className="self-start" onClick={() => void showMore()} aria-disabled={loadingMore || undefined}>
-            {loadingMore ? "Loading more…" : "Show more"}
+            {loadingMore ? t("Loading more…") : t("Show more")}
           </Button>
         )}
       </div>
@@ -261,7 +262,7 @@ function ScoreWatcher({ jobId, onChange }: { jobId: string; onChange: (job: JobV
 export function StartButton({ starting, onClick }: { starting: boolean; onClick: () => void }) {
   return (
     <Button size="sm" aria-disabled={starting || undefined} onClick={starting ? undefined : onClick}>
-      {starting ? "Starting…" : "Start application →"}
+      {starting ? t("Starting…") : t("Start application →")}
     </Button>
   );
 }
@@ -306,12 +307,12 @@ function PostingList({
   };
 
   return (
-    <ul aria-label="Postings" className="flex flex-col gap-2" onKeyDown={move}>
+    <ul aria-label={t("Postings")} className="flex flex-col gap-2" onKeyDown={move}>
       {postings.map((posting) => {
         const key = postingKey(posting);
         const current = key === selectedKey;
-        const title = posting.title || "Untitled posting";
-        const pillLabel = scoring[key] ? "Scoring…" : "Score";
+        const title = posting.title || t("Untitled posting");
+        const pillLabel = scoring[key] ? t("Scoring…") : t("Score");
         return (
           <li key={key} className={cn("group relative", posting.state.dismissed && "opacity-60")}>
             <button
@@ -325,7 +326,7 @@ function PostingList({
               )}
             >
               <span className="flex items-start justify-between gap-3">
-                <span className="text-field font-medium text-pretty">{title}</span>
+                <span className="text-field font-medium text-pretty">{t(title)}</span>
                 <span className="flex shrink-0 items-center gap-1.5">
                   <StateBadges state={posting.state} />
                   {posting.state.score ? (
@@ -337,10 +338,10 @@ function PostingList({
                   )}
                 </span>
               </span>
-              <span className="text-meta text-muted">{[posting.company, posting.place, posting.remote ? "Remote" : ""].filter(Boolean).join(" · ")}</span>
+              <span className="text-meta text-muted">{[posting.company, posting.place, posting.remote ? t("Remote") : ""].filter(Boolean).join(" · ")}</span>
               <span className="flex items-center justify-between gap-3">
                 <span className="min-w-0 truncate text-xs text-muted">
-                  {[postedAgo(posting.postedAt, now), posting.via && `via ${posting.via}`, posting.salary].filter(Boolean).join(" · ")}
+                  {[postedAgo(posting.postedAt, now), posting.via && t("via {via}", { via: posting.via }), posting.salary].filter(Boolean).join(" · ")}
                 </span>
                 <SourceAttribution source={posting.source} url={posting.url} placeholder />
               </span>
@@ -376,7 +377,7 @@ function PostingList({
 }
 
 function StateBadges({ state }: { state: PostingState }) {
-  const badges = [state.applicationId && "Applied", state.saved && "Saved", state.dismissed && "Dismissed"].filter(Boolean) as string[];
+  const badges = [state.applicationId && t("Applied"), state.saved && t("Saved"), state.dismissed && t("Dismissed")].filter(Boolean) as string[];
   if (badges.length === 0) return null;
   return (
     <span className="flex shrink-0 gap-1.5">
@@ -396,10 +397,10 @@ function Fit({ fit }: { fit: PostingFit }) {
       <ScoreBadge score={fit.score} />
       <div className="flex min-w-0 flex-col gap-1.5 text-sm">
         <p className="font-medium">
-          {fitBand(fit.score)} · {fit.score} of 100
+          {t("{fitBand} · {score} of 100", { fitBand: fitBand(fit.score), score: fit.score })}
         </p>
         {fit.reasons.length > 0 && (
-          <ul aria-label="Why it fits" className="flex list-disc flex-col gap-0.5 pl-5 text-muted">
+          <ul aria-label={t("Why it fits")} className="flex list-disc flex-col gap-0.5 pl-5 text-muted">
             {fit.reasons.map((reason, index) => (
               <li key={index}>{reason}</li>
             ))}
@@ -407,7 +408,7 @@ function Fit({ fit }: { fit: PostingFit }) {
         )}
         {fit.redFlags.length > 0 && (
           <div className="text-meta text-warning">
-            <p className="font-medium">Worth knowing</p>
+            <p className="font-medium">{t("Worth knowing")}</p>
             <ul className="flex list-disc flex-col gap-0.5 pl-5">
               {fit.redFlags.map((flag, index) => (
                 <li key={index}>{flag}</li>
@@ -479,20 +480,19 @@ function PostingDetail({
     >
       <div className="flex flex-col gap-1.5">
         <h2 id={headingId} className="font-serif text-section text-pretty">
-          {posting.title || "Untitled posting"}
+          {t(posting.title) || t("Untitled posting")}
         </h2>
-        <p className="text-sm text-muted">{[posting.company, posting.place, posting.remote ? "Remote" : "", posting.salary].filter(Boolean).join(" · ")}</p>
+        <p className="text-sm text-muted">{[posting.company, posting.place, posting.remote ? t("Remote") : "", posting.salary].filter(Boolean).join(" · ")}</p>
         {(ago || posting.via) && (
-          <p className="text-meta text-muted">{[ago && `Posted ${ago === "Today" || ago === "Yesterday" ? ago.toLowerCase() : ago}`, posting.via && `via ${posting.via}`].filter(Boolean).join(" · ")}</p>
+          <p className="text-meta text-muted">{[ago && t("Posted {ago}", { ago: ago === "Today" || ago === "Yesterday" ? ago.toLowerCase() : ago }), posting.via && t("via {via}", { via: posting.via })].filter(Boolean).join(" · ")}</p>
         )}
       </div>
 
       {state.applicationId && (
         <p role="note" className="rounded-card bg-track px-4 py-3 text-meta">
-          You&apos;ve applied for this.{" "}
-          <Link href={`/applications/${state.applicationId}`} className="underline underline-offset-2">
-            Open the application
-          </Link>
+          {rich("You've applied for this. {link}", { link: <Link href={`/applications/${state.applicationId}`} className="underline underline-offset-2">
+            {t("Open the application")}
+          </Link> })}
         </p>
       )}
 
@@ -500,58 +500,56 @@ function PostingDetail({
         {children}
         {state.dismissed ? (
           <Button variant="secondary" size="sm" onClick={onRestore}>
-            Bring back
+            {t("Bring back")}
           </Button>
         ) : (
           <Button variant="secondary" size="sm" aria-pressed={state.saved} onClick={state.saved ? onUnsave : onSave}>
-            {state.saved ? "Saved" : "Save"}
+            {state.saved ? t("Saved") : t("Save")}
           </Button>
         )}
         {posting.url && (
           <a href={posting.url} target="_blank" rel="noopener noreferrer" className={buttonClassName("secondary", "sm")}>
-            Open posting<span aria-hidden>↗</span>
-            <span className="sr-only"> (opens in a new tab)</span>
+            {rich("Open posting{span}{span2}", { span: <span aria-hidden>↗</span>, span2: <span className="sr-only"> {t("(opens in a new tab)")}</span> })}
           </a>
         )}
         {/* A BA posting with a link of its own still links to its ad on arbeitsagentur.de (#223). */}
         {sourcePage && sourcePage !== posting.url && (
           <a href={sourcePage} target="_blank" rel="noopener noreferrer" className={buttonClassName("secondary", "sm")}>
-            On arbeitsagentur.de<span aria-hidden>↗</span>
-            <span className="sr-only"> (opens in a new tab)</span>
+            {rich("On arbeitsagentur.de{span}{span2}", { span: <span aria-hidden>↗</span>, span2: <span className="sr-only"> {t("(opens in a new tab)")}</span> })}
           </a>
         )}
         <Button variant="secondary" size="sm" aria-disabled={scoring ? true : undefined} onClick={scoring ? undefined : onScore}>
-          {scoring ? "Scoring…" : state.score ? "Score again" : "Score"}
+          {scoring ? t("Scoring…") : state.score ? t("Score again") : t("Score")}
         </Button>
         {!state.dismissed && (
           <Button variant="secondary" size="sm" onClick={onDismiss}>
-            Dismiss
+            {t("Dismiss")}
           </Button>
         )}
       </div>
 
       {scoring ? (
         <p role="status" className="text-meta text-muted">
-          {scoring.step ?? "Starting…"}
+          {scoring.step ?? t("Starting…")}
         </p>
       ) : (
         state.score && <Fit fit={state.score} />
       )}
 
       {/* Only the text scrolls, so the title and actions stay in view; focusable, so it scrolls from the keyboard too. */}
-      <div tabIndex={0} role="region" aria-label="Posting text" className="-mx-1 min-h-0 flex-1 overflow-y-auto border-t border-line px-1 pt-4">
+      <div tabIndex={0} role="region" aria-label={t("Posting text")} className="-mx-1 min-h-0 flex-1 overflow-y-auto border-t border-line px-1 pt-4">
         {text.status === "loading" ? (
           <p role="status" className="text-sm text-muted">
-            Getting the whole posting…
+            {t("Getting the whole posting…")}
           </p>
         ) : (
           <>
             {text.status === "partial" && (
               <p className="mb-3 rounded-card bg-warning-surface px-4 py-3 text-meta text-warning">
-                This is only the start of the posting. When you start an application, you can paste the rest from the posting&apos;s page.
+                {t("This is only the start of the posting. When you start an application, you can paste the rest from the posting's page.")}
               </p>
             )}
-            <div className="text-sm leading-relaxed whitespace-pre-line">{text.text || "The source didn't send a description."}</div>
+            <div className="text-sm leading-relaxed whitespace-pre-line">{text.text || t("The source didn't send a description.")}</div>
           </>
         )}
       </div>

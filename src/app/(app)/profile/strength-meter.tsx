@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 
+import { t } from "@/lib/i18n";
 import { profileStrength, type ProfileData } from "@/lib/profile";
 
 /** "Profile strength" with a progress bar and an encouraging hint (PRO-9). */
@@ -19,7 +20,7 @@ export function StrengthMeter({ profile }: { profile: ProfileData }) {
     <div className="flex flex-col gap-2">
       <div className="flex justify-between text-meta">
         <span id={labelId} className="text-muted">
-          Profile strength
+          {t("Profile strength")}
         </span>
         <span className="font-medium tabular-nums">{percent}%</span>
       </div>
@@ -38,7 +39,7 @@ export function StrengthMeter({ profile }: { profile: ProfileData }) {
         />
       </div>
       <p id={hintId} className="text-label text-muted">
-        {hint}
+        {t(hint)}
       </p>
     </div>
   );

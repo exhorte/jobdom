@@ -10,6 +10,7 @@ import { createEducation, removeEducation, reorderEntries, restoreEducation, sav
 import { EntryList } from "./entry-list";
 import { MonthYearField } from "./month-year-field";
 import { useTrackSave } from "@/components/save-tracker";
+import { t } from "@/lib/i18n";
 import type { UpdateProfile } from "./skills-section";
 
 function EducationForm({
@@ -29,41 +30,41 @@ function EducationForm({
     <div className="grid grid-cols-2 gap-[18px]" onBlur={flush}>
       <Input
         className="col-span-2"
-        label="Degree or course"
-        placeholder="BSc Computer Science"
+        label={t("Degree or course")}
+        placeholder={t("BSc Computer Science")}
         value={entry.degree}
         onChange={(event) => set({ degree: event.target.value })}
         autoFocus={autoFocus}
       />
       <Input
         className="col-span-2"
-        label="School"
-        placeholder="Springfield University"
+        label={t("School")}
+        placeholder={t("Springfield University")}
         value={entry.school}
         onChange={(event) => set({ school: event.target.value })}
       />
       <MonthYearField
-        label="Started"
+        label={t("Started")}
         value={{ month: entry.startMonth, year: entry.startYear }}
         onChange={({ month, year }) => set({ startMonth: month, startYear: year })}
       />
       <div className="flex flex-col gap-2.5">
         <MonthYearField
-          label="Finished"
+          label={t("Finished")}
           value={{ month: entry.endMonth, year: entry.endYear }}
           onChange={({ month, year }) => set({ endMonth: month, endYear: year })}
           disabled={entry.current}
         />
         <Checkbox
-          label="Still studying"
+          label={t("Still studying")}
           checked={entry.current}
           onChange={(event) => set({ current: event.target.checked })}
         />
       </div>
       <Textarea
         className="col-span-2"
-        label="Notes"
-        placeholder="Thesis, honours, anything worth mentioning"
+        label={t("Notes")}
+        placeholder={t("Thesis, honours, anything worth mentioning")}
         rows={3}
         value={entry.notes}
         onChange={(event) => set({ notes: event.target.value })}
@@ -78,7 +79,7 @@ export function EducationSection({ profile, update, order }: { profile: ProfileD
     <EntryList
       items={profile.education}
       setItems={(change) => update((current) => ({ ...current, education: change(current.education) }))}
-      addLabel="Add education"
+      addLabel={t("Add education")}
       ordering={{
         mode: order,
         save: (ids) => reorderEntries({ section: "education", ids }),
