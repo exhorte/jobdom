@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title desc">
+  <title id="title">JobDom: your job search, on your own server</title>
+  <desc id="desc">The JobDom mark and tagline next to an illustration of a profile matched against a job posting, a funnel and a PDF resume.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1d1c1a" flood-opacity="0.12"/>
+    </filter>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.2" fill="#1d1c1a" fill-opacity="0.07"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#eeebe4" stop-opacity="1"/>
+      <stop offset="0.45" stop-color="#eeebe4" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#eeebe4" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Paper -->
+  <rect width="1280" height="420" rx="24" fill="#eeebe4"/>
+  <rect width="1280" height="420" rx="24" fill="url(#grid)"/>
+  <rect width="760" height="420" rx="24" fill="url(#fade)"/>
+
+  <!-- Brand -->
+  <g transform="translate(80 72)">
+    <rect width="56" height="56" rx="12.3" fill="#1d1c1a"/>
+    <g transform="scale(0.875)">
+      <path fill="#f4f2ed" transform="matrix(0.02844 0 0 -0.02844 10.214 51.200)" d="M1179.8 691.9Q1179.8 974 1032.5 1107.7Q885.3 1241.3 625.7 1241.3H354.9L338.3 1350H674.8Q936.6 1350 1111 1279.8Q1285.4 1209.6 1372.4 1068.2Q1459.5 926.8 1459.5 714.2Q1459.5 486.8 1357.2 327.4Q1254.8 168 1077.9 84Q900.9 0 678.3 0H338.3L354.9 108.7H646.1Q807.3 108.7 927.1 168.3Q1047 227.8 1113.4 356.5Q1179.8 485.1 1179.8 691.9ZM72.3 0V41L223.4 95.9V1254.2L72.3 1308.9V1350H489.4V0Z"/>
+    </g>
+    <text x="76" y="42" font-family="Newsreader, Georgia, 'Times New Roman', serif" font-size="44" font-weight="600" fill="#1d1c1a" letter-spacing="-0.5">JobDom</text>
+  </g>
+
+  <!-- Headline -->
+  <text font-family="Newsreader, Georgia, 'Times New Roman', serif" font-size="50" fill="#1d1c1a" letter-spacing="-1">
+    <tspan x="80" y="206">Your job search,</tspan>
+    <tspan x="80" y="264" font-style="italic" fill="#7a3b2e">on your own server.</tspan>
+  </text>
+  <text x="80" y="306" font-family="Geist, 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="17" fill="#69655d">
+    Tailored resumes and cover letters, written only from your facts.
+  </text>
+
+  <!-- Chips -->
+  <g font-family="Geist, 'Segoe UI', Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#2b2a27">
+    <rect x="80" y="334" width="112" height="30" rx="15" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.12"/>
+    <text x="136" y="354" text-anchor="middle">Self-hosted</text>
+    <rect x="202" y="334" width="140" height="30" rx="15" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.12"/>
+    <text x="272" y="354" text-anchor="middle">Bring your own AI</text>
+    <rect x="352" y="334" width="128" height="30" rx="15" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.12"/>
+    <text x="416" y="354" text-anchor="middle">English · Français</text>
+    <rect x="490" y="334" width="96" height="30" rx="15" fill="#7a3b2e" fill-opacity="0.08" stroke="#7a3b2e" stroke-opacity="0.25"/>
+    <text x="538" y="354" text-anchor="middle" fill="#7a3b2e">AGPL-3.0</text>
+  </g>
+
+  <!-- Window: how you match -->
+  <g filter="url(#shadow)">
+    <rect x="700" y="46" width="500" height="268" rx="14" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.1"/>
+  </g>
+  <g>
+    <path d="M700 60a14 14 0 0 1 14-14h472a14 14 0 0 1 14 14v22H700z" fill="#e7e3da"/>
+    <circle cx="722" cy="64" r="5" fill="#d3cec4"/>
+    <circle cx="740" cy="64" r="5" fill="#d3cec4"/>
+    <circle cx="758" cy="64" r="5" fill="#d3cec4"/>
+    <rect x="860" y="55" width="180" height="18" rx="9" fill="#f4f2ed"/>
+    <text x="950" y="68" text-anchor="middle" font-family="Geist, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" fill="#69655d">jobdom.example.com</text>
+  </g>
+
+  <g font-family="Geist, 'Segoe UI', Inter, Helvetica, Arial, sans-serif">
+    <text x="728" y="116" font-size="15" font-weight="600" fill="#1d1c1a">How you match</text>
+    <text x="1172" y="116" text-anchor="end" font-size="12" fill="#69655d">4 of 5 covered by your profile</text>
+    <line x1="728" y1="130" x2="1172" y2="130" stroke="#1d1c1a" stroke-opacity="0.08"/>
+
+    <!-- Row 1 -->
+    <circle cx="740" cy="154" r="10" fill="#5a9a6a" fill-opacity="0.15"/>
+    <path d="M735 154l3.5 3.5 6.5-7" fill="none" stroke="#3f7d50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="760" y="152" font-size="13" font-weight="600" fill="#1d1c1a">5+ years of product design</text>
+    <text x="760" y="168" font-size="11" fill="#69655d">3 roles in your profile, since Sep 2015</text>
+
+    <!-- Row 2 -->
+    <circle cx="740" cy="198" r="10" fill="#5a9a6a" fill-opacity="0.15"/>
+    <path d="M735 198l3.5 3.5 6.5-7" fill="none" stroke="#3f7d50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="760" y="196" font-size="13" font-weight="600" fill="#1d1c1a">Built or maintained a design system</text>
+    <text x="760" y="212" font-size="11" fill="#69655d">Used at Northwind Logistics</text>
+
+    <!-- Row 3 (gap) -->
+    <rect x="718" y="226" width="464" height="44" rx="8" fill="#7a3b2e" fill-opacity="0.06"/>
+    <circle cx="740" cy="248" r="10" fill="#7a3b2e" fill-opacity="0.14"/>
+    <path d="M735 248h10" stroke="#7a3b2e" stroke-width="2" stroke-linecap="round"/>
+    <text x="760" y="246" font-size="13" font-weight="600" fill="#1d1c1a">Experience with Kubernetes</text>
+    <text x="760" y="262" font-size="11" fill="#7a3b2e">Not in your profile yet: shown as a gap, never invented</text>
+    <rect x="1070" y="236" width="104" height="24" rx="12" fill="#f4f2ed" stroke="#7a3b2e" stroke-opacity="0.35"/>
+    <text x="1122" y="252" text-anchor="middle" font-size="11" font-weight="500" fill="#7a3b2e">+ Add to profile</text>
+
+  </g>
+
+  <!-- Floating card: funnel -->
+  <g filter="url(#shadow)">
+    <rect x="640" y="284" width="236" height="104" rx="12" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.1"/>
+  </g>
+  <g font-family="Geist, 'Segoe UI', Inter, Helvetica, Arial, sans-serif">
+    <text x="658" y="308" font-size="11" font-weight="500" fill="#69655d" letter-spacing="0.6">YOUR FUNNEL</text>
+    <text x="658" y="334" font-family="Newsreader, Georgia, serif" font-size="22" font-weight="600" fill="#1d1c1a">7</text>
+    <text x="658" y="348" font-size="10.5" fill="#69655d">sent</text>
+    <text x="722" y="334" font-family="Newsreader, Georgia, serif" font-size="22" font-weight="600" fill="#1d1c1a">71%</text>
+    <text x="722" y="348" font-size="10.5" fill="#69655d">heard back</text>
+    <text x="796" y="334" font-family="Newsreader, Georgia, serif" font-size="22" font-weight="600" fill="#1d1c1a">3</text>
+    <text x="796" y="348" font-size="10.5" fill="#69655d">interviews</text>
+    <rect x="658" y="360" width="64" height="10" rx="3" fill="#5a87b5"/>
+    <rect x="725" y="360" width="52" height="10" rx="3" fill="#4a95a0"/>
+    <rect x="780" y="360" width="40" height="10" rx="3" fill="#8a78b8"/>
+    <rect x="823" y="360" width="34" height="10" rx="3" fill="#b8924a"/>
+  </g>
+
+  <!-- Floating card: PDF -->
+  <g filter="url(#shadow)">
+    <rect x="964" y="330" width="252" height="58" rx="12" fill="#f4f2ed" stroke="#1d1c1a" stroke-opacity="0.1"/>
+  </g>
+  <g font-family="Geist, 'Segoe UI', Inter, Helvetica, Arial, sans-serif">
+    <rect x="978" y="342" width="34" height="34" rx="8" fill="#7a3b2e" fill-opacity="0.1"/>
+    <path d="M990 350h7l5 5v13a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5v-16.5a1.5 1.5 0 0 1 1.5-1.5z M997 350v5h5" fill="none" stroke="#7a3b2e" stroke-width="1.6" stroke-linejoin="round"/>
+    <text x="1022" y="356" font-size="12" font-weight="600" fill="#1d1c1a">Resume · Ledgerly.pdf</text>
+    <text x="1022" y="372" font-size="11" fill="#69655d">A4 · 1 page · Editorial theme</text>
+    <path d="M1192 352v12m-5-5 5 5 5-5" fill="none" stroke="#69655d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
